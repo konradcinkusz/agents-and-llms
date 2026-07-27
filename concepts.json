@@ -1,0 +1,276 @@
+[
+  {
+    "id": "what-is-ai",
+    "title": "What is AI?",
+    "kind": "basics",
+    "def": "Software that performs tasks which normally need human intelligence — recognizing images, understanding language, making decisions.",
+    "note": "AI is the umbrella term. Machine learning, LLMs and agents are all specific approaches inside it, not synonyms for it.",
+    "videoUrl": ""
+  },
+  {
+    "id": "what-is-ml",
+    "title": "What is machine learning?",
+    "kind": "basics",
+    "def": "A way of building AI where the system learns patterns from data instead of being explicitly programmed with rules.",
+    "note": "Show it enough labeled examples, and it learns the pattern itself — that's the shift from classic programming to ML.",
+    "videoUrl": ""
+  },
+  {
+    "id": "what-is-llm",
+    "title": "What is an LLM?",
+    "kind": "basics",
+    "def": "A Large Language Model — a neural network trained on huge amounts of text, so it can read and generate language.",
+    "note": "ChatGPT, Claude and Gemini are all products built around an LLM. The LLM is the model; the product is the model plus an interface.",
+    "videoUrl": ""
+  },
+  {
+    "id": "what-is-agent",
+    "title": "What is an AI agent?",
+    "kind": "basics",
+    "def": "An LLM that can take actions, not just reply with text — it can call tools, check results and decide what to do next.",
+    "note": "A plain chatbot only talks. An agent can act: search the web, run code, call an API, then use what it finds to keep going.",
+    "videoUrl": ""
+  },
+  {
+    "id": "what-is-model",
+    "title": "What is a \"model\" in AI?",
+    "kind": "basics",
+    "def": "The trained system itself — millions or billions of numbers (parameters) that turn an input into an output.",
+    "note": "\"Model\" is the generic term; an LLM is one kind of model, specifically one trained on language.",
+    "videoUrl": ""
+  },
+  {
+    "id": "what-is-prompt",
+    "title": "What is a prompt?",
+    "kind": "basics",
+    "def": "The text you give the model as input — an instruction, a question, or both.",
+    "note": "Prompting is how you steer a model without changing its underlying weights. Same model, different prompt, different behavior.",
+    "videoUrl": ""
+  },
+  {
+    "id": "training-vs-inference",
+    "title": "Training vs inference — what's the difference?",
+    "kind": "basics",
+    "def": "Training is when the model learns from data, once, at huge cost. Inference is every time you actually use it afterward.",
+    "note": "When you chat with a model, you're doing inference. The model's knowledge was fixed back when it was trained.",
+    "videoUrl": ""
+  },
+  {
+    "id": "hallucination",
+    "title": "What is a hallucination in AI?",
+    "kind": "basics",
+    "def": "When a model states something false or made-up as if it were fact, with no signal that it's unsure.",
+    "note": "It happens because the model is predicting plausible-sounding text, not looking facts up — confidence and correctness aren't the same thing.",
+    "videoUrl": ""
+  },
+  {
+    "id": "tool-use",
+    "title": "Function calling / tool use",
+    "kind": "agent",
+    "def": "The model doesn't run code — it emits a structured request to call a function you defined, and your code runs it.",
+    "note": "You describe each tool as a schema; the model replies with the name and arguments to invoke. This is the bridge from chat to action.",
+    "lang": "json",
+    "code": "{\n  \"name\": \"get_weather\",\n  \"description\": \"Current weather for a city\",\n  \"parameters\": { \"city\": \"string\" }\n}",
+    "videoUrl": ""
+  },
+  {
+    "id": "token",
+    "title": "Token",
+    "kind": "found",
+    "def": "The smallest chunk of text a model reads or writes — usually a word-piece, not a whole word.",
+    "note": "Everything is counted, priced and limited in tokens. For English, ~4 characters is about 1 token.",
+    "lang": "python",
+    "code": "tokens = [\"token\", \"izing\"]   # \"tokenizing\" -> 2 tokens, not 1 word",
+    "videoUrl": ""
+  },
+  {
+    "id": "context",
+    "title": "Context window",
+    "kind": "found",
+    "def": "The maximum number of tokens a model can hold in view at once — your prompt and its reply combined.",
+    "note": "Anything outside it is invisible. Overflow means the oldest tokens fall off or must be summarized.",
+    "lang": "python",
+    "code": "used = prompt_tokens + reply_tokens\nassert used <= context_window   # or it overflows",
+    "videoUrl": ""
+  },
+  {
+    "id": "temperature",
+    "title": "Temperature",
+    "kind": "found",
+    "def": "How random the model's sampling is. Low keeps it focused and repeatable; high makes it diverse and creative.",
+    "note": "Near 0 it's almost deterministic — good for extraction. Raise it for brainstorming.",
+    "lang": "json",
+    "code": "{ \"temperature\": 0.2, \"top_p\": 1.0 }",
+    "videoUrl": ""
+  },
+  {
+    "id": "messages",
+    "title": "Chat messages",
+    "kind": "found",
+    "def": "Modern LLM APIs take a list of role-tagged messages, not a single prompt string.",
+    "note": "system sets behaviour, user asks, assistant answers — and the whole history is resent every turn.",
+    "lang": "json",
+    "code": "[\n  { \"role\": \"system\", \"content\": \"You are concise.\" },\n  { \"role\": \"user\",   \"content\": \"What is a token?\" }\n]",
+    "videoUrl": ""
+  },
+  {
+    "id": "embedding",
+    "title": "Embedding",
+    "kind": "found",
+    "def": "Text turned into a fixed-length vector, so meaning becomes a distance you can measure.",
+    "note": "Similar meanings land near each other — the basis for search, clustering and retrieval.",
+    "lang": "python",
+    "code": "vec = embed(\"cat\")   # -> [0.02, -0.31, 0.88, ...]",
+    "videoUrl": ""
+  },
+  {
+    "id": "attention",
+    "title": "Self-attention",
+    "kind": "model",
+    "def": "Every token looks at every other token and weighs how relevant it is — that's how context flows through the model.",
+    "note": "Query x Key produces the weights; those weights mix the Values. It's the heart of the transformer.",
+    "lang": "python",
+    "code": "scores  = query @ key.T\nweights = softmax(scores)\nout     = weights @ value",
+    "videoUrl": ""
+  },
+  {
+    "id": "transformer",
+    "title": "Transformer",
+    "kind": "model",
+    "def": "The architecture behind modern LLMs: stacked self-attention and feed-forward layers, with no recurrence.",
+    "note": "It processes a whole sequence in parallel, which is why it trains and scales so well.",
+    "videoUrl": ""
+  },
+  {
+    "id": "positional",
+    "title": "Positional encoding",
+    "kind": "model",
+    "def": "Attention is order-blind on its own, so each token's position is baked into its vector.",
+    "note": "Without it, \"dog bites man\" and \"man bites dog\" would look identical to the model.",
+    "videoUrl": ""
+  },
+  {
+    "id": "softmax",
+    "title": "Softmax",
+    "kind": "model",
+    "def": "Turns raw scores (logits) into a probability distribution that sums to 1.",
+    "note": "It's the final step that decides how likely each possible next token is.",
+    "lang": "python",
+    "code": "probs = exp(logits) / sum(exp(logits))   # sums to 1",
+    "videoUrl": ""
+  },
+  {
+    "id": "next-token",
+    "title": "Next-token prediction",
+    "kind": "model",
+    "def": "An LLM only ever does one thing: predict the probability of the next token, sample one, and repeat.",
+    "note": "Everything else — chat, code, reasoning — emerges from doing this well, one token at a time.",
+    "lang": "python",
+    "code": "logits  = model(tokens)\nnext_id = sample(softmax(logits), temperature=0.7)",
+    "videoUrl": ""
+  },
+  {
+    "id": "react",
+    "title": "ReAct (reason + act)",
+    "kind": "agent",
+    "def": "The model thinks, calls a tool, reads the result, then thinks again — interleaving reasoning with action.",
+    "note": "Each step is grounded in a real observation instead of one long guessed-at answer.",
+    "lang": "trace",
+    "code": "Thought: I need today's weather.\nAction: get_weather(\"Alicante\")\nObservation: 29C, clear skies\nThought: Now I can answer.",
+    "videoUrl": ""
+  },
+  {
+    "id": "agent-loop",
+    "title": "The agent loop",
+    "kind": "agent",
+    "def": "An agent is a loop: think, act, observe, repeat — until the goal is met or a step limit is hit.",
+    "note": "The loop plus tools plus memory is what turns a plain chat model into an agent.",
+    "lang": "python",
+    "code": "while not done:\n    action = model.decide(state)\n    result = run(action)\n    state  = update(state, result)\n    done   = action.is_final",
+    "videoUrl": ""
+  },
+  {
+    "id": "memory",
+    "title": "Memory",
+    "kind": "agent",
+    "def": "Short-term memory is the context window; long-term memory is external storage you retrieve into it.",
+    "note": "Agents summarize or store past steps so they don't forget once the window fills up.",
+    "videoUrl": ""
+  },
+  {
+    "id": "rag",
+    "title": "RAG (retrieval-augmented generation)",
+    "kind": "agent",
+    "def": "Fetch relevant documents and drop them into the prompt, so the model answers from facts rather than only its training.",
+    "note": "Cuts hallucination and lets a model use private or fresh data it never saw during training.",
+    "lang": "python",
+    "code": "docs   = retrieve(query, top_k=4)\nprompt = context(docs) + query\nanswer = model(prompt)",
+    "videoUrl": ""
+  },
+  {
+    "id": "mcp",
+    "title": "MCP (Model Context Protocol)",
+    "kind": "agent",
+    "def": "An open standard for connecting models to tools and data through one consistent interface.",
+    "note": "Write a connector once and any MCP-aware client can use it — a bit like a USB port for tools.",
+    "videoUrl": ""
+  },
+  {
+    "id": "evals",
+    "title": "Evals",
+    "kind": "agent",
+    "def": "Systematic tests that score model or agent output, so you can tell whether a change actually helped.",
+    "note": "Without evals you're tuning by vibes; with them, progress becomes measurable.",
+    "lang": "python",
+    "code": "score = sum(check(model(x)) for x in test_set) / len(test_set)",
+    "videoUrl": ""
+  },
+  {
+    "id": "workflow",
+    "title": "What is an agent workflow?",
+    "kind": "agent",
+    "def": "A graph of steps an agent system runs through — not one long prompt, but a structured, typed sequence you can inspect and control.",
+    "note": "This is what separates a serious agent framework from a chat loop: the orchestration itself becomes a first-class, strongly-typed object instead of hidden inside one big prompt.",
+    "videoUrl": ""
+  },
+  {
+    "id": "executor-edge",
+    "title": "Executors and edges — the building blocks of a workflow",
+    "kind": "agent",
+    "def": "An executor is one unit of work in a workflow — an agent or a plain function. An edge is the connection that routes output from one executor to the next.",
+    "note": "Edges can fan out to run several executors in parallel, fan in to combine their results, or route conditionally based on what came out of the previous step.",
+    "videoUrl": ""
+  },
+  {
+    "id": "checkpointing",
+    "title": "What is checkpointing in an agent workflow?",
+    "kind": "agent",
+    "def": "Saving a workflow's state mid-run, so it can be paused, killed, or crash — and resume later from exactly where it left off, not from the start.",
+    "note": "This is what makes long-running or expensive agent workflows practical: a multi-hour task survives a restart instead of burning every token again.",
+    "videoUrl": ""
+  },
+  {
+    "id": "handoff",
+    "title": "What is handoff orchestration?",
+    "kind": "agent",
+    "def": "A multi-agent pattern where a triage agent routes a request to the right specialist agent, and any specialist can hand the conversation back or sideways if it turns out to be the wrong fit.",
+    "note": "The developer defines the topology — which agents exist and who can hand off to whom — but the agents themselves decide, in the moment, when a handoff is needed.",
+    "videoUrl": ""
+  },
+  {
+    "id": "agent-harness",
+    "title": "What is an agent harness?",
+    "kind": "agent",
+    "def": "A ready-made shell around a model that turns it into a working coding agent in one step — file access, task tracking, shell execution, and approvals, all pre-wired.",
+    "note": "Instead of hand-building memory, file tools, and a sandbox yourself, a harness gives you the standard agent scaffolding out of the box.",
+    "videoUrl": ""
+  },
+  {
+    "id": "a2a",
+    "title": "What is agent-to-agent (A2A) communication?",
+    "kind": "agent",
+    "def": "A protocol that lets independent agents send each other structured messages, even across different frameworks or programming languages.",
+    "note": "This is how a .NET agent and a Python agent — built by different teams on different stacks — can still delegate work to one another reliably.",
+    "videoUrl": ""
+  }
+]

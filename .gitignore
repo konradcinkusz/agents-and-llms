@@ -1,0 +1,12 @@
+# IDE
+.vs/
+.idea/
+*.suo
+
+# Never commit secrets
+.env
+*.local
+
+# Personal notes — recording scripts, planning docs — never publish these
+SCRIPTS.md
+*.private.md

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Agents &amp; LLMs — searchable knowledge base | Konrad's Dev Insight</title>
+<meta name="description" content="Search the concepts behind LLMs and AI agents: tokens, attention, context windows, function calling, ReAct, the agent loop, RAG, MCP, evals and more. From the Konrad's Dev Insight shorts." />
+<meta property="og:title" content="Agents & LLMs — searchable knowledge base" />
+<meta property="og:description" content="Search the concepts behind LLMs and agents, one short at a time." />
+<meta property="og:type" content="website" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:#FBFBFD; --surface:#FFFFFF; --code:#F4F5F8;
+    --ink:#14161C; --muted:#565B67; --faint:#8A8F9A;
+    --line:#E6E7EE; --line-strong:#D5D7E0;
+    --md:#0E9384; --md-soft:#E3F4F1; --md-ink:#0A6A60;
+    --ag:#C4661F; --ag-soft:#FBEEDF; --ag-ink:#9A4E17;
+    --fo:#5A5F6B; --fo-soft:#EEEFF3; --fo-ink:#3D414B;
+    --bs:#2563A8; --bs-soft:#E9F1FA; --bs-ink:#1B4E85;
+    --tk-kw:#8250DF; --tk-type:#1B7F79; --tk-str:#227A4B;
+    --tk-num:#B5691A; --tk-com:#9296A1; --tk-fn:#2563A8; --tk-key:#0A6A60;
+    --radius:10px;
+    --font-display:"Space Grotesk",system-ui,sans-serif;
+    --font-body:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  [data-theme="dark"]{
+    --paper:#0E1014; --surface:#15181E; --code:#1B1F27;
+    --ink:#EDEEF2; --muted:#A2A7B2; --faint:#6E7480;
+    --line:#262A33; --line-strong:#353B47;
+    --md:#34D3B8; --md-soft:#0F302B; --md-ink:#6FE3CE;
+    --ag:#E8974A; --ag-soft:#33220F; --ag-ink:#F0B074;
+    --fo:#A2A7B2; --fo-soft:#22262E; --fo-ink:#C3C6CE;
+    --bs:#5AA2E8; --bs-soft:#15273A; --bs-ink:#8EC2F0;
+    --tk-kw:#C792EA; --tk-type:#4EC9B0; --tk-str:#7EC699;
+    --tk-num:#E0A458; --tk-com:#6E7480; --tk-fn:#6CB6FF; --tk-key:#4EC9B0;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--font-body); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;}
+  a{color:inherit}
+  h1,h2,h3{font-family:var(--font-display); font-weight:500; letter-spacing:-.01em; margin:0}
+
+  header{position:sticky; top:0; z-index:50;
+    background:color-mix(in srgb, var(--paper) 82%, transparent);
+    backdrop-filter:saturate(1.4) blur(10px); border-bottom:1px solid var(--line);}
+  .bar{max-width:1080px; margin:0 auto; padding:0 24px; height:60px; display:flex; align-items:center; gap:20px;}
+  .brand{display:flex; align-items:center; gap:10px; font-family:var(--font-display);
+    font-weight:700; letter-spacing:-.02em; font-size:16px; text-decoration:none; white-space:nowrap;}
+  .brand .glyph{display:inline-grid; place-items:center; width:26px; height:26px; border-radius:7px;
+    background:linear-gradient(135deg,var(--md),var(--ag)); color:#fff; font-size:13px; font-weight:700;}
+  nav{margin-left:auto; display:flex; align-items:center; gap:6px;}
+  .sub-btn{font-size:14px; font-weight:500; text-decoration:none; padding:8px 14px; border-radius:8px;
+    color:#fff; background:linear-gradient(135deg,var(--md),var(--ag)); white-space:nowrap;}
+  .sub-btn:hover{filter:brightness(1.06)}
+  .icon-btn{width:36px; height:36px; border:1px solid var(--line-strong); background:transparent;
+    border-radius:8px; color:var(--muted); cursor:pointer; display:grid; place-items:center; font-size:15px; padding:0;}
+  .icon-btn:hover{color:var(--ink); border-color:var(--faint)}
+
+  main{max-width:1080px; margin:0 auto; padding:0 24px}
+
+  /* ---------- search-first hero ---------- */
+  .hero{padding:52px 0 8px}
+  .hero-top{max-width:680px; animation:rise .5s cubic-bezier(.2,.7,.2,1) both}
+  @media (prefers-reduced-motion:reduce){.hero-top{animation:none}}
+  @keyframes rise{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
+  .eyebrow{font-family:var(--font-mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--faint); margin:0 0 12px}
+  h1{font-size:clamp(1.9rem,4.4vw,2.7rem); line-height:1.08; font-weight:700}
+  h1 .md-w{color:var(--md)} h1 .ag-w{color:var(--ag)}
+  .lede{font-size:15.5px; color:var(--muted); margin:12px 0 0; max-width:560px}
+
+  .search-shell{position:relative; margin-top:28px}
+  .search-shell .mag{position:absolute; left:18px; top:50%; transform:translateY(-50%);
+    color:var(--faint); font-size:19px; pointer-events:none}
+  #search{width:100%; font-family:var(--font-body); font-size:17px; color:var(--ink);
+    background:var(--surface); border:1.5px solid var(--line-strong); border-radius:14px;
+    padding:16px 48px 16px 50px; transition:border-color .15s, box-shadow .15s}
+  #search:focus{outline:none; border-color:var(--md); box-shadow:0 0 0 4px var(--md-soft)}
+  #search::placeholder{color:var(--faint)}
+  .kbd{position:absolute; right:14px; top:50%; transform:translateY(-50%);
+    font-family:var(--font-mono); font-size:11.5px; color:var(--faint);
+    border:1px solid var(--line-strong); border-radius:6px; padding:2px 7px; pointer-events:none}
+  .kbd.is-hidden{display:none}
+
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin:16px 0 0}
+  .chip{font-family:var(--font-mono); font-size:12.5px; color:var(--muted); cursor:pointer;
+    background:var(--surface); border:1px solid var(--line-strong); border-radius:20px; padding:6px 13px;
+    transition:all .15s; display:inline-flex; align-items:center; gap:6px}
+  .chip .n{color:var(--faint)}
+  .chip:hover{color:var(--ink); border-color:var(--faint)}
+  .chip[aria-pressed="true"]{color:#fff; background:var(--ink); border-color:var(--ink)}
+  .chip[aria-pressed="true"] .n{color:color-mix(in srgb, var(--paper) 70%, transparent)}
+
+  .result-bar{display:flex; align-items:center; justify-content:space-between; gap:16px;
+    margin:30px 0 18px; padding-top:22px; border-top:1px solid var(--line)}
+  .count{font-family:var(--font-mono); font-size:13px; color:var(--faint)}
+  .count b{color:var(--ink); font-weight:500}
+
+  main > section{padding-bottom:56px}
+
+  /* ---------- tiles ---------- */
+  .grid{display:flex; flex-direction:column; gap:16px}
+  .card{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--kc,var(--line));
+    border-radius:12px; overflow:hidden; scroll-margin-top:80px; cursor:pointer;
+    transition:border-color .18s ease, transform .18s ease, box-shadow .2s ease, background .18s ease;}
+  .card:hover{transform:translateY(-2px)}
+  .card.k-model{--kc:var(--md); --kc-soft:var(--md-soft); --kc-ink:var(--md-ink)}
+  .card.k-agent{--kc:var(--ag); --kc-soft:var(--ag-soft); --kc-ink:var(--ag-ink)}
+  .card.k-found{--kc:var(--fo); --kc-soft:var(--fo-soft); --kc-ink:var(--fo-ink)}
+  .card.k-basics{--kc:var(--bs); --kc-soft:var(--bs-soft); --kc-ink:var(--bs-ink)}
+  .card.is-target{box-shadow:0 0 0 2px var(--kc)}
+  .card.is-active{background:var(--kc-soft); border-color:var(--kc); box-shadow:0 0 0 1px var(--kc)}
+  .card-head{padding:16px 20px 12px; display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+  .card-title{font-size:17px; font-weight:500; font-family:var(--font-display)}
+  .tag{font-family:var(--font-mono); font-size:11px; letter-spacing:.04em; padding:3px 9px; border-radius:20px;
+    background:var(--kc-soft); color:var(--kc-ink)}
+  .link-icon{margin-left:auto; text-decoration:none; color:var(--faint); font-family:var(--font-mono);
+    font-size:12px; border:1px solid var(--line-strong); border-radius:6px; padding:3px 8px; flex-shrink:0}
+  .link-icon:hover{color:var(--ink); border-color:var(--faint)}
+  .video-link{text-decoration:none; color:var(--kc-ink); font-family:var(--font-mono); font-size:12px;
+    border:1px solid var(--kc-soft); background:var(--kc-soft); border-radius:6px; padding:3px 9px; flex-shrink:0}
+  .video-link:hover{filter:brightness(0.96)}
+  .card-body{padding:0 20px 18px}
+  .def{margin:0; font-size:15.5px; line-height:1.55}
+  .def mark{background:color-mix(in srgb, var(--md) 30%, transparent); color:inherit; border-radius:3px; padding:0 1px}
+  .note{margin:12px 0 0; font-size:14px; color:var(--muted); line-height:1.55}
+
+  .snip{margin-top:14px; border:1px solid var(--line); border-radius:9px; overflow:hidden}
+  .snip-label{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 14px;
+    font-family:var(--font-mono); font-size:11.5px; color:var(--faint); background:var(--code);
+    border-bottom:1px solid var(--line)}
+  .copy{font-family:var(--font-mono); font-size:11px; color:var(--muted); opacity:.85; cursor:pointer;
+    background:transparent; border:1px solid var(--line-strong); border-radius:6px; padding:2px 8px; transition:opacity .15s}
+  .copy:hover{opacity:1; color:var(--ink)}
+  pre{margin:0; padding:14px 16px; background:var(--code); overflow-x:auto}
+  code{font-family:var(--font-mono); font-size:13px; line-height:1.7; color:var(--ink); tab-size:4}
+  .tk-kw{color:var(--tk-kw)} .tk-type{color:var(--tk-type)} .tk-str{color:var(--tk-str)}
+  .tk-num{color:var(--tk-num)} .tk-com{color:var(--tk-com); font-style:italic}
+  .tk-fn{color:var(--tk-fn)} .tk-key{color:var(--tk-key)}
+
+  .empty{text-align:center; padding:64px 0; color:var(--muted); font-size:15px}
+  .empty code{background:var(--code); padding:2px 6px; border-radius:5px; font-size:13px}
+  .loading{text-align:center; padding:64px 0; color:var(--faint); font-family:var(--font-mono); font-size:13px}
+  .load-err{text-align:center; padding:64px 0; color:var(--ag-ink); font-size:14.5px}
+
+  footer{border-top:1px solid var(--line); margin-top:20px}
+  .foot{max-width:1080px; margin:0 auto; padding:36px 24px; display:flex; justify-content:space-between;
+    gap:20px; flex-wrap:wrap; align-items:center; color:var(--faint); font-size:13px; font-family:var(--font-mono)}
+  .foot-links{display:flex; gap:10px}
+  .foot-links a{text-decoration:none; color:var(--ink); border:1px solid var(--line-strong);
+    border-radius:8px; padding:7px 13px; font-size:13px}
+  .foot-links a:hover{border-color:var(--faint)}
+  .noscript{padding:16px 24px; background:var(--ag-soft); color:var(--ag-ink); text-align:center; font-size:14px}
+  :focus-visible{outline:2px solid var(--md); outline-offset:2px; border-radius:4px}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <a class="brand" href="index.html"><span class="glyph">&lt;/&gt;</span>Konrad's Dev Insight</a>
+    <nav>
+      <a class="sub-btn" id="nav-sub" href="#" target="_blank" rel="noopener">Subscribe</a>
+      <button class="icon-btn" id="theme" aria-label="Toggle dark mode" title="Toggle theme">◐</button>
+    </nav>
+  </div>
+</header>
+
+<noscript><div class="noscript">This knowledge base is interactive — please enable JavaScript to search it.</div></noscript>
+
+<main>
+  <section class="hero">
+    <div class="hero-top">
+      <p class="eyebrow">Agents &amp; LLMs · knowledge base</p>
+      <h1>Search the concepts behind <span class="md-w">LLMs</span> and <span class="ag-w">agents</span>.</h1>
+      <p class="lede">Every short, turned into a searchable answer. Type a term, or filter by category.</p>
+    </div>
+
+    <div class="search-shell">
+      <span class="mag" aria-hidden="true">⌕</span>
+      <input type="search" id="search" placeholder="Search: attention, tool use, RAG, temperature…" aria-label="Search the knowledge base" autocomplete="off" />
+      <span class="kbd" id="kbd-hint">/</span>
+    </div>
+
+    <div class="chips" id="chips" role="group" aria-label="Filter by category"></div>
+
+    <div class="result-bar">
+      <span class="count" id="count"></span>
+    </div>
+  </section>
+
+  <section>
+    <div class="grid" id="grid">
+      <div class="loading" id="loading">Loading concepts…</div>
+    </div>
+    <div class="empty" id="empty" hidden>Nothing matches that. Try clearing the search or picking <code>All</code>.</div>
+  </section>
+</main>
+
+<footer>
+  <div class="foot">
+    <span>© 2026 Konrad Cinkusz · Konrad's Dev Insight</span>
+    <div class="foot-links">
+      <a id="foot-sub" href="#" target="_blank" rel="noopener">▶ YouTube</a>
+      <a id="foot-gh" href="#" target="_blank" rel="noopener">★ GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   EDIT THIS BLOCK — point it at your own channel and repo.
+   ============================================================ */
+const CONFIG = {
+  channelUrl: "https://www.youtube.com/@YOUR_CHANNEL_HANDLE",   // ← replace with your channel URL
+  github:     "https://github.com/konradcinkusz/agents-and-llms"
+};
+
+const KINDS = { basics:"Absolute basics", found:"Foundations", model:"Model internals", agent:"Agents & tools" };
+
+/* ---------- tiny syntax highlighter (no deps): python-ish, json, trace ---------- */
+const PY_KW = new Set(["def","return","class","for","in","if","elif","else","while","async","await","or","and","not","is","None","True","False","try","except","finally","as","import","from","with","lambda","yield","pass","raise","assert","break","continue","self"]);
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function wrap(cls, s){ return '<span class="tk-'+cls+'">'+esc(s)+'</span>'; }
+
+function hlPython(code){
+  const re = /(#[^\n]*)|((?:f|r|rf|fr|b)?"(?:[^"\\]|\\.)*"|(?:f|r|rf|fr|b)?'(?:[^'\\]|\\.)*')|(\b\d[\d_]*\.?\d*\b)|([A-Za-z_]\w*)|(\s+)|([\s\S])/g;
+  let out = "", m;
+  while ((m = re.exec(code)) !== null){
+    if (m[1]) out += wrap("com", m[1]);
+    else if (m[2]) out += wrap("str", m[2]);
+    else if (m[3]) out += wrap("num", m[3]);
+    else if (m[4]){
+      const w = m[4];
+      const callsNext = /^\s*\(/.test(code.slice(re.lastIndex));
+      if (PY_KW.has(w)) out += wrap("kw", w);
+      else if (callsNext) out += wrap("fn", w);
+      else if (/^[A-Z]/.test(w)) out += wrap("type", w);
+      else out += esc(w);
+    }
+    else if (m[5]) out += m[5];
+    else out += esc(m[6]);
+    if (m.index === re.lastIndex) re.lastIndex++;
+  }
+  return out;
+}
+function hlJson(code){
+  const re = /("(?:[^"\\]|\\.)*")|(\btrue\b|\bfalse\b|\bnull\b)|(-?\d[\d.eE+\-]*)|(\s+)|([\s\S])/g;
+  let out = "", m;
+  while ((m = re.exec(code)) !== null){
+    if (m[1]){
+      const isKey = /^\s*:/.test(code.slice(re.lastIndex));
+      out += wrap(isKey ? "key" : "str", m[1]);
+    }
+    else if (m[2]) out += wrap("kw", m[2]);
+    else if (m[3]) out += wrap("num", m[3]);
+    else if (m[4]) out += m[4];
+    else out += esc(m[5]);
+    if (m.index === re.lastIndex) re.lastIndex++;
+  }
+  return out;
+}
+function hlInline(s){
+  const re = /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|([A-Za-z_]\w*)(\()|([\s\S])/g;
+  let out = "", m;
+  while ((m = re.exec(s)) !== null){
+    if (m[1]) out += wrap("str", m[1]);
+    else if (m[2] && m[3]) out += wrap("fn", m[2]) + esc(m[3]);
+    else out += esc(m[4]);
+    if (m.index === re.lastIndex) re.lastIndex++;
+  }
+  return out;
+}
+function hlTrace(code){
+  return code.split("\n").map(line => {
+    const mm = line.match(/^(\s*)([A-Za-z]+)(:)(.*)$/);
+    if (mm) return esc(mm[1]) + wrap("kw", mm[2]) + esc(mm[3]) + hlInline(mm[4]);
+    return hlInline(line);
+  }).join("\n");
+}
+function hl(code, lang){
+  if (lang === "json") return hlJson(code);
+  if (lang === "trace") return hlTrace(code);
+  return hlPython(code);
+}
+
+/* ---------- highlight a search match inside plain (unhighlighted) text ---------- */
+function markMatch(text, q){
+  if (!q) return esc(text);
+  const idx = text.toLowerCase().indexOf(q.toLowerCase());
+  if (idx === -1) return esc(text);
+  return esc(text.slice(0, idx)) + "<mark>" + esc(text.slice(idx, idx + q.length)) + "</mark>" + esc(text.slice(idx + q.length));
+}
+
+/* ---------- render ---------- */
+function snippetHTML(c){
+  if (!c.code) return "";
+  const labels = { python:"python", json:"json", trace:"reasoning trace" };
+  return `<div class="snip">
+    <div class="snip-label"><span>${labels[c.lang] || c.lang}</span>
+      <button class="copy" data-code="${encodeURIComponent(c.code)}">copy</button></div>
+    <pre><code>${hl(c.code, c.lang)}</code></pre>
+  </div>`;
+}
+function cardHTML(c, q){
+  const kindLabel = KINDS[c.kind];
+  const searchBlob = (c.title + " " + kindLabel + " " + c.def + " " + (c.note||"") + " " + (c.code||"")).toLowerCase();
+  const hasVideo = c.videoUrl && c.videoUrl.trim().length > 0;
+  return `<article class="card k-${c.kind}" id="${c.id}" data-kind="${kindLabel}" data-search="${esc(searchBlob)}">
+    <div class="card-head">
+      <span class="card-title">${markMatch(c.title, q)}</span>
+      <span class="tag">${kindLabel}</span>
+      ${hasVideo ? `<a class="video-link" href="${esc(c.videoUrl)}" target="_blank" rel="noopener">▶ watch</a>` : ""}
+      <a class="link-icon" href="#${c.id}" title="Link to this concept" aria-label="Link to ${esc(c.title)}">#</a>
+    </div>
+    <div class="card-body">
+      <p class="def">${markMatch(c.def, q)}</p>
+      ${snippetHTML(c)}
+      ${c.note ? `<p class="note">${markMatch(c.note, q)}</p>` : ""}
+    </div>
+  </article>`;
+}
+
+let CONCEPTS = [];
+let active = "All";
+let activeTileId = null; // the one tile currently "lit up" by click, or null
+
+async function init(){
+  const yt = CONFIG.channelUrl;
+  document.getElementById("nav-sub").href = yt;
+  document.getElementById("foot-sub").href = yt;
+  document.getElementById("foot-gh").href = CONFIG.github;
+
+  const grid = document.getElementById("grid");
+  try {
+    const res = await fetch("concepts.json");
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    CONCEPTS = await res.json();
+  } catch (err) {
+    grid.innerHTML = `<div class="load-err">Couldn't load concepts.json (${esc(String(err.message || err))}).<br>If you're opening this file directly from disk, serve it over a local server — e.g. <code>python3 -m http.server</code> — since <code>fetch()</code> is blocked on the <code>file://</code> origin.</div>`;
+    return;
+  }
+
+  buildChips();
+  render();
+
+  document.getElementById("search").addEventListener("input", render);
+}
+
+function buildChips(){
+  const counts = { All: CONCEPTS.length };
+  Object.values(KINDS).forEach(label => counts[label] = 0);
+  CONCEPTS.forEach(c => { counts[KINDS[c.kind]] = (counts[KINDS[c.kind]] || 0) + 1; });
+
+  const order = ["All", ...Object.values(KINDS)];
+  const chipBox = document.getElementById("chips");
+  chipBox.innerHTML = "";
+  order.forEach(label => {
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.setAttribute("aria-pressed", label === "All" ? "true" : "false");
+    b.innerHTML = `${label} <span class="n">${counts[label] ?? 0}</span>`;
+    b.addEventListener("click", () => {
+      active = label;
+      chipBox.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+      render();
+    });
+    chipBox.appendChild(b);
+  });
+}
+
+function render(){
+  const q = document.getElementById("search").value.trim();
+  const qLower = q.toLowerCase();
+  const grid = document.getElementById("grid");
+  const empty = document.getElementById("empty");
+  const countEl = document.getElementById("count");
+
+  const filtered = CONCEPTS.filter(c => {
+    const kindLabel = KINDS[c.kind];
+    const okKind = active === "All" || kindLabel === active;
+    const blob = (c.title + " " + kindLabel + " " + c.def + " " + (c.note||"") + " " + (c.code||"")).toLowerCase();
+    const okQ = !qLower || blob.includes(qLower);
+    return okKind && okQ;
+  });
+
+  grid.innerHTML = filtered.map(c => cardHTML(c, q)).join("");
+  empty.hidden = filtered.length !== 0;
+  countEl.innerHTML = q
+    ? `<b>${filtered.length}</b> of ${CONCEPTS.length} match "<b>${esc(q)}</b>"`
+    : `<b>${filtered.length}</b> of ${CONCEPTS.length} concepts`;
+
+  // re-apply the lit-up state after re-render, since innerHTML above wipes classes
+  if (activeTileId) {
+    const el = document.getElementById(activeTileId);
+    if (el) el.classList.add("is-active");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  init();
+
+  /* "/" focuses search, like most search-first apps */
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "/" && document.activeElement !== document.getElementById("search")) {
+      e.preventDefault();
+      document.getElementById("search").focus();
+    }
+  });
+  document.getElementById("search").addEventListener("focus", () => document.getElementById("kbd-hint").classList.add("is-hidden"));
+  document.getElementById("search").addEventListener("blur", () => {
+    if (!document.getElementById("search").value) document.getElementById("kbd-hint").classList.remove("is-hidden");
+  });
+
+  /* deep-linking: #tool-use scrolls to and briefly highlights that tile once loaded */
+  if (location.hash) {
+    const tryScroll = () => {
+      const el = document.querySelector(location.hash);
+      if (el) {
+        el.scrollIntoView({ block: "center" });
+        el.classList.add("is-target");
+        setTimeout(() => el.classList.remove("is-target"), 2200);
+      }
+    };
+    setTimeout(tryScroll, 300);
+  }
+
+  /* click a tile to light it up — only one active at a time, click again (or elsewhere) to clear */
+  document.body.addEventListener("click", (e) => {
+    const interactive = e.target.closest(".copy, .video-link, .link-icon");
+    if (interactive) return; // let those controls do their own thing, don't toggle the tile
+
+    const card = e.target.closest(".card");
+    const grid = document.getElementById("grid");
+    if (!card || !grid.contains(card)) {
+      // clicked outside any tile — clear the active one, if any
+      if (activeTileId) {
+        const prev = document.getElementById(activeTileId);
+        if (prev) prev.classList.remove("is-active");
+        activeTileId = null;
+      }
+      return;
+    }
+
+    if (activeTileId && activeTileId !== card.id) {
+      const prev = document.getElementById(activeTileId);
+      if (prev) prev.classList.remove("is-active");
+    }
+
+    const turningOn = activeTileId !== card.id;
+    card.classList.toggle("is-active", turningOn);
+    activeTileId = turningOn ? card.id : null;
+  });
+
+  /* copy buttons (event delegation) */
+  document.body.addEventListener("click", (e) => {
+    const btn = e.target.closest(".copy");
+    if (!btn) return;
+    const text = decodeURIComponent(btn.dataset.code);
+    const done = () => { btn.textContent = "copied ✓"; setTimeout(() => { btn.textContent = "copy"; }, 1300); };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
+    } else fallback();
+    function fallback(){
+      const ta = document.createElement("textarea"); ta.value = text;
+      ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta);
+      ta.select(); try { document.execCommand("copy"); done(); } catch(_){} document.body.removeChild(ta);
+    }
+  });
+
+  /* theme toggle */
+  const root = document.documentElement;
+  let stored = null;
+  try { stored = localStorage.getItem("theme"); } catch(_){}
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  root.setAttribute("data-theme", stored || (prefersDark ? "dark" : "light"));
+  document.getElementById("theme").addEventListener("click", () => {
+    const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch(_){}
+  });
+});
+</script>
+</body>
+</html>
