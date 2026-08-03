@@ -279,8 +279,8 @@
     "kind": "prod",
     "def": "Designing the environment an agent acts inside — its sandbox, its file system access, and the runtime surface it's allowed to touch.",
     "note": "A harness decides what's even possible for the agent to attempt. No amount of clever prompting fixes a missing file permission or a shell it can't reach.",
-    "lang": "diagram",
-    "code": "┌───────────────── Harness ──────────────────┐\n│  ┌───────────┐      ┌──────────────────┐   │\n│  │  Sandbox   │      │   File system     │   │\n│  └───────────┘      └──────────────────┘   │\n│  ┌───────────┐      ┌──────────────────┐   │\n│  │ Shell / API│      │  Approval gate    │   │\n│  └───────────┘      └──────────────────┘   │\n│                     ▲                      │\n│                [ Agent ]                   │\n└─────────────────────────────────────────────┘",
+    "lang": "mermaid",
+    "code": "flowchart TD\n    A[Agent]:::n --> H[Harness]:::n\n    H --> SB[Sandbox]:::n\n    H --> FS[File system]:::n\n    H --> RT[Runtime surface]:::n\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px",
     "videoUrl": ""
   },
   {
@@ -289,8 +289,8 @@
     "kind": "prod",
     "def": "Deciding when the agent takes another step and when it stops — the control logic wrapped around think, act, observe.",
     "note": "Stop too early and the task is unfinished. Stop too late and you burn tokens on a loop that already found its answer three steps ago.",
-    "lang": "diagram",
-    "code": "        ┌──────────┐\n   ┌───▶│  Think   │\n   │    └────┬─────┘\n   │         ▼\n   │    ┌──────────┐\n   │    │   Act    │\n   │    └────┬─────┘\n   │         ▼\n   │    ┌──────────┐\n   └────┤ Observe  │\n        └────┬─────┘\n             ▼\n        done? ──yes──▶ [ Stop ]\n             │\n             no\n             │\n             └────────▶ (loop again)",
+    "lang": "mermaid",
+    "code": "flowchart TD\n    T[Think]:::n --> Ac[Act]:::n --> O[Observe]:::n\n    O -->|not done| T\n    O -->|done| S([Stop]):::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
     "videoUrl": ""
   },
   {
@@ -299,8 +299,8 @@
     "kind": "prod",
     "def": "Curating what actually lands in the context window on each turn — pulling in what's relevant, and actively keeping out what isn't.",
     "note": "Most 'prompt engineering' problems that show up in production are really context problems: too much irrelevant history, not too few clever words.",
-    "lang": "diagram",
-    "code": "  full history ─▶ ┌────────────────┐\n  tool output ─▶ │  Selector /     │─▶ [ context window ] ─▶ model\n  memory      ─▶ │  compressor     │\n  docs        ─▶ └────────┬───────┘\n                          ▼\n                 (dropped / summarized)",
+    "lang": "mermaid",
+    "code": "flowchart TD\n    H[History]:::n --> Sel[Selector]:::n\n    Tl[Tool output]:::n --> Sel\n    M[Memory]:::n --> Sel\n    Sel --> W[Context window]:::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
     "videoUrl": ""
   },
   {
@@ -309,8 +309,8 @@
     "kind": "prod",
     "def": "Writing the tool itself, not just its call schema — an agent's ceiling is what its tools let it do, and its risk is their worst edge case.",
     "note": "A tool that fails silently or accepts unchecked input hands the agent a way to cause real damage without anyone actually deciding it should be allowed to.",
-    "lang": "diagram",
-    "code": "model call ─▶ ┌─────────────┐   ┌──────────┐   ┌───────────────┐\n              │ Tool schema │──▶│ Validate │──▶│ Execute (guard │──▶ result\n              └─────────────┘   └──────────┘   │  edge cases)   │\n                                                └───────────────┘",
+    "lang": "mermaid",
+    "code": "flowchart TD\n    C[Model call]:::n --> Sc[Tool schema]:::n --> V[Validate]:::n --> Ex[Execute]:::ok --> R[Result]:::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
     "videoUrl": ""
   },
   {
@@ -319,8 +319,8 @@
     "kind": "prod",
     "def": "The design decisions behind what an agent remembers, for how long, and what it's allowed to forget.",
     "note": "Not everything belongs in long-term storage — a well-designed architecture decides what gets promoted from a single run into something durable.",
-    "lang": "diagram",
-    "code": "┌───────────────┐   fills up   ┌──────────────────┐\n│ Context (STM)  │──overflow──▶│ Summarize / evict │\n└───────────────┘              └─────────┬────────┘\n        ▲                                ▼\n        │                     ┌───────────────────────┐\n        └───────retrieve──────│ Long-term store (DB)   │\n                               └───────────────────────┘",
+    "lang": "mermaid",
+    "code": "flowchart TD\n    C[Context window]:::n -->|fills up| Su[Summarize / evict]:::n\n    Su --> L[Long-term store]:::ok\n    L -->|retrieve| C\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
     "videoUrl": ""
   },
   {
@@ -329,8 +329,8 @@
     "kind": "prod",
     "def": "The shape of an agent system — one agent, a planner delegating to workers, or a swarm of peers — and each shape fails differently.",
     "note": "A single agent fails by running out of context. A swarm fails by agents stepping on each other's work. Pick the shape for the failure mode you can live with.",
-    "lang": "diagram",
-    "code": "Single:    [ Agent ]\n\nPlanner:   [ Planner ]\n               ├──▶ [ Worker A ]\n               └──▶ [ Worker B ]\n\nSwarm:     [Agent]◄──▶[Agent]\n              ▲   ╲   ╱   ▲\n              │    ╲ ╱    │\n           [Agent]──╳──[Agent]",
+    "lang": "mermaid",
+    "code": "flowchart TD\n    P[Planner]:::n --> W1[Worker A]:::n\n    P --> W2[Worker B]:::n\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px",
     "videoUrl": ""
   },
   {
@@ -339,8 +339,8 @@
     "kind": "prod",
     "def": "The checks that run before an agent's action executes, and what happens when the action it wants to take isn't allowed.",
     "note": "A guardrail that only logs a violation after the fact isn't a guardrail — it has to be able to block or reroute before the action actually runs.",
-    "lang": "diagram",
-    "code": "agent action ─▶ ┌──────────────┐  allowed  ┌─────────┐\n                │ Policy check  │─────────▶│ Execute │\n                └──────┬───────┘           └─────────┘\n                       │ denied\n                       ▼\n                ┌──────────────┐\n                │ Block / ask   │\n                │   a human     │\n                └──────────────┘",
+    "lang": "mermaid",
+    "code": "flowchart TD\n    A[Agent action]:::n --> P{Policy check}:::n\n    P -->|allowed| E[Execute]:::ok\n    P -->|denied| B[Block / ask human]:::warn\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px\n    classDef warn fill:#FBE7E7,stroke:#B23B3B,color:#8C2323,font-size:13px",
     "videoUrl": ""
   },
   {
@@ -349,8 +349,8 @@
     "kind": "prod",
     "def": "Scoring an agent's whole trajectory — every step it took — not just whether the final output looks right.",
     "note": "Two runs can land on the same correct answer through very different paths, and one of those paths might have touched something it shouldn't have.",
-    "lang": "diagram",
-    "code": "step1 ─▶ step2 ─▶ step3 ─▶ ... ─▶ stepN ─▶ final answer\n  │        │        │              │           │\n  ▼        ▼        ▼              ▼           ▼\n[check] [check]  [check]        [check]     [check]\n                   └── score = f(all steps, not just the output)",
+    "lang": "mermaid",
+    "code": "flowchart TD\n    S1[Step 1]:::n --> S2[Step 2]:::n --> S3[Step N]:::n --> F[Final answer]:::n\n    F -.-> Sc[Trajectory score]:::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
     "videoUrl": ""
   },
   {
@@ -359,8 +359,8 @@
     "kind": "prod",
     "def": "Deciding upfront which categories of decision never get delegated to the agent, no matter how confident it is.",
     "note": "The line isn't drawn per-request in the moment — it's drawn in the design, before the agent is ever capable of proposing that action.",
-    "lang": "diagram",
-    "code": "agent proposes ─▶ ┌────────────────┐\n                   │ Decision class  │\n                   └───┬────────┬───┘\n         reversible/low│        │high-stakes/irreversible\n                       ▼        ▼\n                 [ auto-run ]  [ human approves ] ──▶ execute",
+    "lang": "mermaid",
+    "code": "flowchart TD\n    A[Agent proposes]:::n --> D{High-stakes?}:::n\n    D -->|no| Au[Auto-run]:::ok\n    D -->|yes| H[Human approves]:::warn --> Ex[Execute]:::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px\n    classDef warn fill:#FBE7E7,stroke:#B23B3B,color:#8C2323,font-size:13px",
     "videoUrl": ""
   },
   {
@@ -369,8 +369,8 @@
     "kind": "prod",
     "def": "Recording every step an agent takes — inputs, outputs, timing, tool calls — so a failure deep in a run is inspectable, not a black box.",
     "note": "When a 30-step run breaks at step 14, a trace lets you look straight at step 14, instead of re-running the whole thing and guessing where it went wrong.",
-    "lang": "diagram",
-    "code": "run ──▶ step1 ──▶ step2 ──▶ ... ──▶ step14 (fails) ──▶ ... ──▶ step30\n         │trace     │trace           │trace                    │trace\n         ▼          ▼                ▼                         ▼\n       ┌───────────────────────────────────────────────────────────┐\n       │           Trace log (inputs / outputs / timing)            │\n       └───────────────────────────────────────────────────────────┘\n                              you jump straight to step 14",
+    "lang": "mermaid",
+    "code": "flowchart TD\n    R[Run: steps 1-30]:::n -->|logs every step| T[Trace log]:::n\n    T --> J[Jump to step 14]:::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
     "videoUrl": ""
   }
 ]
