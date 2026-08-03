@@ -103,6 +103,10 @@
     margin:30px 0 18px; padding-top:22px; border-top:1px solid var(--line)}
   .count{font-family:var(--font-mono); font-size:13px; color:var(--faint)}
   .count b{color:var(--ink); font-weight:500}
+  .share-btn{font-family:var(--font-mono); font-size:12.5px; color:var(--muted); cursor:pointer;
+    background:var(--surface); border:1px solid var(--line-strong); border-radius:20px; padding:6px 13px;
+    white-space:nowrap; transition:all .15s}
+  .share-btn:hover{color:var(--ink); border-color:var(--faint)}
 
   main > section{padding-bottom:56px}
 
@@ -215,6 +219,7 @@
 
     <div class="result-bar">
       <span class="count" id="count"></span>
+      <button class="share-btn" id="share-link" type="button" title="Copy a link to exactly this search + filter">🔗 copy link to this view</button>
     </div>
   </section>
 
@@ -422,6 +427,27 @@ let CONCEPTS = [];
 let active = "All";
 let activeTileId = null; // the one tile currently "lit up" by click, or null
 
+/* ---------- shareable filter state: ?kind=agent&q=react ---------- */
+function kindKeyForLabel(label){
+  return Object.keys(KINDS).find(k => KINDS[k] === label);
+}
+function restoreFromURL(){
+  const params = new URLSearchParams(location.search);
+  const kindParam = params.get("kind");
+  if (kindParam && KINDS[kindParam]) active = KINDS[kindParam];
+  const qParam = params.get("q");
+  if (qParam) document.getElementById("search").value = qParam;
+}
+function syncURL(){
+  const params = new URLSearchParams();
+  const kindKey = kindKeyForLabel(active);
+  if (kindKey) params.set("kind", kindKey);
+  const q = document.getElementById("search").value.trim();
+  if (q) params.set("q", q);
+  const qs = params.toString();
+  history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "") + location.hash);
+}
+
 async function init(){
   const yt = CONFIG.channelUrl;
   document.getElementById("nav-sub").href = yt;
@@ -438,10 +464,11 @@ async function init(){
     return;
   }
 
+  restoreFromURL();
   buildChips();
   render();
 
-  document.getElementById("search").addEventListener("input", render);
+  document.getElementById("search").addEventListener("input", () => { render(); syncURL(); });
 
   document.getElementById("jump-prod").addEventListener("click", () => {
     const label = KINDS.prod;
@@ -449,7 +476,22 @@ async function init(){
     active = label;
     chipBox.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x.textContent.trim().startsWith(label) ? "true" : "false"));
     render();
+    syncURL();
     document.getElementById("grid").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  document.getElementById("share-link").addEventListener("click", () => {
+    const btn = document.getElementById("share-link");
+    const text = location.href;
+    const done = () => { btn.textContent = "✓ link copied"; setTimeout(() => { btn.textContent = "🔗 copy link to this view"; }, 1300); };
+    const fallback = () => {
+      const ta = document.createElement("textarea"); ta.value = text;
+      ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta);
+      ta.select(); try { document.execCommand("copy"); done(); } catch(_){} document.body.removeChild(ta);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
+    } else fallback();
   });
 }
 
@@ -464,12 +506,13 @@ function buildChips(){
   order.forEach(label => {
     const b = document.createElement("button");
     b.className = "chip";
-    b.setAttribute("aria-pressed", label === "All" ? "true" : "false");
+    b.setAttribute("aria-pressed", label === active ? "true" : "false");
     b.innerHTML = `${label} <span class="n">${counts[label] ?? 0}</span>`;
     b.addEventListener("click", () => {
       active = label;
       chipBox.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
       render();
+      syncURL();
     });
     chipBox.appendChild(b);
   });
