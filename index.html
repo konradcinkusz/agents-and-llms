@@ -106,6 +106,27 @@
 
   main > section{padding-bottom:56px}
 
+  /* ---------- production overview diagram ---------- */
+  .prod-overview{padding-top:8px}
+  .prod-head .eyebrow{font-family:var(--font-mono); font-size:12px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--pd-ink); background:var(--pd-soft); display:inline-block;
+    padding:5px 11px; border-radius:20px; margin:0 0 12px}
+  .prod-head h2{font-size:clamp(1.3rem,2.6vw,1.7rem); font-family:var(--font-display); font-weight:700}
+  .prod-head .lede{font-size:15px; color:var(--muted); max-width:600px; margin:10px 0 0}
+  .diagram-panel{margin-top:24px; border:1px solid var(--line); border-radius:var(--radius);
+    background:var(--surface); overflow:hidden}
+  .diagram-scroll{overflow-x:auto; background:var(--code); padding:20px}
+  .diagram-scroll .mermaid{min-width:740px}
+  .diagram-legend{display:flex; flex-wrap:wrap; gap:8px 18px; padding:14px 20px; border-top:1px solid var(--line);
+    font-family:var(--font-mono); font-size:12px; color:var(--muted)}
+  .diagram-legend .dot{display:inline-flex; align-items:center; gap:7px}
+  .diagram-legend i{width:10px; height:10px; border-radius:3px; flex:none}
+  .jump-btn{margin-top:18px; font-family:var(--font-mono); font-size:13px; color:var(--pd-ink);
+    background:var(--pd-soft); border:1px solid transparent; border-radius:8px; padding:9px 16px;
+    cursor:pointer; transition:filter .15s}
+  .jump-btn:hover{filter:brightness(0.96)}
+  [data-theme="dark"] .jump-btn:hover{filter:brightness(1.15)}
+
   /* ---------- tiles ---------- */
   .grid{display:flex; flex-direction:column; gap:16px}
   .card{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--kc,var(--line));
@@ -195,6 +216,73 @@
     <div class="result-bar">
       <span class="count" id="count"></span>
     </div>
+  </section>
+
+  <section class="prod-overview">
+    <div class="prod-head">
+      <p class="eyebrow">Production &amp; ops · the whole system</p>
+      <h2>How the 10 production concepts fit together</h2>
+      <p class="lede">Any one of these on its own is a slide. Wired together, they're the difference between an
+        agent that works in a demo and one that survives real users — one request, flowing through all ten.</p>
+    </div>
+    <div class="diagram-panel">
+      <div class="diagram-scroll">
+<pre class="mermaid">
+flowchart LR
+    U(["Task / request"]):::io --> CTX["3 · Context engineering
+    select + compress the window"]:::ctx --> THINK
+
+    subgraph LOOP["2 · Loop engineering"]
+        direction LR
+        THINK["Think"]:::loopc --> ACT["Act"]:::loopc --> OBS["Observe"]:::loopc
+        OBS -. not done .-> THINK
+    end
+
+    OBS -->|done| STOP(["Stop"]):::io
+    ACT --> TOOLS["4 · Tool design
+    schema, validate, execute"]:::tool --> GUARD{"7 · Guardrails
+    &amp; permissions"}:::guard
+    GUARD -->|allowed| EXEC["Execute"]:::safe
+    GUARD -->|high-stakes| HITL["9 · Human-in-the-loop"]:::human --> EXEC
+    EXEC --> HARNESS
+
+    subgraph HARNESS["1 · Harness engineering"]
+        direction TB
+        SB["Sandbox"]:::harness
+        FS["File system"]:::harness
+        RT["Runtime surface"]:::harness
+    end
+
+    MEM["5 · Memory architecture
+    short + long-term store"]:::mem <-.-> LOOP
+    ORCH["6 · Orchestration patterns
+    single / planner / swarm"]:::meta -. wraps .-> LOOP
+    TRACE["10 · Observability &amp; tracing"]:::meta -. every step .-> LOOP
+    TRACE --> EVALS["8 · Evals for agents
+    scores the whole trajectory"]:::meta
+
+    classDef io fill:#EEF0F4,stroke:#8A8F9A,color:#14161C,font-size:12px
+    classDef ctx fill:#E9F1FA,stroke:#2563A8,color:#1B4E85,font-size:12px
+    classDef loopc fill:#FBEEDF,stroke:#C4661F,color:#9A4E17,font-size:12px
+    classDef mem fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:12px
+    classDef tool fill:#FBEEDF,stroke:#C4661F,color:#9A4E17,font-size:12px
+    classDef guard fill:#FBE7E7,stroke:#B23B3B,color:#8C2323,font-size:12px
+    classDef safe fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:12px
+    classDef human fill:#FBE7E7,stroke:#B23B3B,color:#8C2323,font-size:12px
+    classDef harness fill:#EEEFF3,stroke:#5A5F6B,color:#3D414B,font-size:12px
+    classDef meta fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:12px
+</pre>
+      </div>
+      <div class="diagram-legend">
+        <span class="dot"><i style="background:#2563A8"></i>request &amp; context flow</span>
+        <span class="dot"><i style="background:#C4661F"></i>the loop &amp; its tools</span>
+        <span class="dot"><i style="background:#0E9384"></i>memory &amp; safe execution</span>
+        <span class="dot"><i style="background:#B23B3B"></i>safety gate</span>
+        <span class="dot"><i style="background:#5A5F6B"></i>harness / infrastructure</span>
+        <span class="dot"><i style="background:#7C3AED"></i>production layer wrapped around the loop</span>
+      </div>
+    </div>
+    <button class="jump-btn" id="jump-prod" type="button">Explore the 10 concepts below ↓</button>
   </section>
 
   <section>
@@ -354,6 +442,15 @@ async function init(){
   render();
 
   document.getElementById("search").addEventListener("input", render);
+
+  document.getElementById("jump-prod").addEventListener("click", () => {
+    const label = KINDS.prod;
+    const chipBox = document.getElementById("chips");
+    active = label;
+    chipBox.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x.textContent.trim().startsWith(label) ? "true" : "false"));
+    render();
+    document.getElementById("grid").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 }
 
 function buildChips(){
@@ -489,6 +586,10 @@ document.addEventListener("DOMContentLoaded", () => {
     try { localStorage.setItem("theme", next); } catch(_){}
   });
 });
+</script>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, theme: "base", securityLevel: "strict" });
 </script>
 </body>
 </html>
