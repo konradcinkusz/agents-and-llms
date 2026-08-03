@@ -25,12 +25,17 @@ new short is one JSON object, no HTML editing:**
 }
 ```
 
-- `kind` is one of `basics` (Absolute basics), `found` (Foundations), `model` (Model internals), `agent` (Agents & tools).
+- `kind` is one of `basics` (Absolute basics), `found` (Foundations), `model` (Model internals), `agent` (Agents & tools), `prod` (Production & ops).
 - `lang` and `code` are optional — omit both for a definition-only tile.
 - `videoUrl` is optional; leave it `""` until the short is published, then fill it in
   and the tile grows a **▶ watch** link automatically.
 - Every tile gets a stable anchor (`index.html#kv-cache`) for pinned comments or
   direct links — no extra step needed, it's built from `id`.
+- Picking a category chip or typing a search updates the address bar to
+  `index.html?kind=agent&q=react`, so the URL always reflects exactly what's on
+  screen. The **🔗 copy link to this view** button next to the result count copies
+  that URL — anyone who opens it lands on the same filter and search, restored
+  automatically on load.
 
 ## Run it locally
 

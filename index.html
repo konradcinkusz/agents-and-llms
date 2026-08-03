@@ -20,6 +20,7 @@
     --ag:#C4661F; --ag-soft:#FBEEDF; --ag-ink:#9A4E17;
     --fo:#5A5F6B; --fo-soft:#EEEFF3; --fo-ink:#3D414B;
     --bs:#2563A8; --bs-soft:#E9F1FA; --bs-ink:#1B4E85;
+    --pd:#7C3AED; --pd-soft:#EFE9FE; --pd-ink:#5B21B6;
     --tk-kw:#8250DF; --tk-type:#1B7F79; --tk-str:#227A4B;
     --tk-num:#B5691A; --tk-com:#9296A1; --tk-fn:#2563A8; --tk-key:#0A6A60;
     --radius:10px;
@@ -35,6 +36,7 @@
     --ag:#E8974A; --ag-soft:#33220F; --ag-ink:#F0B074;
     --fo:#A2A7B2; --fo-soft:#22262E; --fo-ink:#C3C6CE;
     --bs:#5AA2E8; --bs-soft:#15273A; --bs-ink:#8EC2F0;
+    --pd:#A78BFA; --pd-soft:#241B38; --pd-ink:#C9B8F5;
     --tk-kw:#C792EA; --tk-type:#4EC9B0; --tk-str:#7EC699;
     --tk-num:#E0A458; --tk-com:#6E7480; --tk-fn:#6CB6FF; --tk-key:#4EC9B0;
   }
@@ -101,8 +103,33 @@
     margin:30px 0 18px; padding-top:22px; border-top:1px solid var(--line)}
   .count{font-family:var(--font-mono); font-size:13px; color:var(--faint)}
   .count b{color:var(--ink); font-weight:500}
+  .share-btn{font-family:var(--font-mono); font-size:12.5px; color:var(--muted); cursor:pointer;
+    background:var(--surface); border:1px solid var(--line-strong); border-radius:20px; padding:6px 13px;
+    white-space:nowrap; transition:all .15s}
+  .share-btn:hover{color:var(--ink); border-color:var(--faint)}
 
   main > section{padding-bottom:56px}
+
+  /* ---------- production overview diagram ---------- */
+  .prod-overview{padding-top:8px}
+  .prod-head .eyebrow{font-family:var(--font-mono); font-size:12px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--pd-ink); background:var(--pd-soft); display:inline-block;
+    padding:5px 11px; border-radius:20px; margin:0 0 12px}
+  .prod-head h2{font-size:clamp(1.3rem,2.6vw,1.7rem); font-family:var(--font-display); font-weight:700}
+  .prod-head .lede{font-size:15px; color:var(--muted); max-width:600px; margin:10px 0 0}
+  .diagram-panel{margin-top:24px; border:1px solid var(--line); border-radius:var(--radius);
+    background:var(--surface); overflow:hidden}
+  .diagram-scroll{overflow-x:auto; background:var(--code); padding:20px}
+  .diagram-scroll .mermaid{min-width:740px}
+  .diagram-legend{display:flex; flex-wrap:wrap; gap:8px 18px; padding:14px 20px; border-top:1px solid var(--line);
+    font-family:var(--font-mono); font-size:12px; color:var(--muted)}
+  .diagram-legend .dot{display:inline-flex; align-items:center; gap:7px}
+  .diagram-legend i{width:10px; height:10px; border-radius:3px; flex:none}
+  .jump-btn{margin-top:18px; font-family:var(--font-mono); font-size:13px; color:var(--pd-ink);
+    background:var(--pd-soft); border:1px solid transparent; border-radius:8px; padding:9px 16px;
+    cursor:pointer; transition:filter .15s}
+  .jump-btn:hover{filter:brightness(0.96)}
+  [data-theme="dark"] .jump-btn:hover{filter:brightness(1.15)}
 
   /* ---------- tiles ---------- */
   .grid{display:flex; flex-direction:column; gap:16px}
@@ -114,6 +141,7 @@
   .card.k-agent{--kc:var(--ag); --kc-soft:var(--ag-soft); --kc-ink:var(--ag-ink)}
   .card.k-found{--kc:var(--fo); --kc-soft:var(--fo-soft); --kc-ink:var(--fo-ink)}
   .card.k-basics{--kc:var(--bs); --kc-soft:var(--bs-soft); --kc-ink:var(--bs-ink)}
+  .card.k-prod{--kc:var(--pd); --kc-soft:var(--pd-soft); --kc-ink:var(--pd-ink)}
   .card.is-target{box-shadow:0 0 0 2px var(--kc)}
   .card.is-active{background:var(--kc-soft); border-color:var(--kc); box-shadow:0 0 0 1px var(--kc)}
   .card-head{padding:16px 20px 12px; display:flex; align-items:center; gap:12px; flex-wrap:wrap}
@@ -191,7 +219,75 @@
 
     <div class="result-bar">
       <span class="count" id="count"></span>
+      <button class="share-btn" id="share-link" type="button" title="Copy a link to exactly this search + filter">🔗 copy link to this view</button>
     </div>
+  </section>
+
+  <section class="prod-overview">
+    <div class="prod-head">
+      <p class="eyebrow">Production &amp; ops · the whole system</p>
+      <h2>How the 10 production concepts fit together</h2>
+      <p class="lede">Any one of these on its own is a slide. Wired together, they're the difference between an
+        agent that works in a demo and one that survives real users — one request, flowing through all ten.</p>
+    </div>
+    <div class="diagram-panel">
+      <div class="diagram-scroll">
+<pre class="mermaid">
+flowchart LR
+    U(["Task / request"]):::io --> CTX["3 · Context engineering
+    select + compress the window"]:::ctx --> THINK
+
+    subgraph LOOP["2 · Loop engineering"]
+        direction LR
+        THINK["Think"]:::loopc --> ACT["Act"]:::loopc --> OBS["Observe"]:::loopc
+        OBS -. not done .-> THINK
+    end
+
+    OBS -->|done| STOP(["Stop"]):::io
+    ACT --> TOOLS["4 · Tool design
+    schema, validate, execute"]:::tool --> GUARD{"7 · Guardrails
+    &amp; permissions"}:::guard
+    GUARD -->|allowed| EXEC["Execute"]:::safe
+    GUARD -->|high-stakes| HITL["9 · Human-in-the-loop"]:::human --> EXEC
+    EXEC --> HARNESS
+
+    subgraph HARNESS["1 · Harness engineering"]
+        direction TB
+        SB["Sandbox"]:::harness
+        FS["File system"]:::harness
+        RT["Runtime surface"]:::harness
+    end
+
+    MEM["5 · Memory architecture
+    short + long-term store"]:::mem <-.-> LOOP
+    ORCH["6 · Orchestration patterns
+    single / planner / swarm"]:::meta -. wraps .-> LOOP
+    TRACE["10 · Observability &amp; tracing"]:::meta -. every step .-> LOOP
+    TRACE --> EVALS["8 · Evals for agents
+    scores the whole trajectory"]:::meta
+
+    classDef io fill:#EEF0F4,stroke:#8A8F9A,color:#14161C,font-size:12px
+    classDef ctx fill:#E9F1FA,stroke:#2563A8,color:#1B4E85,font-size:12px
+    classDef loopc fill:#FBEEDF,stroke:#C4661F,color:#9A4E17,font-size:12px
+    classDef mem fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:12px
+    classDef tool fill:#FBEEDF,stroke:#C4661F,color:#9A4E17,font-size:12px
+    classDef guard fill:#FBE7E7,stroke:#B23B3B,color:#8C2323,font-size:12px
+    classDef safe fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:12px
+    classDef human fill:#FBE7E7,stroke:#B23B3B,color:#8C2323,font-size:12px
+    classDef harness fill:#EEEFF3,stroke:#5A5F6B,color:#3D414B,font-size:12px
+    classDef meta fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:12px
+</pre>
+      </div>
+      <div class="diagram-legend">
+        <span class="dot"><i style="background:#2563A8"></i>request &amp; context flow</span>
+        <span class="dot"><i style="background:#C4661F"></i>the loop &amp; its tools</span>
+        <span class="dot"><i style="background:#0E9384"></i>memory &amp; safe execution</span>
+        <span class="dot"><i style="background:#B23B3B"></i>safety gate</span>
+        <span class="dot"><i style="background:#5A5F6B"></i>harness / infrastructure</span>
+        <span class="dot"><i style="background:#7C3AED"></i>production layer wrapped around the loop</span>
+      </div>
+    </div>
+    <button class="jump-btn" id="jump-prod" type="button">Explore the 10 concepts below ↓</button>
   </section>
 
   <section>
@@ -221,7 +317,7 @@ const CONFIG = {
   github:     "https://github.com/konradcinkusz/agents-and-llms"
 };
 
-const KINDS = { basics:"Absolute basics", found:"Foundations", model:"Model internals", agent:"Agents & tools" };
+const KINDS = { basics:"Absolute basics", found:"Foundations", model:"Model internals", agent:"Agents & tools", prod:"Production & ops" };
 
 /* ---------- tiny syntax highlighter (no deps): python-ish, json, trace ---------- */
 const PY_KW = new Set(["def","return","class","for","in","if","elif","else","while","async","await","or","and","not","is","None","True","False","try","except","finally","as","import","from","with","lambda","yield","pass","raise","assert","break","continue","self"]);
@@ -286,6 +382,7 @@ function hlTrace(code){
 function hl(code, lang){
   if (lang === "json") return hlJson(code);
   if (lang === "trace") return hlTrace(code);
+  if (lang === "diagram") return esc(code);
   return hlPython(code);
 }
 
@@ -300,7 +397,7 @@ function markMatch(text, q){
 /* ---------- render ---------- */
 function snippetHTML(c){
   if (!c.code) return "";
-  const labels = { python:"python", json:"json", trace:"reasoning trace" };
+  const labels = { python:"python", json:"json", trace:"reasoning trace", diagram:"diagram" };
   return `<div class="snip">
     <div class="snip-label"><span>${labels[c.lang] || c.lang}</span>
       <button class="copy" data-code="${encodeURIComponent(c.code)}">copy</button></div>
@@ -330,6 +427,27 @@ let CONCEPTS = [];
 let active = "All";
 let activeTileId = null; // the one tile currently "lit up" by click, or null
 
+/* ---------- shareable filter state: ?kind=agent&q=react ---------- */
+function kindKeyForLabel(label){
+  return Object.keys(KINDS).find(k => KINDS[k] === label);
+}
+function restoreFromURL(){
+  const params = new URLSearchParams(location.search);
+  const kindParam = params.get("kind");
+  if (kindParam && KINDS[kindParam]) active = KINDS[kindParam];
+  const qParam = params.get("q");
+  if (qParam) document.getElementById("search").value = qParam;
+}
+function syncURL(){
+  const params = new URLSearchParams();
+  const kindKey = kindKeyForLabel(active);
+  if (kindKey) params.set("kind", kindKey);
+  const q = document.getElementById("search").value.trim();
+  if (q) params.set("q", q);
+  const qs = params.toString();
+  history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "") + location.hash);
+}
+
 async function init(){
   const yt = CONFIG.channelUrl;
   document.getElementById("nav-sub").href = yt;
@@ -346,10 +464,35 @@ async function init(){
     return;
   }
 
+  restoreFromURL();
   buildChips();
   render();
 
-  document.getElementById("search").addEventListener("input", render);
+  document.getElementById("search").addEventListener("input", () => { render(); syncURL(); });
+
+  document.getElementById("jump-prod").addEventListener("click", () => {
+    const label = KINDS.prod;
+    const chipBox = document.getElementById("chips");
+    active = label;
+    chipBox.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x.textContent.trim().startsWith(label) ? "true" : "false"));
+    render();
+    syncURL();
+    document.getElementById("grid").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  document.getElementById("share-link").addEventListener("click", () => {
+    const btn = document.getElementById("share-link");
+    const text = location.href;
+    const done = () => { btn.textContent = "✓ link copied"; setTimeout(() => { btn.textContent = "🔗 copy link to this view"; }, 1300); };
+    const fallback = () => {
+      const ta = document.createElement("textarea"); ta.value = text;
+      ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta);
+      ta.select(); try { document.execCommand("copy"); done(); } catch(_){} document.body.removeChild(ta);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
+    } else fallback();
+  });
 }
 
 function buildChips(){
@@ -363,12 +506,13 @@ function buildChips(){
   order.forEach(label => {
     const b = document.createElement("button");
     b.className = "chip";
-    b.setAttribute("aria-pressed", label === "All" ? "true" : "false");
+    b.setAttribute("aria-pressed", label === active ? "true" : "false");
     b.innerHTML = `${label} <span class="n">${counts[label] ?? 0}</span>`;
     b.addEventListener("click", () => {
       active = label;
       chipBox.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
       render();
+      syncURL();
     });
     chipBox.appendChild(b);
   });
@@ -485,6 +629,10 @@ document.addEventListener("DOMContentLoaded", () => {
     try { localStorage.setItem("theme", next); } catch(_){}
   });
 });
+</script>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, theme: "base", securityLevel: "strict" });
 </script>
 </body>
 </html>
