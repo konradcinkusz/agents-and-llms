@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>From CRUD to agents — how the shape of a system changes | Konrad's Dev Insight</title>
+<meta name="description" content="The popular version says an agent deletes the frontend and the API. Half of that is wrong. What actually happens is stratification — a non-deterministic layer added above a stack that survives, with nothing in the toolchain governing it." />
+<meta property="og:title" content="From CRUD to agents — how the shape of a system changes" />
+<meta property="og:description" content="Client, frontend, API, domain, database. Now do it with an agent. What moves, what survives, and what quietly loses its guard." />
+<meta property="og:type" content="article" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:#FBFBFD; --surface:#FFFFFF; --code:#F4F5F8;
+    --ink:#14161C; --muted:#565B67; --faint:#8A8F9A;
+    --line:#E6E7EE; --line-strong:#D5D7E0;
+    --md:#0E9384; --md-soft:#E3F4F1; --md-ink:#0A6A60;
+    --ag:#C4661F; --ag-soft:#FBEEDF; --ag-ink:#9A4E17;
+    --fo:#5A5F6B; --fo-soft:#EEEFF3; --fo-ink:#3D414B;
+    --bs:#2563A8; --bs-soft:#E9F1FA; --bs-ink:#1B4E85;
+    --pd:#7C3AED; --pd-soft:#EFE9FE; --pd-ink:#5B21B6;
+    --radius:10px;
+    --font-display:"Space Grotesk",system-ui,sans-serif;
+    --font-body:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  [data-theme="dark"]{
+    --paper:#0E1014; --surface:#15181E; --code:#1B1F27;
+    --ink:#EDEEF2; --muted:#A2A7B2; --faint:#6E7480;
+    --line:#262A33; --line-strong:#353B47;
+    --md:#34D3B8; --md-soft:#0F302B; --md-ink:#6FE3CE;
+    --ag:#E8974A; --ag-soft:#33220F; --ag-ink:#F0B074;
+    --fo:#A2A7B2; --fo-soft:#22262E; --fo-ink:#C3C6CE;
+    --bs:#5AA2E8; --bs-soft:#15273A; --bs-ink:#8EC2F0;
+    --pd:#A78BFA; --pd-soft:#241B38; --pd-ink:#C9B8F5;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--font-body); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;}
+  a{color:inherit}
+  h1,h2,h3{font-family:var(--font-display); font-weight:500; letter-spacing:-.01em; margin:0}
+
+  header{position:sticky; top:0; z-index:50;
+    background:color-mix(in srgb, var(--paper) 82%, transparent);
+    backdrop-filter:saturate(1.4) blur(10px); border-bottom:1px solid var(--line);}
+  .bar{max-width:1080px; margin:0 auto; padding:0 24px; height:60px; display:flex; align-items:center; gap:20px;}
+  .brand{display:flex; align-items:center; gap:10px; font-family:var(--font-display);
+    font-weight:700; letter-spacing:-.02em; font-size:16px; text-decoration:none; white-space:nowrap;}
+  .brand .glyph{display:inline-grid; place-items:center; width:26px; height:26px; border-radius:7px;
+    background:linear-gradient(135deg,var(--md),var(--ag)); color:#fff; font-size:13px; font-weight:700;}
+  nav{margin-left:auto; display:flex; align-items:center; gap:6px;}
+  .nav-link{font-size:14px; font-weight:500; text-decoration:none; color:var(--muted);
+    padding:8px 12px; border-radius:8px; white-space:nowrap}
+  .nav-link:hover{color:var(--ink)}
+  .nav-link[aria-current="page"]{color:var(--ink)}
+  .sub-btn{font-size:14px; font-weight:500; text-decoration:none; padding:8px 14px; border-radius:8px;
+    color:#fff; background:linear-gradient(135deg,var(--md),var(--ag)); white-space:nowrap;}
+  .sub-btn:hover{filter:brightness(1.06)}
+  .icon-btn{width:36px; height:36px; border:1px solid var(--line-strong); background:transparent;
+    border-radius:8px; color:var(--muted); cursor:pointer; display:grid; place-items:center; font-size:15px; padding:0;}
+  .icon-btn:hover{color:var(--ink); border-color:var(--faint)}
+
+  main{max-width:1080px; margin:0 auto; padding:0 24px}
+
+  .hero{padding:52px 0 12px; max-width:720px}
+  .eyebrow{font-family:var(--font-mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--faint); margin:0 0 12px}
+  h1{font-size:clamp(1.9rem,4.4vw,2.7rem); line-height:1.08; font-weight:700}
+  h1 .md-w{color:var(--md)} h1 .ag-w{color:var(--ag)}
+  .lede{font-size:16.5px; color:var(--muted); margin:16px 0 0}
+  .lede + .lede{margin-top:12px}
+
+  section{padding:0 0 12px}
+  .rule{border:0; border-top:1px solid var(--line); margin:44px 0 32px}
+  h2{font-size:clamp(1.25rem,2.4vw,1.6rem); font-weight:700; letter-spacing:-.015em}
+  .h2-note{font-family:var(--font-mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--faint); margin:0 0 8px}
+  .body{font-size:15.5px; color:var(--muted); margin:14px 0 0; max-width:760px}
+  .body strong{color:var(--ink); font-weight:500}
+  .body code{font-family:var(--font-mono); font-size:13px; background:var(--code); padding:2px 6px; border-radius:5px; color:var(--ink)}
+  .body a{color:var(--ink); text-decoration:underline; text-decoration-color:var(--line-strong); text-underline-offset:2px}
+  .body a:hover{text-decoration-color:var(--md)}
+
+  /* ---------- figures ---------- */
+  .fig{margin:24px 0 0; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface)}
+  .fig-label{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 16px;
+    font-family:var(--font-mono); font-size:11.5px; color:var(--faint); background:var(--code);
+    border-bottom:1px solid var(--line)}
+  .copy{font-family:var(--font-mono); font-size:11px; color:var(--muted); opacity:.85; cursor:pointer;
+    background:transparent; border:1px solid var(--line-strong); border-radius:6px; padding:2px 8px; transition:opacity .15s}
+  .copy:hover{opacity:1; color:var(--ink)}
+  .mermaid-frame{padding:22px 14px; background:#F4F5F8; overflow-x:auto}
+  .mermaid-frame .mermaid{display:flex; justify-content:center; min-width:520px}
+  .mermaid-frame svg{max-width:100%; height:auto}
+  .fig-cap{padding:12px 16px 14px; font-size:13.5px; color:var(--muted); border-top:1px solid var(--line)}
+
+  /* ---------- tile legend ---------- */
+  .legend{margin:22px 0 0; display:grid; gap:0}
+  .legend .row{display:grid; grid-template-columns:172px 1fr; gap:18px; align-items:baseline;
+    padding:11px 0; border-bottom:1px solid var(--line); font-size:14.5px; color:var(--muted)}
+  .legend .row:last-child{border-bottom:none}
+  .legend .t{font-family:var(--font-mono); font-size:12.5px; color:var(--ink); letter-spacing:-.01em}
+  .legend .t .swatch{display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:8px;
+    vertical-align:baseline; border:1px solid rgba(0,0,0,.15)}
+  .sw-n{background:#EFE9FE; border-color:#7C3AED !important}
+  .sw-hot{background:#FBEEDF; border-color:#C4661F !important}
+  .sw-own{background:#EEF2F7; border-color:#8FA3BF !important}
+  .sw-sor{background:#FDFBE4; border-color:#C9C56A !important}
+  @media (max-width:620px){ .legend .row{grid-template-columns:1fr; gap:4px} }
+
+  /* ---------- claim cards ---------- */
+  .claims{display:grid; gap:14px; margin-top:24px; grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+  .claim{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--kc,var(--line));
+    border-radius:12px; padding:18px 20px}
+  .claim.c-md{--kc:var(--md)} .claim.c-ag{--kc:var(--ag)}
+  .claim.c-bs{--kc:var(--bs)} .claim.c-pd{--kc:var(--pd)}
+  .claim h3{font-size:15.5px; font-weight:500; margin-bottom:8px}
+  .claim p{margin:0; font-size:14.5px; color:var(--muted); line-height:1.6}
+
+  /* ---------- comparison table ---------- */
+  .table-wrap{overflow-x:auto; margin-top:24px}
+  .cmp{width:100%; border-collapse:collapse; font-size:14.5px; min-width:620px}
+  .cmp th{text-align:left; font-family:var(--font-mono); font-size:11px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--faint); font-weight:400; padding:0 16px 11px 0;
+    border-bottom:1px solid var(--line-strong)}
+  .cmp td{padding:13px 16px 13px 0; border-bottom:1px solid var(--line); vertical-align:top; color:var(--muted)}
+  .cmp td:first-child{color:var(--ink); white-space:nowrap}
+  .cmp td:nth-child(2){color:var(--ag-ink); white-space:nowrap}
+  .cmp tr:last-child td{border-bottom:none}
+  .cmp .same td:nth-child(2){color:var(--md-ink)}
+
+  /* ---------- concept chips ---------- */
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin:20px 0 0}
+  .chip{font-family:var(--font-mono); font-size:12.5px; color:var(--muted); text-decoration:none;
+    background:var(--surface); border:1px solid var(--line-strong); border-radius:20px; padding:6px 13px;
+    transition:all .15s}
+  .chip:hover{color:var(--ink); border-color:var(--faint)}
+
+  footer{border-top:1px solid var(--line); margin-top:56px}
+  .foot{max-width:1080px; margin:0 auto; padding:36px 24px; display:flex; justify-content:space-between;
+    gap:20px; flex-wrap:wrap; align-items:center; color:var(--faint); font-size:13px; font-family:var(--font-mono)}
+  .foot-links{display:flex; gap:10px}
+  .foot-links a{text-decoration:none; color:var(--ink); border:1px solid var(--line-strong);
+    border-radius:8px; padding:7px 13px; font-size:13px}
+  .foot-links a:hover{border-color:var(--faint)}
+  :focus-visible{outline:2px solid var(--md); outline-offset:2px; border-radius:4px}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <a class="brand" href="index.html"><span class="glyph">&lt;/&gt;</span>Konrad's Dev Insight</a>
+    <nav>
+      <a class="nav-link" href="index.html">Knowledge base</a>
+      <a class="nav-link" href="architecture.html" aria-current="page">Architecture</a>
+      <a class="sub-btn" id="nav-sub" href="#" target="_blank" rel="noopener">Subscribe</a>
+      <button class="icon-btn" id="theme" aria-label="Toggle dark mode" title="Toggle theme">◐</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <p class="eyebrow">Architecture · one pager</p>
+    <h1>From <span class="md-w">CRUD</span> to <span class="ag-w">agents</span>: what actually moves.</h1>
+    <p class="lede">Twenty years of layered architecture put the same five things in the same order — client, frontend, API, domain, database. The popular version of what happens next is that an agent deletes two of them.</p>
+    <p class="lede">That version is half right, and the wrong half is the loud one. What actually happens is <strong style="color:var(--ink);font-weight:500">stratification</strong>: a non-deterministic layer gets added on top of a stack that largely survives, and nothing in the standard toolchain governs the new layer. Below is the same system drawn three times, one tile at a time, with the overstated parts marked as overstated.</p>
+    <div class="chips">
+      <a class="chip" href="#classic">1 · Classic</a>
+      <a class="chip" href="#agent-first">2 · Agent-first</a>
+      <a class="chip" href="#limits">3 · Where it's overstated</a>
+      <a class="chip" href="#what-moved">4 · What moved</a>
+      <a class="chip" href="#what-breaks">5 · What breaks</a>
+      <a class="chip" href="#middle">6 · The middle state</a>
+      <a class="chip" href="#integration">7 · Integration</a>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ CLASSIC ============ -->
+  <section id="classic">
+    <p class="h2-note">Figure 1</p>
+    <h2>The classic shape</h2>
+    <p class="body">A human who already knows the process drives every step. The frontend encodes the workflow as a sequence of screens; the API is a typed contract that both sides can diff in CI. Everything below the client belongs to you and ships when you say so.</p>
+
+    <div class="fig">
+      <div class="fig-label"><span>diagram · classic</span>
+        <button class="copy" data-target="src-classic">copy</button></div>
+      <div class="mermaid-frame">
+<pre class="mermaid" id="src-classic">
+flowchart LR
+    clientA["Client"]
+    idpA["Identity"]
+    subgraph ownA["Yours to deploy"]
+        direction LR
+        fe["Frontend"]
+        api["API"]
+        subgraph sorA["System of record"]
+            direction LR
+            domA["Domain"] --> dbA["Database"]
+        end
+        fe --> api --> domA
+    end
+    clientA --> fe
+    idpA -.->|sign-in| fe
+    idpA -.->|enforced| api
+    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px
+    class clientA,idpA,fe,api,domA,dbA n
+    style ownA fill:#EEF2F7,stroke:#8FA3BF,color:#33455C
+    style sorA fill:#FDFBE4,stroke:#C9C56A,color:#5C5A20
+</pre>
+      </div>
+      <p class="fig-cap">One line, five tiles, two frames. Every consumer crosses a typed boundary before it reaches the domain.</p>
+    </div>
+
+    <div class="legend">
+      <div class="row"><span class="t"><span class="swatch sw-n"></span>Client</span><span>A human operator. Knows the process, drives each step, and is the one deciding what happens next.</span></div>
+      <div class="row"><span class="t"><span class="swatch sw-n"></span>Frontend</span><span>Screens, forms, validation. It also quietly does security work: it never renders the button you have no right to press.</span></div>
+      <div class="row"><span class="t"><span class="swatch sw-n"></span>API</span><span>Routes, DTOs, versioning. The contract is a schema — typed, diffable, and identical on every run.</span></div>
+      <div class="row"><span class="t"><span class="swatch sw-n"></span>Identity</span><span>Two different jobs on two different tiles. The frontend is where the user signs in and where authorisation is <em>cosmetic</em> — it hides what you may not do. The API is where the same claim is validated and enforced. Anything the frontend decides can be bypassed with curl; only the API edge is a trust boundary.</span></div>
+      <div class="row"><span class="t"><span class="swatch sw-own"></span>Yours to deploy</span><span>Everything the client touches is inside your deployment. You changed the frontend on a Tuesday and that was that.</span></div>
+      <div class="row"><span class="t"><span class="swatch sw-sor"></span>System of record</span><span>Domain plus database — the business truth. This is the one frame that survives the rest of this page unchanged.</span></div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ AGENT-FIRST ============ -->
+  <section id="agent-first">
+    <p class="h2-note">Figure 2</p>
+    <h2>The agent-first shape</h2>
+    <p class="body">Same domain, same database. This is the strong form of the claim, drawn honestly: the frontend and the API are gone, and an agent provisioned in a platform runtime stands where both of them used to be. The tiles that changed are marked in orange.</p>
+    <p class="body">Read it as a <strong>limit case, not a forecast</strong>. It is the right picture for a narrow class of systems — internal tooling, ops consoles, long-tail self-service where the process is expensive for the human and cheap for the machine. The next section is about the two places where it overshoots, and they are the two places it gets quoted from.</p>
+
+    <div class="fig">
+      <div class="fig-label"><span>diagram · agent-first</span>
+        <button class="copy" data-target="src-agent">copy</button></div>
+      <div class="mermaid-frame">
+<pre class="mermaid" id="src-agent">
+flowchart LR
+    clientB["Client"]
+    knowB["Knowledge"]
+    idpB["Identity"]
+    agent["Agent · Azure AI Foundry"]
+    subgraph ownB["Yours to deploy"]
+        direction LR
+        tools["Tools"]
+        subgraph sorB["System of record"]
+            direction LR
+            domB["Domain"] --> dbB["Database"]
+        end
+        tools --> domB
+    end
+    clientB --> agent
+    agent -->|on behalf of user| tools
+    knowB --> agent
+    idpB -.->|sign-in| agent
+    idpB -.->|enforced| tools
+    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px
+    classDef hot fill:#FBEEDF,stroke:#C4661F,color:#9A4E17,font-size:13px
+    class clientB,idpB,domB,dbB n
+    class agent,tools,knowB hot
+    style ownB fill:#EEF2F7,stroke:#8FA3BF,color:#33455C
+    style sorB fill:#FDFBE4,stroke:#C9C56A,color:#5C5A20
+</pre>
+      </div>
+      <p class="fig-cap">The ownership frame starts one tile later than in Figure 1 — the surface the client talks to now runs somewhere you don't deploy.</p>
+    </div>
+
+    <div class="legend">
+      <div class="row"><span class="t"><span class="swatch sw-n"></span>Client</span><span>States intent rather than clicking through a process, and approves outcomes rather than authoring them.</span></div>
+      <div class="row"><span class="t"><span class="swatch sw-hot"></span>Agent</span><span>Provisioned in Azure AI Foundry. It occupies both vacated positions: it is the interface and it is the orchestrator.</span></div>
+      <div class="row"><span class="t"><span class="swatch sw-hot"></span>Knowledge</span><span>An indexed copy of domain data, read directly by the agent. It bypasses both the tool boundary and the enforcement point.</span></div>
+      <div class="row"><span class="t"><span class="swatch sw-hot"></span>Tools</span><span>Intent-shaped operations, not CRUD verbs. The last typed surface in the system and the only one still under your control — and, to be plain about it, <strong>this is an API</strong>. Typed, versioned, authenticated, discoverable. What changed is its shape and its discovery story, not its existence.</span></div>
+      <div class="row"><span class="t"><span class="swatch sw-n"></span>Identity</span><span>Sign-in still happens at the surface, but the surface is now the agent — and the agent carries <strong>two</strong> identities: its own platform identity for reaching the model, the index and storage, and the user's delegated identity, which has to survive all the way to Tools. Call your tools with the agent's own credentials and every user silently inherits the agent's permissions.</span></div>
+      <div class="row"><span class="t"><span class="swatch sw-own"></span>Yours to deploy</span><span>Starts at Tools. One tile escaped, and it happens to be the one the client talks to.</span></div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ WHERE IT'S OVERSTATED ============ -->
+  <section id="limits">
+    <p class="h2-note">Correction</p>
+    <h2>Two claims in Figure 2 that don't survive contact</h2>
+    <p class="body">Figure 2 is how this shift usually gets described — including on the first draft of this page. Two of its claims are the most likely to be repeated and the least likely to hold up, and both are worth retiring before they end up in someone's design document.</p>
+
+    <div class="claims">
+      <div class="claim c-ag">
+        <h3>"There is no API"</h3>
+        <p>The tool boundary <em>is</em> an API. Figure 2 admits it — there's a tile called Tools. What changed is its shape and its discovery story, not the existence of a typed, versioned, authenticated contract. The ecosystem is actively hardening it into exactly that: MCP moved to a stateless core so servers scale on ordinary HTTP, added a formal deprecation policy, aligned authorisation with OAuth and OIDC, and shipped an enterprise-managed authorisation extension so admins govern server access from the identity provider they already run. That isn't the death of the API. It's REST's second act with a behavioural contract bolted on — and saying otherwise earns exactly one reply from a senior reviewer: <em>so it's an API.</em></p>
+      </div>
+      <div class="claim c-pd">
+        <h3>"There is no frontend"</h3>
+        <p>Here the industry is moving in the opposite direction to the claim. MCP Apps became the first official protocol extension in January 2026, letting a server return an interactive component that renders inside the client instead of a wall of text; ChatGPT added support alongside its own Apps SDK, and Google published A2UI for rendering agent-generated interfaces natively across web, mobile and desktop. The pattern that won is an agent <strong>selecting from a catalogue of pre-approved components</strong>, not an agent replacing the interface with prose. The UI was never deleted. Its authoring model changed — from a designed screen graph to a catalogue picked at runtime.</p>
+      </div>
+    </div>
+
+    <p class="h2-note" style="margin-top:34px">And the forecasts say "integrated with", not "instead of"</p>
+    <p class="body">It's worth reading the actual wording rather than the summaries of it. Gartner's forecast is that <a href="https://www.gartner.com/en/newsroom/press-releases/2025-08-26-gartner-predicts-40-percent-of-enterprise-apps-will-feature-task-specific-ai-agents-by-2026-up-from-less-than-5-percent-in-2025" target="_blank" rel="noopener">40% of enterprise applications will be integrated with task-specific AI agents by the end of 2026, up from less than 5%</a> — a claim about agents arriving <em>inside</em> applications, not about applications being replaced by them. The longer-range version is smaller still: <a href="https://www.gartner.com/en/newsroom/press-releases/2025-06-25-gartner-predicts-over-40-percent-of-agentic-ai-projects-will-be-canceled-by-end-of-2027" target="_blank" rel="noopener">33% of enterprise software applications including agentic AI by 2028, up from under 1% in 2024, with over 40% of agentic projects cancelled by the end of 2027</a> over cost, unclear value and inadequate risk controls.</p>
+
+    <p class="body">The strongest evidence <em>for</em> the strong version comes from the same firm, and it's an economic argument rather than an architectural one. Gartner puts <a href="https://www.gartner.com/en/newsroom/press-releases/2026-07-01-gartner-says-us-dollars-234-billion-in-enterprise-application-software-spend-is-at-risk-from-agentic-artificial-intelligence" target="_blank" rel="noopener">up to $234 billion of enterprise application spending at risk from "agentic arbitrage" by 2030</a>, reasoning that agentic systems deliver outcomes directly, bypass UX-heavy applications and make the software invisible. That is Figure 2's thesis stated as a revenue-model disruption rather than a rewrite — and both can be true at once. The interface loses its centrality while the system of record underneath carries on unchanged.</p>
+
+    <p class="body">On the governance gap this page keeps returning to, Gartner's data and analytics predictions hold that <a href="https://www.gartner.com/en/newsroom/press-releases/2026-03-11-gartner-announces-top-predictions-for-data-and-analytics-in-2026" target="_blank" rel="noopener">by 2030 half of all AI agent deployment failures will be caused by insufficient runtime enforcement from an AI governance platform</a> — a failure of the layer, not of the model. Secondary summaries of Forrester's root-cause work point the same way, blaming unclear success criteria, insufficient tool or data access and drift in evaluation coverage; those specific percentages are <a href="https://northflank.com/blog/enterprise-ai-coding-agent-deployment" target="_blank" rel="noopener">reported secondhand</a> and could not be traced to a Forrester publication, so read them as directional rather than as figures.</p>
+
+    <p class="body">So the honest verb is not <em>replacement</em>, it's <strong>stratification</strong>. A non-deterministic composition layer is being added above a system of record that keeps its shape, and the engineering problem is that this layer has no established discipline behind it. Nothing in the standard toolchain compiles it, diffs it, or fails a build over it. That reframing isn't a retreat — it's the version that survives review, and it points the work somewhere more useful: not at wiring an agent to a domain, which is nearly a config file already, but at being able to state mechanically whether a guarantee held.</p>
+
+    <p class="body" style="font-size:13px">Sources — <strong>on the API claim:</strong>
+      <a href="https://blog.modelcontextprotocol.io/posts/2026-07-28/" target="_blank" rel="noopener">MCP 2026-07-28 specification</a>,
+      <a href="https://www.infoq.com/news/2026/07/mcp-ema-enterprise-auth/" target="_blank" rel="noopener">Enterprise-Managed Authorisation</a>.
+      <strong>On the frontend claim:</strong>
+      <a href="https://blog.modelcontextprotocol.io/posts/2026-01-26-mcp-apps/" target="_blank" rel="noopener">MCP Apps</a>,
+      <a href="https://developers.googleblog.com/a2ui-and-mcp-apps/" target="_blank" rel="noopener">A2UI and MCP Apps</a>.
+      <strong>On the forecasts:</strong> Gartner press releases, linked inline above.
+      An earlier draft of this section carried adoption figures taken from secondary aggregators — they could not be traced to a primary publication and contradicted Gartner's own numbers, so they were removed rather than softened. Where only a secondary summary exists, the text says so.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ WHAT MOVED ============ -->
+  <section id="what-moved">
+    <p class="h2-note">Side by side</p>
+    <h2>What moved, and what didn't</h2>
+    <p class="body">The rows are ordered by how much trouble each one causes. The last row is the one people expect to be hard, and it's the only one that costs nothing.</p>
+
+    <div class="table-wrap">
+      <table class="cmp">
+        <thead>
+          <tr><th>Classic</th><th>Agent-first</th><th>What actually changed</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Frontend + API</td><td>Agent + Tools</td><td>Two layers give way to two different layers. The API doesn't die — it re-forms as a capability boundary with a coarser grain and a discovery story. The frontend doesn't die either; see the last row of the middle-state section.</td></tr>
+          <tr><td>Process written in code</td><td>Composed at runtime</td><td>Screen order and use-case classes <em>were</em> the workflow. Now the model picks the steps, so the process stops being an artefact you can read in the repo.</td></tr>
+          <tr><td>Schema contract</td><td>Capability catalogue</td><td>Types survive at the tool boundary, but nothing types the <strong>sequence</strong> of calls any more.</td></tr>
+          <tr><td>Two gates</td><td>One gate</td><td>The frontend refused to render what you couldn't do; the API checked it again. The first gate left with the frontend, and the agent is not a replacement — it can be talked into trying.</td></tr>
+          <tr><td>All of it is your deploy</td><td>Surface is a vendor runtime</td><td>Behaviour depends on a model version you pin but don't ship. A supplier can change your system without touching your repo.</td></tr>
+          <tr><td>One path to the data</td><td>Two paths</td><td>Live operations cross the tool boundary; the indexed copy doesn't. Different freshness, different permissions, one answer.</td></tr>
+          <tr><td>Human as operator</td><td>Human as approver</td><td>The machine drives and the person confirms. This is a role reversal, not a UI change.</td></tr>
+          <tr class="same"><td>Domain + Database</td><td>Unchanged</td><td>The system of record doesn't care which architecture is asking. Invariants, transactions and migrations are exactly as they were.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ WHAT BREAKS ============ -->
+  <section id="what-breaks">
+    <p class="h2-note">Consequences</p>
+    <h2>Four standards that stop being enough</h2>
+    <p class="body">Below the tool boundary nothing changes — the dependency rule, the domain model, transactions, migrations all still hold. What changes is that they stopped being <strong>complete</strong>, because a layer appeared above them that none of them describes.</p>
+
+    <div class="claims">
+      <div class="claim c-ag">
+        <h3>Authorisation</h3>
+        <p>Per-endpoint checks assumed a UI that had already filtered the options. With no UI, every refusal has to be spoken out loud, in plain language, by the server. And the agent must act <em>on behalf of</em> the user — if it carries its own service identity, every user silently inherits the agent's permissions.</p>
+      </div>
+      <div class="claim c-bs">
+        <h3>Versioning</h3>
+        <p>A breaking change used to be a schema diff both parties could compute. Now the model version is a supplier-controlled input on a moving alias, so behaviour can break while every artefact on both sides stays byte-identical. Pin the model, and treat the pin as part of the contract.</p>
+      </div>
+      <div class="claim c-pd">
+        <h3>Determinism</h3>
+        <p>Unit and integration tests still pass — they cover the domain, which didn't move. They just no longer cover the part that decides what happens. Behaviour above the boundary is shaped by prompt, tool descriptions, model and retrieval corpus, none of which break a build when they change.</p>
+      </div>
+      <div class="claim c-md">
+        <h3>Idempotency</h3>
+        <p>Optional when a human clicked submit once. Mandatory when a non-deterministic caller may retry a write whose outcome came back as "unknown". Without a client-supplied idempotency key, the honest answer to a timeout is a shrug — and the helpful answer books the same thing twice.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ THE MIDDLE STATE ============ -->
+  <section id="middle">
+    <p class="h2-note">Figure 3 · migration</p>
+    <h2>The middle, which is where you'll actually live</h2>
+    <p class="body">Nobody goes from Figure 1 to Figure 2. You go from Figure 1 to <strong>Figure 1 and Figure 2 running at the same time</strong> — and the adoption numbers above suggest this isn't a waypoint at all. For most enterprise systems it is the <strong>destination</strong>. Agents are being embedded beside existing applications far faster than applications are being rebuilt around agents, and there is no particular reason to expect the second curve to catch the first.</p>
+    <p class="body">Which means this section is not a migration footnote. It is the architecture most teams will actually operate, and it deserves the same scrutiny as either endpoint. One sentence describes it, and every problem below is a consequence of that sentence: <strong>two surfaces, one system of record.</strong></p>
+
+    <div class="fig">
+      <div class="fig-label"><span>diagram · running both</span>
+        <button class="copy" data-target="src-middle">copy</button></div>
+      <div class="mermaid-frame">
+<pre class="mermaid" id="src-middle">
+flowchart LR
+    clientA["Client · UI"]
+    clientB["Client · chat"]
+    knowC["Knowledge"]
+    idpC["Identity"]
+    fe["Frontend"]
+    api["API"]
+    agent["Agent · Azure AI Foundry"]
+    tools["Tools"]
+    subgraph sorC["System of record"]
+        direction LR
+        domC["Domain"] --> dbC["Database"]
+    end
+    clientA --> fe
+    fe --> api
+    api --> domC
+    clientB --> agent
+    agent -->|on behalf of user| tools
+    tools --> domC
+    knowC --> agent
+    idpC -.->|enforced| api
+    idpC -.->|enforced| tools
+    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px
+    classDef hot fill:#FBEEDF,stroke:#C4661F,color:#9A4E17,font-size:13px
+    class clientA,clientB,idpC,fe,api,domC,dbC n
+    class agent,tools,knowC hot
+    style sorC fill:#FDFBE4,stroke:#C9C56A,color:#5C5A20
+</pre>
+      </div>
+      <p class="fig-cap">Old path in purple, new path in orange, and one shared frame at the end of both. Two enforcement points now exist, and nothing makes them agree except you.</p>
+    </div>
+
+    <p class="h2-note" style="margin-top:34px">The decision that's expensive to undo</p>
+    <p class="body">The tempting move is to wrap your existing endpoints as tools, one for one, and be done in a week. That isn't a migration — it's a rename. From that moment the agent's contract <em>is</em> your endpoint list, and every later attempt to give it intent-shaped operations breaks the agent you already shipped. There are two honest ways to attach the boundary instead.</p>
+
+    <div class="fig">
+      <div class="fig-label"><span>diagram · where the tool boundary attaches</span>
+        <button class="copy" data-target="src-options">copy</button></div>
+      <div class="mermaid-frame">
+<pre class="mermaid" id="src-options">
+flowchart LR
+    subgraph optA["Option A · facade over the API"]
+        direction LR
+        t1["Tools"] --> a1["API"] --> d1["Domain"]
+    end
+    subgraph optB["Option B · sibling adapter"]
+        direction LR
+        t2["Tools"] --> d2["Domain"]
+        a2["API"] --> d2
+    end
+    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px
+    classDef hot fill:#FBEEDF,stroke:#C4661F,color:#9A4E17,font-size:13px
+    class a1,d1,a2,d2 n
+    class t1,t2 hot
+    style optA fill:#F7F7F9,stroke:#C9CBD4,color:#565B67
+    style optB fill:#F7F7F9,stroke:#C9CBD4,color:#565B67
+</pre>
+      </div>
+      <p class="fig-cap">A ships this quarter. B is the one you actually want. The trick is starting with A in a way that doesn't prevent B.</p>
+    </div>
+
+    <div class="claims">
+      <div class="claim c-bs">
+        <h3>Option A — tools in front of the API</h3>
+        <p>No surgery on the monolith, so it ships fast. The bill comes in three parts: enforcement now lives in two places with different models, the API stays directly callable so any guarantee you add at the tool boundary is bypassable, and one intent turns into a fan-out of endpoint calls. Treat it as scaffolding, and write down the date you intend to remove it.</p>
+      </div>
+      <div class="claim c-md">
+        <h3>Option B — tools beside the API</h3>
+        <p>Both adapters sit on the same domain and neither depends on the other. This is the shape you want, and it needs something most monoliths don't have: a domain layer you can actually call. If the business logic lives in controllers, extracting it <em>is</em> the migration — the agent is just what finally forced the issue.</p>
+      </div>
+    </div>
+
+    <p class="body" style="margin-top:20px"><strong>The rule that keeps A survivable:</strong> tools are intent-shaped from day one, never one-for-one with endpoints. A tool that is <code>POST /orders</code> under a new name has welded the agent to the old shape, and no amount of later refactoring gets it back.</p>
+
+    <p class="h2-note" style="margin-top:34px">Five things that only break in the middle</p>
+
+    <div class="claims">
+      <div class="claim c-ag">
+        <h3>Two write paths, one set of invariants</h3>
+        <p>If a business rule lived in a form validator or a controller, the agent path simply doesn't have it — and now two definitions of "valid" write to one database. Push the invariants down into the domain <em>before</em> you open the second path, not after the first bad record.</p>
+      </div>
+      <div class="claim c-pd">
+        <h3>Idempotency and correlation</h3>
+        <p>One record, two producers. A person submits in the UI while the agent submits on their behalf; or the agent retries a write whose outcome came back as unknown. Client-supplied idempotency keys and a correlation id stop being a nice-to-have the day the second path opens.</p>
+      </div>
+      <div class="claim c-bs">
+        <h3>Two authorisation models</h3>
+        <p>The API checks per endpoint, the tools check per capability, and wherever the two disagree the <strong>weaker one is your actual policy</strong>. Derive both from one source of truth, or accept that you don't know what your permissions are.</p>
+      </div>
+      <div class="claim c-md">
+        <h3>Audit attribution</h3>
+        <p>Existing logs record the API caller. The caller is now "this user, via the agent, under this approval." A log line that says only "the service did it" has thrown away the exact fact you will want at 2am, and it throws it away silently.</p>
+      </div>
+      <div class="claim c-ag">
+        <h3>Shared session state</h3>
+        <p>Someone starts a task in the UI and continues it in the chat. Either that draft is shared across both surfaces deliberately, or it is deliberately not — the failure mode is having made no decision and finding out from a user which one you picked by accident.</p>
+      </div>
+    </div>
+
+    <p class="h2-note" style="margin-top:34px">The order to do it in</p>
+    <p class="body"><strong>Reads first, one intent at a time.</strong> A read that's wrong costs a confused user; a write that's wrong costs a phone call. Ship the agent against the boring half of the system until the tool boundary has earned trust.</p>
+    <p class="body"><strong>Writes last, and gated from the first commit.</strong> Approval machinery retrofitted onto a working write path is a rewrite, because the whole flow has to become two turns instead of one. Build the second write with the gate already in it.</p>
+    <p class="body"><strong>The frontend doesn't die — it demotes.</strong> This is where Figure 2 was a simplification worth admitting: what disappears is the frontend that <em>encodes the process</em>, not the pixels. The screens that used to walk a person through eleven steps collapse into one surface that renders what the agent is proposing and takes yes or no. That's a smaller frontend with a completely different job, and it's the piece of the old system that survives the longest.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ OPEN QUESTION ============ -->
+  <section id="integration">
+    <p class="h2-note">Open question</p>
+    <h2>So what does "integrate with us" mean now?</h2>
+    <p class="body">If there's no API, a partner has nothing to call. The surface doesn't vanish, though — it moves down and changes type. What a partner integrates against is the <strong>tool boundary</strong>, published as an MCP server rather than as REST. Two shapes fall out of that, and they are not equally solved.</p>
+    <p class="body"><strong>Their code calls your tools.</strong> Deterministic, no agent in the path, classic contract testing still works. This is REST with a different wire format and a nicer discovery story.</p>
+    <p class="body"><strong>Their agent talks to your agent.</strong> Now the contract is behavioural on both sides, and a tool schema tells neither party whether the guarantee held. A publishable contract here needs four things: the tool catalogue, a written behaviour spec, a shared scenario corpus the consumer can run against you, and a common trace shape so both sides assert on the same artefact instead of on each other's prose. Three of those have no standard form yet.</p>
+
+    <div class="chips">
+      <a class="chip" href="index.html#mcp">MCP</a>
+      <a class="chip" href="index.html#tool-use">Function calling / tool use</a>
+      <a class="chip" href="index.html#tool-design">Tool design</a>
+      <a class="chip" href="index.html#rag">RAG</a>
+      <a class="chip" href="index.html#guardrails-permissions">Guardrails &amp; permissions</a>
+      <a class="chip" href="index.html#human-in-the-loop">Human-in-the-loop</a>
+      <a class="chip" href="index.html#a2a">Agent-to-agent</a>
+      <a class="chip" href="index.html#agent-trajectory-evals">Evals for agents</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="foot">
+    <span>© 2026 Konrad Cinkusz · Konrad's Dev Insight</span>
+    <div class="foot-links">
+      <a id="foot-sub" href="#" target="_blank" rel="noopener">▶ YouTube</a>
+      <a id="foot-gh" href="#" target="_blank" rel="noopener">★ GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   Same CONFIG block as index.html — keep the two in sync.
+   ============================================================ */
+const CONFIG = {
+  channelUrl: "https://www.youtube.com/@_dev_insight",
+  github:     "https://github.com/konradcinkusz/agents-and-llms"
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("nav-sub").href = CONFIG.channelUrl;
+  document.getElementById("foot-sub").href = CONFIG.channelUrl;
+  document.getElementById("foot-gh").href = CONFIG.github;
+
+  /* copy the mermaid source of a figure */
+  document.body.addEventListener("click", (e) => {
+    const btn = e.target.closest(".copy");
+    if (!btn) return;
+    const src = document.getElementById(btn.dataset.target);
+    const text = (src && src.dataset.src) ? src.dataset.src : "";
+    const done = () => { btn.textContent = "copied ✓"; setTimeout(() => { btn.textContent = "copy"; }, 1300); };
+    const fallback = () => {
+      const ta = document.createElement("textarea"); ta.value = text;
+      ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta);
+      ta.select(); try { document.execCommand("copy"); done(); } catch(_){} document.body.removeChild(ta);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
+    } else fallback();
+  });
+
+  /* theme toggle — identical behaviour to index.html */
+  const root = document.documentElement;
+  let stored = null;
+  try { stored = localStorage.getItem("theme"); } catch(_){}
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  root.setAttribute("data-theme", stored || (prefersDark ? "dark" : "light"));
+  document.getElementById("theme").addEventListener("click", () => {
+    const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch(_){}
+  });
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) {
+    /* stash the source before mermaid replaces it with an <svg>, so "copy" still works */
+    document.querySelectorAll("pre.mermaid").forEach(el => { el.dataset.src = el.textContent.trim(); });
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "base",
+      securityLevel: "strict",
+      flowchart: { useMaxWidth: true, htmlLabels: true }
+    });
+    mermaid.run({ querySelector: "pre.mermaid" }).catch(() => {});
+  }
+</script>
+</body>
+</html>

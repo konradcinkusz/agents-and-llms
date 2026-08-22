@@ -57,6 +57,10 @@
   .brand .glyph{display:inline-grid; place-items:center; width:26px; height:26px; border-radius:7px;
     background:linear-gradient(135deg,var(--md),var(--ag)); color:#fff; font-size:13px; font-weight:700;}
   nav{margin-left:auto; display:flex; align-items:center; gap:6px;}
+  .nav-link{font-size:14px; font-weight:500; text-decoration:none; color:var(--muted);
+    padding:8px 12px; border-radius:8px; white-space:nowrap}
+  .nav-link:hover{color:var(--ink)}
+  .nav-link[aria-current="page"]{color:var(--ink)}
   .sub-btn{font-size:14px; font-weight:500; text-decoration:none; padding:8px 14px; border-radius:8px;
     color:#fff; background:linear-gradient(135deg,var(--md),var(--ag)); white-space:nowrap;}
   .sub-btn:hover{filter:brightness(1.06)}
@@ -175,6 +179,8 @@
   <div class="bar">
     <a class="brand" href="index.html"><span class="glyph">&lt;/&gt;</span>Konrad's Dev Insight</a>
     <nav>
+      <a class="nav-link" href="index.html" aria-current="page">Knowledge base</a>
+      <a class="nav-link" href="architecture.html">Architecture</a>
       <a class="sub-btn" id="nav-sub" href="#" target="_blank" rel="noopener">Subscribe</a>
       <button class="icon-btn" id="theme" aria-label="Toggle dark mode" title="Toggle theme">◐</button>
     </nav>

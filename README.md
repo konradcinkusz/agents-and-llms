@@ -37,6 +37,17 @@ new short is one JSON object, no HTML editing:**
   that URL — anyone who opens it lands on the same filter and search, restored
   automatically on load.
 
+## Architecture: CRUD to agents
+
+[`architecture.html`](architecture.html) is a second, static page — an essay-style
+one-pager on how a classic layered system (client → frontend → API → domain →
+database) changes shape once an agent is introduced. It covers what actually moves,
+what survives unchanged, where the "no more API/frontend" framing overstates itself,
+and the concrete problems that show up while both architectures run side by side
+during a migration. It links back into `index.html`'s concept tiles (MCP, tool use,
+RAG, guardrails, human-in-the-loop, A2A, evals) for anyone who wants the underlying
+definitions. Reachable from the **Architecture** link in the header nav of both pages.
+
 ## Run it locally
 
 Because the page `fetch()`s `concepts.json`, opening `index.html` directly from disk
@@ -68,6 +79,7 @@ agents-and-llms/
 ├─ LICENSE
 ├─ .nojekyll
 ├─ index.html          ← the knowledge base (search + filter)
+├─ architecture.html    ← CRUD-to-agents essay (second tab)
 └─ concepts.json        ← every tile's data — edit this to add a short
 ```
 
