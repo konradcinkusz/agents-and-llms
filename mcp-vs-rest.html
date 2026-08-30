@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MCP vs REST, in plain words | Konrad's Dev Insight</title>
+<meta name="description" content="MCP vs REST explained simply: REST serves calls a programmer decided on before the app ran. MCP lets an AI model decide, live. Plain-language diagrams, a short table, and quick answers to the usual questions." />
+<meta property="og:title" content="MCP vs REST, in plain words" />
+<meta property="og:description" content="One difference explains everything: who decides which call happens, and when. Simple diagrams included." />
+<meta property="og:type" content="article" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:#FBFBFD; --surface:#FFFFFF; --code:#F4F5F8;
+    --ink:#14161C; --muted:#565B67; --faint:#8A8F9A;
+    --line:#E6E7EE; --line-strong:#D5D7E0;
+    --md:#0E9384; --md-soft:#E3F4F1; --md-ink:#0A6A60;
+    --ag:#C4661F; --ag-soft:#FBEEDF; --ag-ink:#9A4E17;
+    --fo:#5A5F6B; --fo-soft:#EEEFF3; --fo-ink:#3D414B;
+    --bs:#2563A8; --bs-soft:#E9F1FA; --bs-ink:#1B4E85;
+    --pd:#7C3AED; --pd-soft:#EFE9FE; --pd-ink:#5B21B6;
+    --radius:10px;
+    --font-display:"Space Grotesk",system-ui,sans-serif;
+    --font-body:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  [data-theme="dark"]{
+    --paper:#0E1014; --surface:#15181E; --code:#1B1F27;
+    --ink:#EDEEF2; --muted:#A2A7B2; --faint:#6E7480;
+    --line:#262A33; --line-strong:#353B47;
+    --md:#34D3B8; --md-soft:#0F302B; --md-ink:#6FE3CE;
+    --ag:#E8974A; --ag-soft:#33220F; --ag-ink:#F0B074;
+    --fo:#A2A7B2; --fo-soft:#22262E; --fo-ink:#C3C6CE;
+    --bs:#5AA2E8; --bs-soft:#15273A; --bs-ink:#8EC2F0;
+    --pd:#A78BFA; --pd-soft:#241B38; --pd-ink:#C9B8F5;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--font-body); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;}
+  a{color:inherit}
+  h1,h2,h3{font-family:var(--font-display); font-weight:500; letter-spacing:-.01em; margin:0}
+
+  header{position:sticky; top:0; z-index:50;
+    background:color-mix(in srgb, var(--paper) 82%, transparent);
+    backdrop-filter:saturate(1.4) blur(10px); border-bottom:1px solid var(--line);}
+  .bar{max-width:1080px; margin:0 auto; padding:0 24px; height:60px; display:flex; align-items:center; gap:20px;}
+  .brand{display:flex; align-items:center; gap:10px; font-family:var(--font-display);
+    font-weight:700; letter-spacing:-.02em; font-size:16px; text-decoration:none; white-space:nowrap;}
+  .brand .glyph{display:inline-grid; place-items:center; width:26px; height:26px; border-radius:7px;
+    background:linear-gradient(135deg,var(--md),var(--ag)); color:#fff; font-size:13px; font-weight:700;}
+  nav{margin-left:auto; display:flex; align-items:center; gap:6px;}
+  .nav-link{font-size:14px; font-weight:500; text-decoration:none; color:var(--muted);
+    padding:8px 12px; border-radius:8px; white-space:nowrap}
+  .nav-link:hover{color:var(--ink)}
+  .nav-link[aria-current="page"]{color:var(--ink)}
+  .sub-btn{font-size:14px; font-weight:500; text-decoration:none; padding:8px 14px; border-radius:8px;
+    color:#fff; background:linear-gradient(135deg,var(--md),var(--ag)); white-space:nowrap;}
+  .sub-btn:hover{filter:brightness(1.06)}
+  .icon-btn{width:36px; height:36px; border:1px solid var(--line-strong); background:transparent;
+    border-radius:8px; color:var(--muted); cursor:pointer; display:grid; place-items:center; font-size:15px; padding:0;}
+  .icon-btn:hover{color:var(--ink); border-color:var(--faint)}
+
+  main{max-width:1080px; margin:0 auto; padding:0 24px}
+
+  .hero{padding:52px 0 12px; max-width:720px}
+  .eyebrow{font-family:var(--font-mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--faint); margin:0 0 12px}
+  h1{font-size:clamp(1.9rem,4.4vw,2.7rem); line-height:1.08; font-weight:700}
+  h1 .md-w{color:var(--md)} h1 .ag-w{color:var(--ag)}
+  .lede{font-size:16.5px; color:var(--muted); margin:16px 0 0}
+  .lede + .lede{margin-top:12px}
+
+  /* ---------- the one-sentence verdict box ---------- */
+  .verdict{margin:26px 0 0; display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .verdict .v{border-radius:12px; padding:16px 18px; font-size:15.5px; line-height:1.55; border:1px solid var(--line)}
+  .verdict .v b{font-family:var(--font-mono); font-size:13px; letter-spacing:.05em; display:block; margin-bottom:6px}
+  .verdict .v-rest{background:var(--md-soft); color:var(--ink)} .verdict .v-rest b{color:var(--md-ink)}
+  .verdict .v-mcp{background:var(--ag-soft); color:var(--ink)} .verdict .v-mcp b{color:var(--ag-ink)}
+
+  section{padding:0 0 12px}
+  .rule{border:0; border-top:1px solid var(--line); margin:44px 0 32px}
+  h2{font-size:clamp(1.25rem,2.4vw,1.6rem); font-weight:700; letter-spacing:-.015em}
+  .h2-note{font-family:var(--font-mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--faint); margin:0 0 8px}
+  .body{font-size:15.5px; color:var(--muted); margin:14px 0 0; max-width:760px}
+  .body strong{color:var(--ink); font-weight:500}
+  .body code{font-family:var(--font-mono); font-size:13px; background:var(--code); padding:2px 6px; border-radius:5px; color:var(--ink)}
+  .body a{color:var(--ink); text-decoration:underline; text-decoration-color:var(--line-strong); text-underline-offset:2px}
+  .body a:hover{text-decoration-color:var(--md)}
+
+  /* ---------- figures ---------- */
+  .fig{margin:24px 0 0; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface)}
+  .fig-label{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 16px;
+    font-family:var(--font-mono); font-size:11.5px; color:var(--faint); background:var(--code);
+    border-bottom:1px solid var(--line)}
+  .copy{font-family:var(--font-mono); font-size:11px; color:var(--muted); opacity:.85; cursor:pointer;
+    background:transparent; border:1px solid var(--line-strong); border-radius:6px; padding:2px 8px; transition:opacity .15s}
+  .copy:hover{opacity:1; color:var(--ink)}
+  .mermaid-frame{padding:22px 14px; background:#F4F5F8; overflow-x:auto}
+  .mermaid-frame .mermaid{display:flex; justify-content:center; min-width:520px}
+  .mermaid-frame svg{max-width:100%; height:auto}
+  .fig-cap{padding:12px 16px 14px; font-size:13.5px; color:var(--muted); border-top:1px solid var(--line)}
+
+  /* ---------- side-by-side code ---------- */
+  .duo{display:grid; gap:14px; margin-top:24px; grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+  .snip{border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface)}
+  .snip-label{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 16px;
+    font-family:var(--font-mono); font-size:11.5px; color:var(--faint); background:var(--code);
+    border-bottom:1px solid var(--line)}
+  .snip pre{margin:0; padding:14px 16px; background:var(--code); overflow-x:auto}
+  .snip code{font-family:var(--font-mono); font-size:12.5px; line-height:1.7; color:var(--ink); tab-size:2}
+  .snip .hl{color:var(--ag-ink); font-weight:500}
+  .snip-cap{padding:11px 16px 13px; font-size:13px; color:var(--muted); border-top:1px solid var(--line)}
+
+  /* ---------- claim cards ---------- */
+  .claims{display:grid; gap:14px; margin-top:24px; grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+  .claim{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--kc,var(--line));
+    border-radius:12px; padding:18px 20px}
+  .claim.c-md{--kc:var(--md)} .claim.c-ag{--kc:var(--ag)}
+  .claim.c-bs{--kc:var(--bs)} .claim.c-pd{--kc:var(--pd)}
+  .claim h3{font-size:15.5px; font-weight:500; margin-bottom:8px}
+  .claim p{margin:0; font-size:14.5px; color:var(--muted); line-height:1.6}
+  .claim p + p{margin-top:8px}
+  .claim code{font-family:var(--font-mono); font-size:12px; background:var(--code); padding:2px 5px; border-radius:5px; color:var(--ink)}
+
+  /* ---------- comparison table ---------- */
+  .table-wrap{overflow-x:auto; margin-top:24px}
+  .cmp{width:100%; border-collapse:collapse; font-size:14.5px; min-width:640px}
+  .cmp th{text-align:left; font-family:var(--font-mono); font-size:11px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--faint); font-weight:400; padding:0 16px 11px 0;
+    border-bottom:1px solid var(--line-strong)}
+  .cmp th.th-rest{color:var(--md-ink)} .cmp th.th-mcp{color:var(--ag-ink)}
+  .cmp td{padding:13px 16px 13px 0; border-bottom:1px solid var(--line); vertical-align:top; color:var(--muted)}
+  .cmp td:first-child{color:var(--ink); font-weight:500; min-width:150px}
+  .cmp tr:last-child td{border-bottom:none}
+  .cmp td b{color:var(--ink); font-weight:500}
+  .cmp td code{font-family:var(--font-mono); font-size:12px; background:var(--code); padding:2px 5px; border-radius:5px; color:var(--ink); white-space:nowrap}
+
+  /* ---------- concept chips ---------- */
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin:20px 0 0}
+  .chip{font-family:var(--font-mono); font-size:12.5px; color:var(--muted); text-decoration:none;
+    background:var(--surface); border:1px solid var(--line-strong); border-radius:20px; padding:6px 13px;
+    transition:all .15s}
+  .chip:hover{color:var(--ink); border-color:var(--faint)}
+
+  footer{border-top:1px solid var(--line); margin-top:56px}
+  .foot{max-width:1080px; margin:0 auto; padding:36px 24px; display:flex; justify-content:space-between;
+    gap:20px; flex-wrap:wrap; align-items:center; color:var(--faint); font-size:13px; font-family:var(--font-mono)}
+  .foot-links{display:flex; gap:10px}
+  .foot-links a{text-decoration:none; color:var(--ink); border:1px solid var(--line-strong);
+    border-radius:8px; padding:7px 13px; font-size:13px}
+  .foot-links a:hover{border-color:var(--faint)}
+  :focus-visible{outline:2px solid var(--md); outline-offset:2px; border-radius:4px}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <a class="brand" href="index.html"><span class="glyph">&lt;/&gt;</span>Konrad's Dev Insight</a>
+    <nav>
+      <a class="nav-link" href="index.html">Knowledge base</a>
+      <a class="nav-link" href="architecture.html">Architecture</a>
+      <a class="nav-link" href="mcp-vs-rest.html" aria-current="page">MCP vs REST</a>
+      <a class="sub-btn" id="nav-sub" href="#" target="_blank" rel="noopener">Subscribe</a>
+      <button class="icon-btn" id="theme" aria-label="Toggle dark mode" title="Toggle theme">◐</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <p class="eyebrow">Protocols · plain-language guide</p>
+    <h1><span class="ag-w">MCP</span> vs <span class="md-w">REST</span>, in plain words.</h1>
+    <p class="lede">You don't need the specs to understand the difference. You need one question: <strong style="color:var(--ink);font-weight:500">who decides which call happens — and when?</strong></p>
+    <div class="verdict">
+      <div class="v v-rest"><b>REST</b>A <strong>programmer</strong> decides. They read the docs, write the code, and the app makes exactly those calls, forever — decided <strong>before</strong> the app ever runs.</div>
+      <div class="v v-mcp"><b>MCP</b>An <strong>AI model</strong> decides. It connects, asks "what can I do here?", and picks a tool to call — decided <strong>live</strong>, while it runs.</div>
+    </div>
+    <p class="lede">That's the whole difference. Everything on this page is just that one sentence, applied to something concrete.</p>
+    <div class="chips">
+      <a class="chip" href="#words">1 · The two words</a>
+      <a class="chip" href="#decides">2 · Who decides</a>
+      <a class="chip" href="#conversation">3 · An MCP session</a>
+      <a class="chip" href="#description">4 · The description trick</a>
+      <a class="chip" href="#compare">5 · Quick table</a>
+      <a class="chip" href="#stack">6 · They don't compete</a>
+      <a class="chip" href="#choose">7 · Which one?</a>
+      <a class="chip" href="#faq">8 · Quick answers</a>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ THE TWO WORDS ============ -->
+  <section id="words">
+    <p class="h2-note">Step 1</p>
+    <h2>First, the two words</h2>
+
+    <div class="claims">
+      <div class="claim c-md">
+        <h3>REST — how programs talk to programs</h3>
+        <p>The standard way apps have talked to servers for ~20 years. Your app calls fixed web addresses — <code>GET /orders/42</code> to read order 42, <code>POST /orders</code> to create one — and gets data back.</p>
+        <p>Key point: <strong style="color:var(--ink);font-weight:500">the app never improvises.</strong> Every call it makes was written by a programmer, ahead of time.</p>
+      </div>
+      <div class="claim c-ag">
+        <h3>MCP — how AI models use tools</h3>
+        <p>The Model Context Protocol (open standard, late 2024). You wrap your system in an "MCP server" that offers <strong style="color:var(--ink);font-weight:500">tools</strong> — actions like <code>place_order</code> or <code>check_stock</code>. Any AI app can connect, see the tools, and use them.</p>
+        <p>Think <strong style="color:var(--ink);font-weight:500">USB-C for AI</strong>: build the plug once, and Claude, ChatGPT, your IDE — every AI client — can use it. No custom integration per app.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ WHO DECIDES ============ -->
+  <section id="decides">
+    <p class="h2-note">Figure 1</p>
+    <h2>Who decides — and when</h2>
+    <p class="body">Same shop, same database. The only thing that moves is the moment of decision. With REST, the thinking happened at a programmer's desk, weeks ago. With MCP, the thinking happens in the moment, inside the model.</p>
+
+    <div class="fig">
+      <div class="fig-label"><span>diagram · the moment of decision</span>
+        <button class="copy" data-target="src-decides">copy</button></div>
+      <div class="mermaid-frame">
+<pre class="mermaid" id="src-decides">
+flowchart TB
+    subgraph restP["REST — decided BEFORE the app runs"]
+        direction LR
+        prog["Programmer"] -.->|"reads the docs,<br/>writes the calls"| app["Your app"]
+        app -->|"GET /orders/42<br/>(always the same)"| api["REST API"]
+        api --> db1[("Database")]
+    end
+    subgraph mcpP["MCP — decided WHILE it runs"]
+        direction LR
+        user["User: “order 2 chairs”"] --> ai["AI model"]
+        ai -->|"picks a tool, live:<br/>place_order(...)"| srv["MCP server"]
+        srv --> db2[("Database")]
+    end
+    restP ~~~ mcpP
+    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px
+    classDef hot fill:#FBEEDF,stroke:#C4661F,color:#9A4E17,font-size:13px
+    class prog,app,api,db1 n
+    class user,ai,srv,db2 hot
+    style restP fill:#F7F7F9,stroke:#C9CBD4,color:#565B67
+    style mcpP fill:#F7F7F9,stroke:#C9CBD4,color:#565B67
+</pre>
+      </div>
+      <p class="fig-cap">Top: the dotted arrow — a person reading docs and writing code — happened once, before launch. Bottom: there is no dotted arrow. The model figures out what to call, every single time.</p>
+    </div>
+
+    <p class="body">Why does that need a new protocol at all? Because before MCP, every AI app that wanted to use your system needed its own hand-built integration. 10 AI apps × 20 tools = 200 integrations. With one standard plug it's 10 + 20 = 30. That's the actual pitch of MCP — <strong>less glue code</strong>, not "REST is dead".</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ THE CONVERSATION ============ -->
+  <section id="conversation">
+    <p class="h2-note">Figure 2</p>
+    <h2>An MCP session is just a short conversation</h2>
+    <p class="body">Here is everything that happens when an AI agent uses an MCP server, written as the dialogue it really is. Two of the lines have official names — <code>tools/list</code> (asking what's available) and <code>tools/call</code> (using one) — and that's most of the protocol already.</p>
+
+    <div class="fig">
+      <div class="fig-label"><span>diagram · one session, as a dialogue</span>
+        <button class="copy" data-target="src-conversation">copy</button></div>
+      <div class="mermaid-frame">
+<pre class="mermaid" id="src-conversation">
+sequenceDiagram
+    participant A as AI agent
+    participant S as MCP server (your shop)
+    A->>S: Hi — what can you do?  (tools/list)
+    S-->>A: I have 3 tools: check_stock, place_order, track_order
+    Note over A: User says: “order 2 chairs for me”
+    A->>S: place_order(customer, 2 × chair)  (tools/call)
+    S-->>A: Done — order no. 1042 created.
+    Note over A: Agent reads the result and tells the user
+</pre>
+      </div>
+      <p class="fig-cap">Notice what the first two arrows replace: in REST, "what can you do?" was answered by documentation that a human read. Here the server answers it itself, live — so if you add a fourth tool tonight, every agent can use it tomorrow, with nothing redeployed on their side.</p>
+    </div>
+
+    <p class="body">Under the hood the messages are JSON-RPC, carried over HTTP (for remote servers) or plain stdin/stdout (for local ones). Interesting if you're building a server; safe to ignore if you're just deciding between the two.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ THE DESCRIPTION TRICK ============ -->
+  <section id="description">
+    <p class="h2-note">Step 4 · the subtle one</p>
+    <h2>The description trick — the difference people miss</h2>
+    <p class="body">Here's the same "create an order" action, defined for REST and for MCP. They look almost identical. The difference is what the description text <strong>does</strong> — and this is the one non-obvious thing on this page, so it gets its own section.</p>
+
+    <div class="duo">
+      <div class="snip">
+        <div class="snip-label"><span>REST · from the OpenAPI docs</span>
+          <button class="copy" data-target="src-openapi">copy</button></div>
+        <pre id="src-openapi"><code>{
+  "post": {
+    "operationId": "createOrder",
+    "summary": "Create an order",
+    "requestBody": { "$ref": "NewOrder" },
+    "responses": {
+      "201": { "description": "Created" },
+      "409": { "description": "Out of stock" }
+    }
+  }
+}</code></pre>
+        <p class="snip-cap"><strong>Read by a human, once.</strong> If the summary is stale or vague, nothing breaks — the app was coded against the schema, and the schema is what matters.</p>
+      </div>
+      <div class="snip">
+        <div class="snip-label"><span>MCP · tool definition</span>
+          <button class="copy" data-target="src-tool">copy</button></div>
+        <pre id="src-tool"><code>{
+  "name": "place_order",
+  "description": "<span class="hl">Place an order.
+    Only call this AFTER the customer
+    confirmed the cart. If an item is
+    out of stock, the result names it —
+    offer alternatives, don't retry.</span>",
+  "inputSchema": {
+    "customer_id": "string",
+    "items": "array"
+  }
+}</code></pre>
+        <p class="snip-cap"><strong>Read by the model, every time.</strong> The highlighted text is an instruction the model follows. Change it, and your system behaves differently — without any code change.</p>
+      </div>
+    </div>
+
+    <p class="body">Three practical rules fall out of this:</p>
+    <div class="claims">
+      <div class="claim c-ag">
+        <h3>Write descriptions like they're code</h3>
+        <p>Because they are — they steer the model the way code steers a CPU. A vague description means the tool gets called at the wrong moment. Review description edits like you review code.</p>
+      </div>
+      <div class="claim c-bs">
+        <h3>Write errors the model can act on</h3>
+        <p>A REST app branches on <code>409</code>. A model reads a sentence. <em>"Out of stock: chair-oak-02 — suggest alternatives"</em> gives it a useful next move. A bare <code>500</code> teaches it nothing, and it will just retry blindly.</p>
+      </div>
+      <div class="claim c-md">
+        <h3>Make tools match intentions, not tables</h3>
+        <p>Code happily chains five small calls into one task. A model chaining five calls is five chances to pick wrong. So give it <code>place_order</code> — one tool, one intention — not <code>POST /orders</code> plus four lookups it must figure out.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ QUICK TABLE ============ -->
+  <section id="compare">
+    <p class="h2-note">Side by side</p>
+    <h2>The whole thing in one table</h2>
+
+    <div class="table-wrap">
+      <table class="cmp">
+        <thead>
+          <tr><th></th><th class="th-rest">REST</th><th class="th-mcp">MCP</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Who decides the call</td><td>A programmer, before launch</td><td>The AI model, live</td></tr>
+          <tr><td>How the caller learns what exists</td><td>A human reads the docs</td><td>The agent asks: <code>tools/list</code></td></tr>
+          <tr><td>A call looks like</td><td><code>POST /orders</code></td><td><code>place_order(customer, items)</code></td></tr>
+          <tr><td>Right size of an action</td><td>Small pieces; code glues them</td><td>One tool = one whole intention</td></tr>
+          <tr><td>Errors are for</td><td>Code — it branches on <code>404</code>, <code>409</code>…</td><td>The model — it reads a sentence and adapts</td></tr>
+          <tr><td>The description text</td><td>Helps humans; can go stale harmlessly</td><td><b>Steers the model</b> — changing it changes behavior</td></tr>
+          <tr><td>Best for</td><td>Programs talking to programs</td><td>AI agents using your system</td></tr>
+          <tr><td>Been around</td><td>~20 years, everywhere</td><td>Since late 2024, spreading fast</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ THEY DON'T COMPETE ============ -->
+  <section id="stack">
+    <p class="h2-note">Figure 3</p>
+    <h2>They don't compete — they stack</h2>
+    <p class="body">This is the part headlines get wrong. In real systems MCP doesn't replace the REST API — it usually <strong>stands in front of it</strong>. You end up with two doors into the same backend: a REST door for programs, an MCP door for AI agents. Most MCP servers in production are thin adapters that call the same REST API you already had.</p>
+
+    <div class="fig">
+      <div class="fig-label"><span>diagram · two doors, one backend</span>
+        <button class="copy" data-target="src-stack">copy</button></div>
+      <div class="mermaid-frame">
+<pre class="mermaid" id="src-stack">
+flowchart LR
+    app["Website · mobile app<br/>· other services"] -->|"REST door"| api["REST API"]
+    agent["AI agents"] -->|"MCP door"| mcp["MCP server"]
+    mcp -->|"usually just calls"| api
+    api --> db[("One database,<br/>one set of rules")]
+    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px
+    classDef hot fill:#FBEEDF,stroke:#C4661F,color:#9A4E17,font-size:13px
+    class app,api,db n
+    class agent,mcp hot
+</pre>
+      </div>
+      <p class="fig-cap">Your website keeps using REST — it doesn't need an AI in the middle. Agents come through the MCP door. Both end up at the same database, governed by the same rules.</p>
+    </div>
+
+    <p class="body">One warning that matters even in the simple picture: <strong>the agent must act as the user, not as itself.</strong> If the MCP server calls your API with its own all-powerful service account, then every user of every agent silently gets those powers. Pass the real user's identity through, all the way down.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ WHICH ONE ============ -->
+  <section id="choose">
+    <p class="h2-note">Decision</p>
+    <h2>So which one should you use?</h2>
+
+    <div class="claims">
+      <div class="claim c-md">
+        <h3>Program calling a program? → REST</h3>
+        <p>Your frontend, service-to-service traffic, webhooks, cron jobs. No AI in the path means MCP buys you nothing there. Keep the types, keep the speed.</p>
+      </div>
+      <div class="claim c-ag">
+        <h3>AI agent using your system? → MCP</h3>
+        <p>Build one MCP server and every AI client can use it. Start with read-only tools (checking, searching); add write tools (ordering, deleting) later, with human approval in front of them.</p>
+      </div>
+      <div class="claim c-bs">
+        <h3>Both kinds of caller? → Both doors</h3>
+        <p>This is most real systems in 2026. REST for code, MCP for agents, same backend behind both — exactly Figure 3. It's an addition to your architecture, not a rewrite.</p>
+      </div>
+    </div>
+
+    <p class="body" style="margin-top:24px">Still unsure? One test settles it: <strong>is anything in this call path deciding at runtime what to do next?</strong> No → REST. Yes → that part wants MCP.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ FAQ ============ -->
+  <section id="faq">
+    <p class="h2-note">Quick answers</p>
+    <h2>The questions everyone asks</h2>
+
+    <div class="claims">
+      <div class="claim c-ag">
+        <h3>"Does MCP replace REST?"</h3>
+        <p>No. It usually sits in front of it (Figure 3). What's true: for the <em>AI-facing</em> part of your system, MCP is becoming the standard door. Everything behind that door keeps working as before.</p>
+      </div>
+      <div class="claim c-bs">
+        <h3>"Isn't MCP just another API?"</h3>
+        <p>It <em>is</em> an API — that's fine to say. What's new is the caller: a model instead of code. That's why discovery is live, descriptions steer behavior, and errors are sentences. Same job, different reader.</p>
+      </div>
+      <div class="claim c-md">
+        <h3>"Can't the model just read my REST docs?"</h3>
+        <p>It can, and it works — but every AI app did it its own way, which is the 200-integrations problem again. MCP's value is standardizing the plug, so one connector fits all clients. Boring on purpose.</p>
+      </div>
+      <div class="claim c-pd">
+        <h3>"What's the catch with MCP?"</h3>
+        <p>Nothing checks the <em>order</em> of calls anymore. In REST that order lives in reviewed, tested code; with MCP the model improvises it. The replacement is testing agent runs (<a href="index.html#agent-trajectory-evals" style="color:inherit">evals</a>) and <a href="index.html#guardrails-permissions" style="color:inherit">guardrails</a> before risky actions. If you can't invest in those yet, staying behind REST is a legitimate choice.</p>
+      </div>
+    </div>
+
+    <p class="body" style="margin-top:24px">Want to go deeper? Related cards in the knowledge base, and the full architectural story:</p>
+    <div class="chips">
+      <a class="chip" href="index.html#mcp">MCP</a>
+      <a class="chip" href="index.html#tool-use">Function calling / tool use</a>
+      <a class="chip" href="index.html#tool-design">Tool design</a>
+      <a class="chip" href="index.html#agent-loop">The agent loop</a>
+      <a class="chip" href="index.html#guardrails-permissions">Guardrails &amp; permissions</a>
+      <a class="chip" href="index.html#agent-trajectory-evals">Evals for agents</a>
+      <a class="chip" href="architecture.html">Architecture · the full story</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="foot">
+    <span>© 2026 Konrad Cinkusz · Konrad's Dev Insight</span>
+    <div class="foot-links">
+      <a id="foot-sub" href="#" target="_blank" rel="noopener">▶ YouTube</a>
+      <a id="foot-gh" href="#" target="_blank" rel="noopener">★ GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   Same CONFIG block as index.html — keep the two in sync.
+   ============================================================ */
+const CONFIG = {
+  channelUrl: "https://www.youtube.com/@_dev_insight",
+  github:     "https://github.com/konradcinkusz/agents-and-llms"
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("nav-sub").href = CONFIG.channelUrl;
+  document.getElementById("foot-sub").href = CONFIG.channelUrl;
+  document.getElementById("foot-gh").href = CONFIG.github;
+
+  /* stash the source of the plain code figures so "copy" works for them too */
+  document.querySelectorAll(".snip pre").forEach(el => { el.dataset.src = el.textContent.trim(); });
+
+  /* copy the source of a figure (mermaid or code) */
+  document.body.addEventListener("click", (e) => {
+    const btn = e.target.closest(".copy");
+    if (!btn) return;
+    const src = document.getElementById(btn.dataset.target);
+    const text = (src && src.dataset.src) ? src.dataset.src : "";
+    const done = () => { btn.textContent = "copied ✓"; setTimeout(() => { btn.textContent = "copy"; }, 1300); };
+    const fallback = () => {
+      const ta = document.createElement("textarea"); ta.value = text;
+      ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta);
+      ta.select(); try { document.execCommand("copy"); done(); } catch(_){} document.body.removeChild(ta);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
+    } else fallback();
+  });
+
+  /* theme toggle — identical behaviour to index.html */
+  const root = document.documentElement;
+  let stored = null;
+  try { stored = localStorage.getItem("theme"); } catch(_){}
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  root.setAttribute("data-theme", stored || (prefersDark ? "dark" : "light"));
+  document.getElementById("theme").addEventListener("click", () => {
+    const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch(_){}
+  });
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) {
+    /* stash the source before mermaid replaces it with an <svg>, so "copy" still works */
+    document.querySelectorAll("pre.mermaid").forEach(el => { el.dataset.src = el.textContent.trim(); });
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "base",
+      securityLevel: "strict",
+      flowchart: { useMaxWidth: true, htmlLabels: true }
+    });
+    mermaid.run({ querySelector: "pre.mermaid" }).catch(() => {});
+  }
+</script>
+</body>
+</html>
