@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MCP vs REST — same domain, different consumer | Konrad's Dev Insight</title>
+<meta name="description" content="MCP is not REST's replacement and not REST with hype. One serves code a developer wrote at design time; the other serves a model deciding at runtime. Every real difference — discovery, contract, wire, errors, state — falls out of that one sentence." />
+<meta property="og:title" content="MCP vs REST — same domain, different consumer" />
+<meta property="og:description" content="What actually differs between MCP and REST: who reads the contract, when discovery happens, what an error is for, and why most systems end up publishing both." />
+<meta property="og:type" content="article" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:#FBFBFD; --surface:#FFFFFF; --code:#F4F5F8;
+    --ink:#14161C; --muted:#565B67; --faint:#8A8F9A;
+    --line:#E6E7EE; --line-strong:#D5D7E0;
+    --md:#0E9384; --md-soft:#E3F4F1; --md-ink:#0A6A60;
+    --ag:#C4661F; --ag-soft:#FBEEDF; --ag-ink:#9A4E17;
+    --fo:#5A5F6B; --fo-soft:#EEEFF3; --fo-ink:#3D414B;
+    --bs:#2563A8; --bs-soft:#E9F1FA; --bs-ink:#1B4E85;
+    --pd:#7C3AED; --pd-soft:#EFE9FE; --pd-ink:#5B21B6;
+    --radius:10px;
+    --font-display:"Space Grotesk",system-ui,sans-serif;
+    --font-body:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  [data-theme="dark"]{
+    --paper:#0E1014; --surface:#15181E; --code:#1B1F27;
+    --ink:#EDEEF2; --muted:#A2A7B2; --faint:#6E7480;
+    --line:#262A33; --line-strong:#353B47;
+    --md:#34D3B8; --md-soft:#0F302B; --md-ink:#6FE3CE;
+    --ag:#E8974A; --ag-soft:#33220F; --ag-ink:#F0B074;
+    --fo:#A2A7B2; --fo-soft:#22262E; --fo-ink:#C3C6CE;
+    --bs:#5AA2E8; --bs-soft:#15273A; --bs-ink:#8EC2F0;
+    --pd:#A78BFA; --pd-soft:#241B38; --pd-ink:#C9B8F5;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--font-body); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;}
+  a{color:inherit}
+  h1,h2,h3{font-family:var(--font-display); font-weight:500; letter-spacing:-.01em; margin:0}
+
+  header{position:sticky; top:0; z-index:50;
+    background:color-mix(in srgb, var(--paper) 82%, transparent);
+    backdrop-filter:saturate(1.4) blur(10px); border-bottom:1px solid var(--line);}
+  .bar{max-width:1080px; margin:0 auto; padding:0 24px; height:60px; display:flex; align-items:center; gap:20px;}
+  .brand{display:flex; align-items:center; gap:10px; font-family:var(--font-display);
+    font-weight:700; letter-spacing:-.02em; font-size:16px; text-decoration:none; white-space:nowrap;}
+  .brand .glyph{display:inline-grid; place-items:center; width:26px; height:26px; border-radius:7px;
+    background:linear-gradient(135deg,var(--md),var(--ag)); color:#fff; font-size:13px; font-weight:700;}
+  nav{margin-left:auto; display:flex; align-items:center; gap:6px;}
+  .nav-link{font-size:14px; font-weight:500; text-decoration:none; color:var(--muted);
+    padding:8px 12px; border-radius:8px; white-space:nowrap}
+  .nav-link:hover{color:var(--ink)}
+  .nav-link[aria-current="page"]{color:var(--ink)}
+  .sub-btn{font-size:14px; font-weight:500; text-decoration:none; padding:8px 14px; border-radius:8px;
+    color:#fff; background:linear-gradient(135deg,var(--md),var(--ag)); white-space:nowrap;}
+  .sub-btn:hover{filter:brightness(1.06)}
+  .icon-btn{width:36px; height:36px; border:1px solid var(--line-strong); background:transparent;
+    border-radius:8px; color:var(--muted); cursor:pointer; display:grid; place-items:center; font-size:15px; padding:0;}
+  .icon-btn:hover{color:var(--ink); border-color:var(--faint)}
+
+  main{max-width:1080px; margin:0 auto; padding:0 24px}
+
+  .hero{padding:52px 0 12px; max-width:720px}
+  .eyebrow{font-family:var(--font-mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--faint); margin:0 0 12px}
+  h1{font-size:clamp(1.9rem,4.4vw,2.7rem); line-height:1.08; font-weight:700}
+  h1 .md-w{color:var(--md)} h1 .ag-w{color:var(--ag)}
+  .lede{font-size:16.5px; color:var(--muted); margin:16px 0 0}
+  .lede + .lede{margin-top:12px}
+
+  section{padding:0 0 12px}
+  .rule{border:0; border-top:1px solid var(--line); margin:44px 0 32px}
+  h2{font-size:clamp(1.25rem,2.4vw,1.6rem); font-weight:700; letter-spacing:-.015em}
+  .h2-note{font-family:var(--font-mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--faint); margin:0 0 8px}
+  .body{font-size:15.5px; color:var(--muted); margin:14px 0 0; max-width:760px}
+  .body strong{color:var(--ink); font-weight:500}
+  .body code{font-family:var(--font-mono); font-size:13px; background:var(--code); padding:2px 6px; border-radius:5px; color:var(--ink)}
+  .body a{color:var(--ink); text-decoration:underline; text-decoration-color:var(--line-strong); text-underline-offset:2px}
+  .body a:hover{text-decoration-color:var(--md)}
+
+  /* ---------- figures ---------- */
+  .fig{margin:24px 0 0; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface)}
+  .fig-label{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 16px;
+    font-family:var(--font-mono); font-size:11.5px; color:var(--faint); background:var(--code);
+    border-bottom:1px solid var(--line)}
+  .copy{font-family:var(--font-mono); font-size:11px; color:var(--muted); opacity:.85; cursor:pointer;
+    background:transparent; border:1px solid var(--line-strong); border-radius:6px; padding:2px 8px; transition:opacity .15s}
+  .copy:hover{opacity:1; color:var(--ink)}
+  .mermaid-frame{padding:22px 14px; background:#F4F5F8; overflow-x:auto}
+  .mermaid-frame .mermaid{display:flex; justify-content:center; min-width:520px}
+  .mermaid-frame svg{max-width:100%; height:auto}
+  .fig-cap{padding:12px 16px 14px; font-size:13.5px; color:var(--muted); border-top:1px solid var(--line)}
+
+  /* ---------- side-by-side code ---------- */
+  .duo{display:grid; gap:14px; margin-top:24px; grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+  .snip{border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface)}
+  .snip-label{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 16px;
+    font-family:var(--font-mono); font-size:11.5px; color:var(--faint); background:var(--code);
+    border-bottom:1px solid var(--line)}
+  .snip pre{margin:0; padding:14px 16px; background:var(--code); overflow-x:auto}
+  .snip code{font-family:var(--font-mono); font-size:12.5px; line-height:1.7; color:var(--ink); tab-size:2}
+  .snip .hl{color:var(--ag-ink); font-weight:500}
+  .snip-cap{padding:11px 16px 13px; font-size:13px; color:var(--muted); border-top:1px solid var(--line)}
+
+  /* ---------- claim cards ---------- */
+  .claims{display:grid; gap:14px; margin-top:24px; grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+  .claim{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--kc,var(--line));
+    border-radius:12px; padding:18px 20px}
+  .claim.c-md{--kc:var(--md)} .claim.c-ag{--kc:var(--ag)}
+  .claim.c-bs{--kc:var(--bs)} .claim.c-pd{--kc:var(--pd)}
+  .claim h3{font-size:15.5px; font-weight:500; margin-bottom:8px}
+  .claim p{margin:0; font-size:14.5px; color:var(--muted); line-height:1.6}
+  .claim p + p{margin-top:8px}
+  .claim code{font-family:var(--font-mono); font-size:12px; background:var(--code); padding:2px 5px; border-radius:5px; color:var(--ink)}
+
+  /* ---------- comparison table ---------- */
+  .table-wrap{overflow-x:auto; margin-top:24px}
+  .cmp{width:100%; border-collapse:collapse; font-size:14.5px; min-width:680px}
+  .cmp th{text-align:left; font-family:var(--font-mono); font-size:11px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--faint); font-weight:400; padding:0 16px 11px 0;
+    border-bottom:1px solid var(--line-strong)}
+  .cmp th.th-rest{color:var(--md-ink)} .cmp th.th-mcp{color:var(--ag-ink)}
+  .cmp td{padding:13px 16px 13px 0; border-bottom:1px solid var(--line); vertical-align:top; color:var(--muted)}
+  .cmp td:first-child{color:var(--ink); white-space:nowrap; font-weight:500}
+  .cmp tr:last-child td{border-bottom:none}
+  .cmp td b{color:var(--ink); font-weight:500}
+
+  /* ---------- concept chips ---------- */
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin:20px 0 0}
+  .chip{font-family:var(--font-mono); font-size:12.5px; color:var(--muted); text-decoration:none;
+    background:var(--surface); border:1px solid var(--line-strong); border-radius:20px; padding:6px 13px;
+    transition:all .15s}
+  .chip:hover{color:var(--ink); border-color:var(--faint)}
+
+  footer{border-top:1px solid var(--line); margin-top:56px}
+  .foot{max-width:1080px; margin:0 auto; padding:36px 24px; display:flex; justify-content:space-between;
+    gap:20px; flex-wrap:wrap; align-items:center; color:var(--faint); font-size:13px; font-family:var(--font-mono)}
+  .foot-links{display:flex; gap:10px}
+  .foot-links a{text-decoration:none; color:var(--ink); border:1px solid var(--line-strong);
+    border-radius:8px; padding:7px 13px; font-size:13px}
+  .foot-links a:hover{border-color:var(--faint)}
+  :focus-visible{outline:2px solid var(--md); outline-offset:2px; border-radius:4px}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <a class="brand" href="index.html"><span class="glyph">&lt;/&gt;</span>Konrad's Dev Insight</a>
+    <nav>
+      <a class="nav-link" href="index.html">Knowledge base</a>
+      <a class="nav-link" href="architecture.html">Architecture</a>
+      <a class="nav-link" href="mcp-vs-rest.html" aria-current="page">MCP vs REST</a>
+      <a class="sub-btn" id="nav-sub" href="#" target="_blank" rel="noopener">Subscribe</a>
+      <button class="icon-btn" id="theme" aria-label="Toggle dark mode" title="Toggle theme">◐</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <p class="eyebrow">Protocols · one pager</p>
+    <h1><span class="ag-w">MCP</span> vs <span class="md-w">REST</span>: same domain, different consumer.</h1>
+    <p class="lede">Every comparison of MCP and REST that starts from the wire format gets lost in the weeds, because the wire is the least interesting difference. Start from the consumer instead and the whole thing collapses into one sentence:</p>
+    <p class="lede"><strong style="color:var(--ink);font-weight:500">REST serves code that a developer wrote at design time. MCP serves a model that decides at runtime.</strong> Discovery, contract, errors, state, granularity — every real difference on this page is that sentence applied to a different column.</p>
+    <div class="chips">
+      <a class="chip" href="#shapes">1 · Two consumption paths</a>
+      <a class="chip" href="#wire">2 · On the wire</a>
+      <a class="chip" href="#contract">3 · The contract</a>
+      <a class="chip" href="#compare">4 · Side by side</a>
+      <a class="chip" href="#myths">5 · Four things people get wrong</a>
+      <a class="chip" href="#stack">6 · How they stack</a>
+      <a class="chip" href="#choose">7 · Which one, when</a>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ TWO CONSUMPTION PATHS ============ -->
+  <section id="shapes">
+    <p class="h2-note">Figure 1</p>
+    <h2>Two consumption paths to one domain</h2>
+    <p class="body">A REST integration is built <strong>before</strong> it runs. A developer reads the OpenAPI spec, writes client code against it, and from then on the running system executes exactly the calls that developer decided on — same endpoints, same order, every time. The intelligence is in the repo; the runtime just replays it.</p>
+    <p class="body">An MCP integration is composed <strong>while</strong> it runs. The client connects, asks the server what it can do (<code>tools/list</code>), hands that catalogue to the model, and the model picks a tool and its arguments turn by turn. The intelligence is in the loop; nothing in any repo says which calls will happen, or in what order.</p>
+
+    <div class="fig">
+      <div class="fig-label"><span>diagram · who decides, and when</span>
+        <button class="copy" data-target="src-shapes">copy</button></div>
+      <div class="mermaid-frame">
+<pre class="mermaid" id="src-shapes">
+flowchart TB
+    subgraph restP["REST · the calls were decided at design time"]
+        direction LR
+        dev["Developer"] -.->|reads OpenAPI,<br/>writes the calls| code["Client code"]
+        code -->|"GET /orders/42<br/>POST /orders"| restApi["REST API"]
+        restApi --> domR["Domain"]
+    end
+    subgraph mcpP["MCP · the calls are decided at runtime"]
+        direction LR
+        model["Model"] -->|picks tool + args<br/>each turn| mclient["MCP client"]
+        mclient -->|"tools/list<br/>tools/call"| mserver["MCP server"]
+        mserver --> domM["Domain"]
+    end
+    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px
+    classDef hot fill:#FBEEDF,stroke:#C4661F,color:#9A4E17,font-size:13px
+    class dev,code,restApi,domR n
+    class model,mclient,mserver hot
+    style restP fill:#F7F7F9,stroke:#C9CBD4,color:#565B67
+    style mcpP fill:#F7F7F9,stroke:#C9CBD4,color:#565B67
+</pre>
+      </div>
+      <p class="fig-cap">Same domain at the end of both rows. The dotted arrow is the whole difference: in REST it happens once, weeks before deployment, at a person's desk. In MCP its equivalent — discovery — happens in-band, on every session.</p>
+    </div>
+
+    <p class="body">This is also why MCP exists at all. Before it, every AI application integrated every tool bespoke: N clients × M tools meant N×M adapters, each one a developer reading docs and writing glue. MCP standardises the client side of that loop — discovery, invocation, results-into-context — so a connector written once works in any MCP-aware client. N×M becomes N+M. That's a claim about <strong>integration economics</strong>, not about HTTP being obsolete.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ ON THE WIRE ============ -->
+  <section id="wire">
+    <p class="h2-note">Figure 2</p>
+    <h2>On the wire</h2>
+    <p class="body">Mechanically: REST is HTTP verbs on resource URLs, strictly request–response, stateless by design. MCP is <strong>JSON-RPC 2.0</strong> methods over one of two transports — <code>stdio</code> for local servers, streamable HTTP for remote ones — inside a session that starts with a capability handshake. And it is <strong>bidirectional</strong>: a server can ask the client's model to complete something (<em>sampling</em>) or ask the user a clarifying question (<em>elicitation</em>). A REST server can't ask its caller anything; it can only answer.</p>
+
+    <div class="fig">
+      <div class="fig-label"><span>diagram · one MCP session</span>
+        <button class="copy" data-target="src-wire">copy</button></div>
+      <div class="mermaid-frame">
+<pre class="mermaid" id="src-wire">
+sequenceDiagram
+    participant M as Model
+    participant C as MCP client (host app)
+    participant S as MCP server
+    C->>S: initialize — protocol version, capabilities
+    S-->>C: capabilities — tools, resources, prompts
+    C->>S: tools/list
+    S-->>C: catalogue — names, descriptions, input schemas
+    Note over M,C: user intent arrives, catalogue goes into context
+    M->>C: call place_order(customer_id, items)
+    C->>S: tools/call "place_order" {…}
+    S-->>C: result — content for the model
+    C->>M: result appended to context
+    Note over M,S: loop — the model reads the result and may call again
+</pre>
+      </div>
+      <p class="fig-cap">The first four arrows are what REST doesn't have in-band. Their REST equivalent happened weeks earlier: a person read the docs and hard-coded the outcome. Here the catalogue arrives at runtime, so the server can grow a tool tonight and every connected agent can use it tomorrow, with no client redeployed.</p>
+    </div>
+
+    <p class="body">One honest footnote on state: MCP started session-heavy and is moving the other way — the ecosystem push (stateless core, scaling on ordinary HTTP, OAuth-aligned authorisation) is making MCP servers deployable like any other web service. The <a href="architecture.html#limits">Architecture page</a> covers that trajectory; the short version is that MCP is converging on REST's <em>operational</em> virtues while keeping its own <em>interface</em> model. The differences that remain are the ones that can't converge, and they're all in the next section.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ THE CONTRACT ============ -->
+  <section id="contract">
+    <p class="h2-note">The real difference</p>
+    <h2>The description is part of the interface</h2>
+    <p class="body">Put an OpenAPI operation next to an MCP tool and they look like the same thing wearing different clothes — a name, a schema, a description string. The difference is what the description string <strong>does</strong>.</p>
+
+    <div class="duo">
+      <div class="snip">
+        <div class="snip-label"><span>REST · OpenAPI fragment</span>
+          <button class="copy" data-target="src-openapi">copy</button></div>
+        <pre id="src-openapi"><code>{
+  "paths": {
+    "/orders": {
+      "post": {
+        "operationId": "createOrder",
+        "summary": "Create an order",
+        "requestBody": { "$ref": "#/…/NewOrder" },
+        "responses": {
+          "201": { "description": "Created" },
+          "409": { "description": "Out of stock" }
+        }
+      }
+    }
+  }
+}</code></pre>
+        <p class="snip-cap">Read by a human, once. If the summary goes stale, nothing breaks — the client code was written against the schema, and the schema is what CI diffs.</p>
+      </div>
+      <div class="snip">
+        <div class="snip-label"><span>MCP · tool definition</span>
+          <button class="copy" data-target="src-tool">copy</button></div>
+        <pre id="src-tool"><code>{
+  "name": "place_order",
+  "description": "<span class="hl">Place an order for a customer.
+    Only call this after the customer has
+    confirmed the cart. If an item is out
+    of stock, the result says which one —
+    offer alternatives before retrying.</span>",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "customer_id": { "type": "string" },
+      "items":       { "type": "array" }
+    },
+    "required": ["customer_id", "items"]
+  }
+}</code></pre>
+        <p class="snip-cap">Read by a model, every session. The highlighted prose is <em>executed</em>: it decides when the tool gets called and what happens on failure. Edit it and the system behaves differently — with no schema diff, no type error, no failing build.</p>
+      </div>
+    </div>
+
+    <div class="claims">
+      <div class="claim c-ag">
+        <h3>Descriptions are load-bearing</h3>
+        <p>In REST, documentation describes the interface. In MCP, documentation <strong>is</strong> the interface — the description is the only thing standing between the model and calling the tool at the wrong moment with the wrong intent. Tool descriptions are prompt engineering with a schema attached, and they deserve the same review discipline as code, because they change behaviour the way code does while diffing the way prose does.</p>
+      </div>
+      <div class="claim c-bs">
+        <h3>Errors are read, not handled</h3>
+        <p>A REST error is a status code for <em>code</em> to branch on — <code>409</code> means whatever the client developer decided it means, back at design time. An MCP tool error is text for a <em>model</em> to read and recover from. "Out of stock: SKU-1432; suggest alternatives" lets the agent take a sensible next step; a bare <code>500</code> teaches it nothing and invites a blind retry. In MCP, error messages are UX.</p>
+      </div>
+      <div class="claim c-md">
+        <h3>Granularity follows the consumer</h3>
+        <p>REST grew resource-grained because code composes cheaply — a developer happily chains five endpoint calls into one use case. A model chaining five CRUD calls is five chances to pick wrongly, so MCP tools want to be <strong>intent-shaped</strong>: <code>place_order</code>, not <code>POST /orders</code> plus four lookups. This is the same rule the <a href="architecture.html#middle">Architecture page</a> derives for the migration: never wrap endpoints one-for-one.</p>
+      </div>
+      <div class="claim c-pd">
+        <h3>The sequence is untyped</h3>
+        <p>REST's compensating virtue, and it's a big one: the <em>order</em> of calls is in reviewed, tested client code. In MCP nothing types the sequence — the model may call tools in an order no one anticipated, and no contract artefact can fail a build over it. What replaces the type-check is evals over trajectories and guardrails before execution. If you can't afford that machinery yet, that's a genuine reason to stay behind REST.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ SIDE BY SIDE ============ -->
+  <section id="compare">
+    <p class="h2-note">Side by side</p>
+    <h2>Dimension by dimension</h2>
+    <p class="body">Rows ordered from the root cause down to the plumbing. The first row generates all the others.</p>
+
+    <div class="table-wrap">
+      <table class="cmp">
+        <thead>
+          <tr><th>Dimension</th><th class="th-rest">REST</th><th class="th-mcp">MCP</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Consumer</td><td>A developer at design time, then the code they wrote, forever after.</td><td>A model at runtime, choosing per turn — plus the human approving what it proposes.</td></tr>
+          <tr><td>Discovery</td><td>Out-of-band: OpenAPI docs read by a person before any call is made.</td><td>In-band: <b>tools/list</b> per session. New capability tonight, every client has it tomorrow.</td></tr>
+          <tr><td>Contract</td><td>Schema — typed, diffable, breakage is computable in CI.</td><td>Schema <b>plus prose</b> — the description steers behaviour, and prose changes don't fail builds.</td></tr>
+          <tr><td>Call sequence</td><td>Fixed in client code; reviewable, testable, identical every run.</td><td>Composed by the model each run; validated by evals and guardrails, not by types.</td></tr>
+          <tr><td>Granularity</td><td>Resource-grained CRUD; code composes the use case.</td><td>Intent-grained tools; the use case <b>is</b> the tool.</td></tr>
+          <tr><td>Errors</td><td>Status codes for code to branch on.</td><td>Readable messages for the model to recover from — error text is UX.</td></tr>
+          <tr><td>Direction</td><td>Client asks, server answers. Full stop.</td><td>Bidirectional: server may request sampling from the model or elicit input from the user.</td></tr>
+          <tr><td>Wire</td><td>HTTP verbs on resource URLs.</td><td>JSON-RPC 2.0 over stdio or streamable HTTP.</td></tr>
+          <tr><td>State</td><td>Stateless per request; cache-friendly by construction.</td><td>Capability handshake per session; core moving stateless so servers scale like web services.</td></tr>
+          <tr><td>Versioning</td><td>URL or header versions; a break is a schema diff both sides can compute.</td><td>Dated protocol revisions with a deprecation policy; but a description edit changes behaviour with no diffable break.</td></tr>
+          <tr><td>Auth</td><td>OAuth 2.x, mature and ubiquitous.</td><td>Converging on the same rails: OAuth/OIDC-aligned, with enterprise-managed authorisation for IdP-governed access.</td></tr>
+          <tr><td>Maturity</td><td>Two decades of tooling, gateways, monitoring, muscle memory.</td><td>Spec from late 2024, moving fast; the operational toolchain is still being built.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ MYTHS ============ -->
+  <section id="myths">
+    <p class="h2-note">Corrections</p>
+    <h2>Four things people get wrong</h2>
+
+    <div class="claims">
+      <div class="claim c-ag">
+        <h3>"MCP replaces REST"</h3>
+        <p>It sits <em>in front of</em> REST far more often than instead of it. The most common production MCP server is an adapter translating intent-shaped tool calls into the same REST endpoints that existed last year — Figure 3 below is the picture. The claim's honest core is narrower: for <strong>agent-facing</strong> integration surfaces, MCP is becoming the default doorway. The service behind the doorway keeps speaking whatever it spoke.</p>
+      </div>
+      <div class="claim c-bs">
+        <h3>"It's just RPC with hype"</h3>
+        <p>The wire is indeed unglamorous JSON-RPC. What's new isn't the encoding — it's <strong>who reads the contract</strong>. No prior RPC standard made natural-language descriptions a load-bearing part of the interface, defined a runtime discovery loop for a non-deterministic caller, or let the server ask its caller's model a question mid-request. Judge it by the loop it standardises, not by the framing bytes.</p>
+      </div>
+      <div class="claim c-md">
+        <h3>"OpenAPI already does this"</h3>
+        <p>A model <em>can</em> read an OpenAPI spec and improvise calls — every lab demoed exactly that. What that leaves unstandardised is everything around the call: how the catalogue reaches the model, how results re-enter context, how auth is delegated, how the client and server negotiate what each supports. Each vendor solved that bespoke, which is the N×M problem again with extra steps. MCP's contribution is boring on purpose: one loop, agreed on by clients that compete.</p>
+      </div>
+      <div class="claim c-pd">
+        <h3>"MCP is only tools"</h3>
+        <p>Tools are one of three server primitives. <strong>Resources</strong> expose data for the host to place into context (the application decides, not the model); <strong>prompts</strong> are user-invoked templates. In the other direction, servers can request <strong>sampling</strong> and <strong>elicitation</strong> from the client. Reducing MCP to "function calling over the network" misses that it's a two-way protocol between a host application and a capability provider — the tool call is just its loudest message.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ HOW THEY STACK ============ -->
+  <section id="stack">
+    <p class="h2-note">Figure 3</p>
+    <h2>How they actually stack in production</h2>
+    <p class="body">The realistic end-state for a system that already has a REST API isn't a swap — it's <strong>two doorways into one domain</strong>. Deterministic consumers (your frontend, partner backends, cron jobs) keep the REST door: they benefit from typed contracts and don't need runtime discovery. Agent consumers get the MCP door, with tools shaped around intent. Both doors enforce the same identity and land on the same invariants.</p>
+
+    <div class="fig">
+      <div class="fig-label"><span>diagram · two doorways, one domain</span>
+        <button class="copy" data-target="src-stack">copy</button></div>
+      <div class="mermaid-frame">
+<pre class="mermaid" id="src-stack">
+flowchart LR
+    agent["Agent"]
+    partner["Partner code · frontend · jobs"]
+    idp["Identity"]
+    mcps["MCP server · tools"]
+    rest["REST API"]
+    subgraph sor["System of record"]
+        direction LR
+        dom["Domain"] --> db["Database"]
+    end
+    agent -->|"tools/call · on behalf of user"| mcps
+    partner -->|"HTTP · typed contract"| rest
+    mcps -->|"adapter, often"| rest
+    mcps -.->|"or directly"| dom
+    rest --> dom
+    idp -.->|enforced| mcps
+    idp -.->|enforced| rest
+    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px
+    classDef hot fill:#FBEEDF,stroke:#C4661F,color:#9A4E17,font-size:13px
+    class partner,rest,idp,dom,db n
+    class agent,mcps hot
+    style sor fill:#FDFBE4,stroke:#C9C56A,color:#5C5A20
+</pre>
+      </div>
+      <p class="fig-cap">The solid MCP→REST arrow is the pragmatic start: ship the MCP server as a facade. The dotted arrow is where you want to end up — both adapters as siblings on the domain. The trade-offs of facade-first, and the rule that keeps it survivable (intent-shaped tools from day one), are worked through in <a href="architecture.html#middle" style="color:inherit">the middle state</a>.</p>
+    </div>
+
+    <p class="body">Two warnings that only apply to the stacked shape. <strong>Enforcement lives twice</strong>: the REST layer checks per endpoint, the MCP layer per capability, and wherever they disagree, the weaker one is your actual policy. <strong>Identity must be delegated</strong>: if the MCP server calls the REST API with its own service credentials, every user of every agent silently inherits the server's permissions — the tool boundary has to carry the user's identity all the way down.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ WHICH ONE WHEN ============ -->
+  <section id="choose">
+    <p class="h2-note">Decision</p>
+    <h2>Which one, when</h2>
+
+    <div class="claims">
+      <div class="claim c-md">
+        <h3>Stay with REST when…</h3>
+        <p>The caller is deterministic code: service-to-service traffic, your own frontend, webhooks, anything with hard latency budgets or contract-tested SLAs. No model in the path means MCP buys you nothing there — you'd be paying discovery and prose-contract costs for a caller that can't use either.</p>
+      </div>
+      <div class="claim c-ag">
+        <h3>Reach for MCP when…</h3>
+        <p>The caller is a model, or many different models: a capability that should be usable from Claude, an IDE, and an internal agent without three bespoke integrations. The wins are runtime discovery, one connector for N clients, and an interface a model can actually be steered by. Start with reads; gate writes behind approval from the first commit.</p>
+      </div>
+      <div class="claim c-bs">
+        <h3>Run both when…</h3>
+        <p>You have an existing API <em>and</em> agent consumers — which is most real systems now. Publish REST for code and MCP for agents, over the same domain and the same identity. Resist the one-for-one wrapper: tools are intent-shaped from day one or the agent welds itself to your old endpoint list.</p>
+      </div>
+      <div class="claim c-pd">
+        <h3>The test that settles arguments</h3>
+        <p>Ask one question about the consumer: <strong>is anything in this call path deciding at runtime what to call next?</strong> No — REST, and enjoy the types. Yes — that segment of the path wants MCP semantics: intent-shaped tools, readable errors, descriptions reviewed like code, and evals where the type-checker used to be.</p>
+      </div>
+    </div>
+
+    <p class="body" style="margin-top:24px">Related concepts in the knowledge base, and the longer architectural argument:</p>
+    <div class="chips">
+      <a class="chip" href="index.html#mcp">MCP</a>
+      <a class="chip" href="index.html#tool-use">Function calling / tool use</a>
+      <a class="chip" href="index.html#tool-design">Tool design</a>
+      <a class="chip" href="index.html#agent-loop">The agent loop</a>
+      <a class="chip" href="index.html#guardrails-permissions">Guardrails &amp; permissions</a>
+      <a class="chip" href="index.html#agent-trajectory-evals">Evals for agents</a>
+      <a class="chip" href="index.html#a2a">Agent-to-agent</a>
+      <a class="chip" href="architecture.html#middle">Architecture · the middle state</a>
+      <a class="chip" href="architecture.html#integration">Architecture · integration</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="foot">
+    <span>© 2026 Konrad Cinkusz · Konrad's Dev Insight</span>
+    <div class="foot-links">
+      <a id="foot-sub" href="#" target="_blank" rel="noopener">▶ YouTube</a>
+      <a id="foot-gh" href="#" target="_blank" rel="noopener">★ GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   Same CONFIG block as index.html — keep the two in sync.
+   ============================================================ */
+const CONFIG = {
+  channelUrl: "https://www.youtube.com/@_dev_insight",
+  github:     "https://github.com/konradcinkusz/agents-and-llms"
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("nav-sub").href = CONFIG.channelUrl;
+  document.getElementById("foot-sub").href = CONFIG.channelUrl;
+  document.getElementById("foot-gh").href = CONFIG.github;
+
+  /* stash the source of the plain code figures so "copy" works for them too */
+  document.querySelectorAll(".snip pre").forEach(el => { el.dataset.src = el.textContent.trim(); });
+
+  /* copy the source of a figure (mermaid or code) */
+  document.body.addEventListener("click", (e) => {
+    const btn = e.target.closest(".copy");
+    if (!btn) return;
+    const src = document.getElementById(btn.dataset.target);
+    const text = (src && src.dataset.src) ? src.dataset.src : "";
+    const done = () => { btn.textContent = "copied ✓"; setTimeout(() => { btn.textContent = "copy"; }, 1300); };
+    const fallback = () => {
+      const ta = document.createElement("textarea"); ta.value = text;
+      ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta);
+      ta.select(); try { document.execCommand("copy"); done(); } catch(_){} document.body.removeChild(ta);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
+    } else fallback();
+  });
+
+  /* theme toggle — identical behaviour to index.html */
+  const root = document.documentElement;
+  let stored = null;
+  try { stored = localStorage.getItem("theme"); } catch(_){}
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  root.setAttribute("data-theme", stored || (prefersDark ? "dark" : "light"));
+  document.getElementById("theme").addEventListener("click", () => {
+    const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch(_){}
+  });
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) {
+    /* stash the source before mermaid replaces it with an <svg>, so "copy" still works */
+    document.querySelectorAll("pre.mermaid").forEach(el => { el.dataset.src = el.textContent.trim(); });
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "base",
+      securityLevel: "strict",
+      flowchart: { useMaxWidth: true, htmlLabels: true }
+    });
+    mermaid.run({ querySelector: "pre.mermaid" }).catch(() => {});
+  }
+</script>
+</body>
+</html>
