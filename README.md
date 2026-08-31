@@ -6,8 +6,8 @@ A searchable knowledge base for the "Agents & LLMs" short series. Companion to t
 ## The knowledge base
 
 [`index.html`](index.html) is a static, search-first page. Type a term or filter by
-category (Absolute basics / Foundations / Model internals / Agents & tools) and it
-filters instantly — no backend, no build step.
+category (Absolute basics / Foundations / Model internals / Agents & tools /
+Production & ops) and it filters instantly — no backend, no build step.
 
 Content lives in [`concepts.json`](concepts.json), separate from the page. **Adding a
 new short is one JSON object, no HTML editing:**
@@ -36,6 +36,22 @@ new short is one JSON object, no HTML editing:**
   screen. The **🔗 copy link to this view** button next to the result count copies
   that URL — anyone who opens it lands on the same filter and search, restored
   automatically on load.
+
+## Contributing
+
+[`CONTRIBUTING.md`](CONTRIBUTING.md) is the full field reference and style guide — what a
+`def` and a `note` should sound like, when a snippet earns its place, which category a tile
+belongs in, and the mermaid conventions the eleven diagrams share. Before opening a PR:
+
+```bash
+node scripts/validate.mjs
+```
+
+It needs nothing installed — Node built-ins only, matching the no-dependencies rule for the
+site itself. It checks `concepts.json` against [`concepts.schema.json`](concepts.schema.json)
+(required fields, no unknown ones, valid `kind` and `lang`, `id` shape and uniqueness,
+`videoUrl` empty-or-YouTube) and confirms every `index.html#<id>` link in the pages resolves
+to a real tile. CI runs the same command on every push and pull request.
 
 ## Architecture: CRUD to agents
 
@@ -84,13 +100,21 @@ GitHub Pages serves everything over `https://`, so this only matters for local p
 ```
 agents-and-llms/
 ├─ README.md
-├─ ROADMAP.md          ← where the project is going, phase by phase
+├─ CONTRIBUTING.md          ← how to write a tile: fields, style guide, workflow
+├─ ROADMAP.md               ← where the project is going, phase by phase
 ├─ LICENSE
 ├─ .nojekyll
-├─ index.html          ← the knowledge base (search + filter)
-├─ architecture.html    ← CRUD-to-agents essay (second tab)
-├─ mcp-vs-rest.html     ← MCP vs REST essay (third tab)
-└─ concepts.json        ← every tile's data — edit this to add a short
+├─ index.html               ← the knowledge base (search + filter)
+├─ architecture.html        ← CRUD-to-agents essay (second tab)
+├─ mcp-vs-rest.html         ← MCP vs REST essay (third tab)
+├─ concepts.json            ← every tile's data — edit this to add a short
+├─ concepts.schema.json     ← the field reference for concepts.json
+├─ scripts/
+│  └─ validate.mjs          ← the only check: node scripts/validate.mjs
+└─ .github/
+   ├─ workflows/validate.yml   ← runs the validator on every push and PR
+   ├─ ISSUE_TEMPLATE/          ← new tile · fix a tile · video published
+   └─ pull_request_template.md
 ```
 
 ## License

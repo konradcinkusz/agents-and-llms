@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: How to write a tile
+    url: https://github.com/konradcinkusz/agents-and-llms/blob/main/CONTRIBUTING.md
+    about: Field reference, style guide and the workflow for adding a short. Read this before proposing a tile.
+  - name: Roadmap tracker
+    url: https://github.com/konradcinkusz/agents-and-llms/issues/26
+    about: What is planned and what is already claimed, phase by phase. Check here before filing something new.

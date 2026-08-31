@@ -1,0 +1,112 @@
+name: New concept tile
+description: Propose a concept that deserves its own tile in the knowledge base.
+title: "[tile] "
+labels: ["content"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One concept per issue. A tile is one plain sentence, optionally one sentence of nuance,
+        and a snippet only when it shows something the sentences cannot.
+
+        Two things worth doing first: search the [existing tiles](https://konradcinkusz.github.io/agents-and-llms/)
+        so you are not proposing one that is already there, and skim
+        [CONTRIBUTING.md](https://github.com/konradcinkusz/agents-and-llms/blob/main/CONTRIBUTING.md)
+        for the style guide and worked examples. A rough draft is fine — the wording gets edited in review.
+
+  - type: input
+    id: title
+    attributes:
+      label: Proposed title
+      description: >-
+        Phrased the way a viewer would search for it. Question form ("What is …?") for absolute
+        basics, a short noun phrase everywhere else.
+      placeholder: KV cache
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Suggested category
+      description: >-
+        Five categories, no more. The line that blurs: Agents & tools is the mechanism,
+        Production & ops is the discipline of running the mechanism well.
+      options:
+        - "Absolute basics — vocabulary needed before the other tiles parse"
+        - "Foundations — what you need to call an LLM API at all"
+        - "Model internals — what happens inside the network"
+        - "Agents & tools — what makes it an agent rather than a chatbot"
+        - "Production & ops — the disciplines of running one for real"
+    validations:
+      required: true
+
+  - type: input
+    id: proposed-id
+    attributes:
+      label: Proposed id
+      description: >-
+        kebab-case, unique, and permanent once merged — it is the anchor `index.html#<id>` that
+        pinned YouTube comments and the essay pages point at, so it is never renamed. Leave this
+        blank if you are unsure and a maintainer will pick one.
+      placeholder: kv-cache
+
+  - type: textarea
+    id: def
+    attributes:
+      label: Draft def — one plain sentence
+      description: >-
+        Say what the thing is, not what category of thing it belongs to. No jargon that is not
+        itself a tile. Do not open with `A <title> is` — the title already said that.
+      placeholder: The smallest chunk of text a model reads or writes — usually a word-piece, not a whole word.
+    validations:
+      required: true
+
+  - type: textarea
+    id: note
+    attributes:
+      label: Draft note — one sentence of nuance (optional)
+      description: >-
+        Correct a likely misreading, name the trade-off, give the rule of thumb, or draw a
+        boundary. Never restate the def in new words. Omit it rather than padding it.
+      placeholder: Everything is counted, priced and limited in tokens. For English, ~4 characters is about 1 token.
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Snippet or diagram (optional)
+      description: >-
+        Six lines or fewer, and only if it shows something the two sentences cannot. Illustrative
+        pseudo-code is correct — no imports, no API keys, no `main()`. A definition-only tile is a
+        finished tile.
+      placeholder: |
+        scores  = query @ key.T
+        weights = softmax(scores)
+        out     = weights @ value
+      render: text
+
+  - type: dropdown
+    id: lang
+    attributes:
+      label: Snippet language
+      description: >-
+        `python` for a mechanism or formula, `json` when the concept is a payload shape, `trace`
+        for a sequence of model turns, `mermaid` when you would draw it with arrows. Leave it on
+        the first option if there is no snippet.
+      options:
+        - "no snippet — definition-only tile"
+        - "python"
+        - "json"
+        - "trace"
+        - "mermaid"
+      default: 0
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why this deserves a tile
+      description: >-
+        What question does a viewer arrive with? Which existing tiles does it sit next to, and
+        what does it add that they do not already cover?
+    validations:
+      required: true

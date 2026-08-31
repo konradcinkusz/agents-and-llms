@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://konradcinkusz.github.io/agents-and-llms/concepts.schema.json",
+  "title": "Agents & LLMs concept tiles",
+  "description": "Every tile rendered by index.html. concepts.json is a flat array of concept objects and is the only database this project has. This schema doubles as the field reference; scripts/validate.mjs enforces the same rules plus the two things a schema cannot express: ids must be unique across the array, and every index.html#<id> link in the essay pages must resolve to a tile.",
+  "type": "array",
+  "items": { "$ref": "#/$defs/concept" },
+  "$defs": {
+    "concept": {
+      "type": "object",
+      "description": "One searchable tile. Adding a short means adding one of these objects — no HTML editing.",
+      "required": ["id", "title", "kind", "def"],
+      "additionalProperties": false,
+      "dependentRequired": {
+        "code": ["lang"],
+        "lang": ["code"]
+      },
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Permanent kebab-case anchor for the tile (index.html#<id>). Pinned YouTube comments link to it, so an id is never renamed once merged. Must be unique across the file.",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "examples": ["kv-cache", "agent-loop", "rag"]
+        },
+        "title": {
+          "type": "string",
+          "description": "The tile heading, phrased the way a viewer would search for it — \"What is an AI agent?\" rather than \"Agent (definition)\".",
+          "minLength": 1,
+          "pattern": "\\S",
+          "examples": ["KV cache", "What is an AI agent?"]
+        },
+        "kind": {
+          "type": "string",
+          "description": "Category key. Maps to a filter chip label in index.html's KINDS object: basics = Absolute basics, found = Foundations, model = Model internals, agent = Agents & tools, prod = Production & ops.",
+          "enum": ["basics", "found", "model", "agent", "prod"]
+        },
+        "def": {
+          "type": "string",
+          "description": "The definition: ONE plain-language sentence, no jargon that itself needs a tile. This is the line a viewer reads first.",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "note": {
+          "type": "string",
+          "description": "Optional. ONE more sentence of nuance — the caveat, the contrast, or the thing people get wrong. Omit it rather than padding it.",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "lang": {
+          "type": "string",
+          "description": "Language of the snippet in \"code\", which selects the renderer in index.html: python/json/trace are syntax-highlighted, mermaid is drawn as a diagram. Required whenever \"code\" is present, and meaningless without it.",
+          "enum": ["python", "json", "trace", "mermaid"]
+        },
+        "code": {
+          "type": "string",
+          "description": "Optional snippet or mermaid diagram, at most about six lines. Include it only when it explains something the two sentences cannot; a definition-only tile omits both \"code\" and \"lang\".",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "videoUrl": {
+          "type": "string",
+          "description": "Link to the published short. Empty string until the short exists — the tile grows a \"watch\" link automatically once it is filled in. Must be an https:// youtube.com or youtu.be URL.",
+          "pattern": "^$|^https://(?:(?:www|m)\\.)?(?:youtube\\.com|youtu\\.be)/.+",
+          "examples": ["", "https://www.youtube.com/shorts/abc123"]
+        }
+      }
+    }
+  }
+}
