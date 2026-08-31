@@ -127,6 +127,26 @@
   .chip[aria-pressed="true"]{color:#fff; background:var(--ink); border-color:var(--ink)}
   .chip[aria-pressed="true"] .n{color:color-mix(in srgb, var(--paper) 70%, transparent)}
 
+  .chips.paths{margin-top:10px; align-items:center}
+  .paths-label{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--faint); margin-right:2px}
+  .chip-path[aria-pressed="true"]{background:var(--md); border-color:var(--md); color:#fff}
+  .chip-path[aria-pressed="true"] .n{color:color-mix(in srgb, #fff 70%, transparent)}
+  .path-blurb{margin:14px 0 0; font-size:14.5px; color:var(--muted)}
+
+  /* step number, shown only inside a learning path */
+  .step{display:inline-grid; place-items:center; width:22px; height:22px; flex-shrink:0;
+    border-radius:50%; background:var(--kc-soft); color:var(--kc-ink);
+    font-family:var(--font-mono); font-size:11.5px; font-weight:500}
+
+  /* "see also" row */
+  .rel-row{margin:14px 0 0; display:flex; flex-wrap:wrap; align-items:center; gap:7px}
+  .rel-label{font-family:var(--font-mono); font-size:11px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--faint); margin-right:2px}
+  .rel{font-size:13px; text-decoration:none; color:var(--muted); background:var(--code);
+    border:1px solid var(--line); border-radius:20px; padding:4px 11px; transition:all .15s}
+  .rel:hover{color:var(--ink); border-color:var(--kc); background:var(--kc-soft)}
+
   .result-bar{display:flex; align-items:center; justify-content:space-between; gap:16px;
     margin:30px 0 18px; padding-top:22px; border-top:1px solid var(--line)}
   .count{font-family:var(--font-mono); font-size:13px; color:var(--faint)}
@@ -239,6 +259,8 @@
     </div>
 
     <div class="chips" id="chips" role="group" aria-label="Filter by category"></div>
+    <div class="chips paths" id="paths" role="group" aria-label="Follow a learning path" hidden></div>
+    <p class="path-blurb" id="path-blurb" hidden></p>
 
     <div class="result-bar">
       <span class="count" id="count"></span>
@@ -367,12 +389,32 @@ function snippetHTML(c){
     <pre><code>${hl(c.code, c.lang)}</code></pre>
   </div>`;
 }
-function cardHTML(c, q){
+/* Everything a search query is matched against. "aliases" are the terms a viewer
+   is likely to type but that appear nowhere in the tile's own words — "top-p",
+   "CoT", "function calling" — so they are searched but never displayed. */
+function searchBlob(c){
+  return (c.title + " " + KINDS[c.kind] + " " + c.def + " " + (c.note||"") + " " +
+          (c.code||"") + " " + (c.aliases ? c.aliases.join(" ") : "")).toLowerCase();
+}
+
+/* "See also": a hand-picked shortlist of the tiles worth reading next. The
+   concepts form a graph; without this the page renders it as a flat list. */
+function relatedHTML(c){
+  if (!Array.isArray(c.related) || c.related.length === 0) return "";
+  const links = c.related
+    .map(id => BY_ID[id])
+    .filter(Boolean)
+    .map(t => `<a class="rel" href="#${t.id}" data-goto="${t.id}">${esc(t.title)}</a>`)
+    .join("");
+  return links ? `<div class="rel-row"><span class="rel-label">See also</span>${links}</div>` : "";
+}
+
+function cardHTML(c, q, stepNo){
   const kindLabel = KINDS[c.kind];
-  const searchBlob = (c.title + " " + kindLabel + " " + c.def + " " + (c.note||"") + " " + (c.code||"")).toLowerCase();
   const hasVideo = c.videoUrl && c.videoUrl.trim().length > 0;
-  return `<article class="card k-${c.kind}" id="${c.id}" data-kind="${kindLabel}" data-search="${esc(searchBlob)}">
+  return `<article class="card k-${c.kind}" id="${c.id}" data-kind="${kindLabel}" data-search="${esc(searchBlob(c))}">
     <div class="card-head">
+      ${stepNo ? `<span class="step" aria-label="Step ${stepNo}">${stepNo}</span>` : ""}
       <span class="card-title">${markMatch(c.title, q)}</span>
       <span class="tag">${kindLabel}</span>
       ${hasVideo ? `<a class="video-link" href="${esc(c.videoUrl)}" target="_blank" rel="noopener">▶ watch</a>` : ""}
@@ -382,33 +424,66 @@ function cardHTML(c, q){
       <p class="def">${markMatch(c.def, q)}</p>
       ${snippetHTML(c)}
       ${c.note ? `<p class="note">${markMatch(c.note, q)}</p>` : ""}
+      ${relatedHTML(c)}
     </div>
   </article>`;
 }
 
 let CONCEPTS = [];
+let BY_ID = {};
+let PATHS = [];
 let active = "All";
-let activeTileId = null; // the one tile currently "lit up" by click, or null
+let activePath = null;      // a path id, or null for the normal grid
+let activeTileId = null;    // the one tile currently "lit up" by click, or null
 
-/* ---------- shareable filter state: ?kind=agent&q=react ---------- */
+function pathById(id){ return PATHS.find(p => p.id === id) || null; }
+
+/* ---------- shareable state: ?kind=agent&q=react, or ?path=builder ---------- */
 function kindKeyForLabel(label){
   return Object.keys(KINDS).find(k => KINDS[k] === label);
 }
 function restoreFromURL(){
   const params = new URLSearchParams(location.search);
+  const pathParam = params.get("path");
+  if (pathParam && pathById(pathParam)) activePath = pathParam;
   const kindParam = params.get("kind");
-  if (kindParam && KINDS[kindParam]) active = KINDS[kindParam];
+  if (!activePath && kindParam && KINDS[kindParam]) active = KINDS[kindParam];
   const qParam = params.get("q");
   if (qParam) document.getElementById("search").value = qParam;
 }
 function syncURL(){
   const params = new URLSearchParams();
-  const kindKey = kindKeyForLabel(active);
-  if (kindKey) params.set("kind", kindKey);
+  // a path replaces the category filter rather than combining with it
+  if (activePath) {
+    params.set("path", activePath);
+  } else {
+    const kindKey = kindKeyForLabel(active);
+    if (kindKey) params.set("kind", kindKey);
+  }
   const q = document.getElementById("search").value.trim();
   if (q) params.set("q", q);
   const qs = params.toString();
   history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "") + location.hash);
+}
+
+/* Jump to a tile from a "see also" link. The target may be filtered out of the
+   current view, so clear the filters first — otherwise the link silently does
+   nothing, which is worse than navigating somewhere unexpected. */
+function goToTile(id){
+  if (!BY_ID[id]) return;
+  active = "All";
+  activePath = null;
+  document.getElementById("search").value = "";
+  buildChips();
+  buildPathChips();
+  render();
+  syncURL();
+  history.replaceState(null, "", location.pathname + location.search + "#" + id);
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.scrollIntoView({ block: "center" });
+  el.classList.add("is-target");
+  setTimeout(() => el.classList.remove("is-target"), 2200);
 }
 
 async function init(){
@@ -426,9 +501,18 @@ async function init(){
     grid.innerHTML = `<div class="load-err">Couldn't load concepts.json (${esc(String(err.message || err))}).<br>If you're opening this file directly from disk, serve it over a local server — e.g. <code>python3 -m http.server</code> — since <code>fetch()</code> is blocked on the <code>file://</code> origin.</div>`;
     return;
   }
+  BY_ID = Object.fromEntries(CONCEPTS.map(c => [c.id, c]));
+
+  // Paths are a bonus, not a dependency — if the file is missing, the page is
+  // exactly what it was before, minus the Paths row.
+  try {
+    const res = await fetch("paths.json");
+    if (res.ok) PATHS = await res.json();
+  } catch (_) { PATHS = []; }
 
   restoreFromURL();
   buildChips();
+  buildPathChips();
   render();
 
   document.getElementById("search").addEventListener("input", () => { render(); syncURL(); });
@@ -463,11 +547,41 @@ function buildChips(){
     b.innerHTML = `${label} <span class="n">${counts[label] ?? 0}</span>`;
     b.addEventListener("click", () => {
       active = label;
+      activePath = null;   // picking a category leaves the path
       chipBox.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+      buildPathChips();
       render();
       syncURL();
     });
     chipBox.appendChild(b);
+  });
+}
+
+/* A path is a curated, ORDERED route through the tiles — the answer to "where
+   do I start?", which search cannot give. It replaces the category filter
+   rather than combining with it: the whole point is the sequence. */
+function buildPathChips(){
+  const box = document.getElementById("paths");
+  if (!box) return;
+  if (PATHS.length === 0) { box.hidden = true; return; }
+  box.hidden = false;
+  box.innerHTML = `<span class="paths-label">Start here</span>`;
+  PATHS.forEach(p => {
+    const b = document.createElement("button");
+    b.className = "chip chip-path";
+    b.type = "button";
+    b.title = p.blurb;
+    b.setAttribute("aria-pressed", p.id === activePath ? "true" : "false");
+    b.innerHTML = `${esc(p.title)} <span class="n">${p.steps.length}</span>`;
+    b.addEventListener("click", () => {
+      activePath = (activePath === p.id) ? null : p.id;   // click again to leave
+      active = "All";
+      buildChips();
+      buildPathChips();
+      render();
+      syncURL();
+    });
+    box.appendChild(b);
   });
 }
 
@@ -478,19 +592,36 @@ function render(){
   const empty = document.getElementById("empty");
   const countEl = document.getElementById("count");
 
-  const filtered = CONCEPTS.filter(c => {
-    const kindLabel = KINDS[c.kind];
-    const okKind = active === "All" || kindLabel === active;
-    const blob = (c.title + " " + kindLabel + " " + c.def + " " + (c.note||"") + " " + (c.code||"")).toLowerCase();
-    const okQ = !qLower || blob.includes(qLower);
+  const path = activePath ? pathById(activePath) : null;
+  const blurbEl = document.getElementById("path-blurb");
+
+  // In a path, order is the content: the tiles come out in the path's sequence,
+  // numbered, rather than in file order.
+  const pool = path
+    ? path.steps.map(id => BY_ID[id]).filter(Boolean)
+    : CONCEPTS;
+
+  const stepOf = new Map();
+  if (path) pool.forEach((c, i) => stepOf.set(c.id, i + 1));
+
+  const filtered = pool.filter(c => {
+    const okKind = path || active === "All" || KINDS[c.kind] === active;
+    const okQ = !qLower || searchBlob(c).includes(qLower);
     return okKind && okQ;
   });
 
-  grid.innerHTML = filtered.map(c => cardHTML(c, q)).join("");
+  if (blurbEl) {
+    blurbEl.hidden = !path;
+    if (path) blurbEl.textContent = path.blurb;
+  }
+
+  grid.innerHTML = filtered.map(c => cardHTML(c, q, stepOf.get(c.id))).join("");
   empty.hidden = filtered.length !== 0;
+  const total = path ? pool.length : CONCEPTS.length;
+  const noun = path ? `in ${path.title}` : "concepts";
   countEl.innerHTML = q
-    ? `<b>${filtered.length}</b> of ${CONCEPTS.length} match "<b>${esc(q)}</b>"`
-    : `<b>${filtered.length}</b> of ${CONCEPTS.length} concepts`;
+    ? `<b>${filtered.length}</b> of ${total} match "<b>${esc(q)}</b>"`
+    : `<b>${filtered.length}</b> ${path ? "steps " + noun : "of " + total + " concepts"}`;
 
   // re-apply the lit-up state after re-render, since innerHTML above wipes classes
   if (activeTileId) {
@@ -559,8 +690,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* click a tile to light it up — only one active at a time, click again (or elsewhere) to clear */
+  /* "see also" links navigate to the target tile rather than toggling the card */
   document.body.addEventListener("click", (e) => {
-    const interactive = e.target.closest(".copy, .video-link, .link-icon");
+    const rel = e.target.closest(".rel");
+    if (!rel) return;
+    e.preventDefault();
+    goToTile(rel.dataset.goto);
+  });
+
+  document.body.addEventListener("click", (e) => {
+    const interactive = e.target.closest(".copy, .video-link, .link-icon, .rel");
     if (interactive) return; // let those controls do their own thing, don't toggle the tile
 
     const card = e.target.closest(".card");

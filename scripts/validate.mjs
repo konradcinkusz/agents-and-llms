@@ -40,8 +40,12 @@ const LANGS = ["python", "json", "trace", "mermaid"];
 
 const REQUIRED_FIELDS = ["id", "title", "kind", "def"];
 
-// Optional fields. Planned additions ("related", "aliases") go here.
-const OPTIONAL_FIELDS = ["note", "lang", "code", "videoUrl"];
+const OPTIONAL_FIELDS = ["note", "lang", "code", "aliases", "related", "videoUrl"];
+
+// "related" is a hand-curated list of tiles to offer as "see also"; "aliases"
+// are extra search terms folded into the tile's search blob but never shown.
+const MAX_RELATED = 4;
+const MAX_ALIASES = 8;
 
 // Tile ids are permanent anchors (index.html#<id>), so they stay kebab-case.
 const ID_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -217,6 +221,41 @@ concepts.forEach((concept, i) => {
     error(`${where}: "note" must be a non-empty string, or be omitted entirely.`);
   }
 
+  // aliases: extra search terms. Shape only here; the cross-checks that need
+  // every id (dangling "related", alias collisions) run in a second pass below.
+  if ("aliases" in concept) {
+    if (!Array.isArray(concept.aliases) || concept.aliases.length === 0) {
+      error(`${where}: "aliases" must be a non-empty array of strings, or be omitted.`);
+    } else {
+      if (concept.aliases.length > MAX_ALIASES) {
+        error(`${where}: ${concept.aliases.length} aliases (max ${MAX_ALIASES}) — keep them to terms a viewer would actually type.`);
+      }
+      concept.aliases.forEach((a) => {
+        if (!isNonEmptyString(a)) error(`${where}: every alias must be a non-empty string (got ${JSON.stringify(a)}).`);
+      });
+      const seen = new Set(concept.aliases.map((a) => String(a).toLowerCase()));
+      if (seen.size !== concept.aliases.length) {
+        error(`${where}: "aliases" contains duplicates.`);
+      }
+    }
+  }
+
+  if ("related" in concept) {
+    if (!Array.isArray(concept.related) || concept.related.length === 0) {
+      error(`${where}: "related" must be a non-empty array of concept ids, or be omitted.`);
+    } else {
+      if (concept.related.length > MAX_RELATED) {
+        error(`${where}: ${concept.related.length} related ids (max ${MAX_RELATED}) — a "see also" row is a shortlist, not an index.`);
+      }
+      if (new Set(concept.related).size !== concept.related.length) {
+        error(`${where}: "related" lists the same id twice.`);
+      }
+      if (concept.related.includes(concept.id)) {
+        error(`${where}: "related" contains the tile's own id.`);
+      }
+    }
+  }
+
   // (e) videoUrl is "" or an https:// YouTube link
   if ("videoUrl" in concept) {
     const url = concept.videoUrl;
@@ -266,6 +305,93 @@ concepts.forEach((concept, i) => {
  * ------------------------------------------------------------------ */
 
 const conceptIds = new Set(idIndex.keys());
+
+/* ------------------------------------------------------------------ *
+ * Cross-tile checks — these need the full id set, so they run here.
+ * ------------------------------------------------------------------ */
+
+// Every "related" id must resolve, or the "see also" row renders a dead link.
+let relatedCount = 0;
+concepts.forEach((concept, i) => {
+  if (!concept || !Array.isArray(concept.related)) return;
+  concept.related.forEach((rid) => {
+    relatedCount += 1;
+    if (!conceptIds.has(rid)) {
+      error(`${at(i, concept)}: related id "${rid}" does not exist in ${FILE_LABEL}.`);
+    }
+  });
+});
+
+// An alias that is exactly another tile's title sends the searcher to the wrong
+// place — the whole point of aliases is routing, so this is an error, not a nit.
+const titleToId = new Map();
+concepts.forEach((c) => {
+  if (c && isNonEmptyString(c.title) && isNonEmptyString(c.id)) {
+    titleToId.set(c.title.trim().toLowerCase(), c.id);
+  }
+});
+let aliasCount = 0;
+concepts.forEach((concept, i) => {
+  if (!concept || !Array.isArray(concept.aliases)) return;
+  concept.aliases.forEach((alias) => {
+    if (!isNonEmptyString(alias)) return;
+    aliasCount += 1;
+    const owner = titleToId.get(String(alias).trim().toLowerCase());
+    if (owner && owner !== concept.id) {
+      error(`${at(i, concept)}: alias "${alias}" is the exact title of concepts "${owner}" — it would misroute the search.`);
+    }
+  });
+});
+
+/* ------------------------------------------------------------------ *
+ * paths.json — the curated learning routes, if present.
+ * ------------------------------------------------------------------ */
+
+const PATHS_PATH = join(ROOT, "paths.json");
+let pathCount = 0;
+let pathStepCount = 0;
+if (existsSync(PATHS_PATH)) {
+  let paths = null;
+  try {
+    paths = JSON.parse(readFileSync(PATHS_PATH, "utf8"));
+  } catch (err) {
+    error(`paths.json is not valid JSON: ${err.message}`);
+  }
+  if (paths !== null) {
+    if (!Array.isArray(paths)) {
+      error("paths.json must be a JSON array of path objects.");
+    } else {
+      const pathIds = new Set();
+      paths.forEach((p, i) => {
+        const label = p && typeof p.id === "string" ? `paths[${i}] "${p.id}"` : `paths[${i}]`;
+        if (p === null || typeof p !== "object" || Array.isArray(p)) {
+          error(`${label}: must be an object.`);
+          return;
+        }
+        pathCount += 1;
+        for (const field of ["id", "title", "blurb"]) {
+          if (!isNonEmptyString(p[field])) error(`${label}: "${field}" must be a non-empty string.`);
+        }
+        if (isNonEmptyString(p.id)) {
+          if (!ID_PATTERN.test(p.id)) error(`${label}: id is not kebab-case — it appears in the URL as ?path=${p.id}.`);
+          if (pathIds.has(p.id)) error(`${label}: duplicate path id.`);
+          pathIds.add(p.id);
+        }
+        if (!Array.isArray(p.steps) || p.steps.length === 0) {
+          error(`${label}: "steps" must be a non-empty array of concept ids.`);
+          return;
+        }
+        pathStepCount += p.steps.length;
+        p.steps.forEach((sid) => {
+          if (!conceptIds.has(sid)) error(`${label}: step "${sid}" does not exist in ${FILE_LABEL}.`);
+        });
+        if (new Set(p.steps).size !== p.steps.length) {
+          error(`${label}: the same concept appears twice in this path.`);
+        }
+      });
+    }
+  }
+}
 let tileRefCount = 0;
 const tileRefIds = new Set();
 let pagesScanned = 0;
@@ -321,6 +447,11 @@ for (const k of KIND_KEYS) {
 console.log(`  ${"total".padEnd(labelWidth)}  ${String(concepts.length).padStart(3)}`);
 console.log("");
 console.log(`  videos published:  ${withVideo}/${concepts.length}`);
+console.log(`  see-also edges:    ${relatedCount} across ${concepts.filter((c) => c && Array.isArray(c.related)).length} tiles, all resolved`);
+console.log(`  search aliases:    ${aliasCount} across ${concepts.filter((c) => c && Array.isArray(c.aliases)).length} tiles`);
+if (pathCount > 0) {
+  console.log(`  learning paths:    ${pathCount} paths, ${pathStepCount} steps, all resolved`);
+}
 console.log(`  tile anchors:      ${tileRefCount} index.html#... link${tileRefCount === 1 ? "" : "s"} across ${pagesScanned} page${pagesScanned === 1 ? "" : "s"}, ${tileRefIds.size} distinct id${tileRefIds.size === 1 ? "" : "s"}, all resolved`);
 if (warnings.length > 0) {
   console.log(`  warnings:          ${warnings.length} (not fatal)`);

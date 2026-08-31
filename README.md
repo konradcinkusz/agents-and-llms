@@ -31,6 +31,11 @@ new short is one JSON object, no HTML editing:**
 
 - `kind` is one of `basics` (Absolute basics), `found` (Foundations), `model` (Model internals), `agent` (Agents & tools), `prod` (Production & ops), `sec` (Security & safety).
 - `lang` and `code` are optional — omit both for a definition-only tile.
+- `aliases` are extra search terms, never displayed — the words someone would type that
+  aren't in the tile's own wording (`top-p`, `CoT`, `function calling`).
+- `related` is 2–4 ids rendered as the tile's **See also** row.
+- `paths.json` holds the ordered learning routes shown in the **Start here** row
+  (`index.html?path=builder`).
 - `videoUrl` is optional; leave it `""` until the short is published, then fill it in
   and the tile grows a **▶ watch** link automatically.
 - Every tile gets a stable anchor (`index.html#kv-cache`) for pinned comments or
@@ -134,6 +139,7 @@ agents-and-llms/
 ├─ architecture.html        ← CRUD-to-agents essay (second tab)
 ├─ mcp-vs-rest.html         ← MCP vs REST essay (third tab)
 ├─ concepts.json            ← every tile's data — edit this to add a short
+├─ paths.json               ← curated learning routes (the "Start here" row)
 ├─ concepts.schema.json     ← the field reference for concepts.json
 ├─ og-image.png             ← 1200×630 social preview card
 ├─ sitemap.xml
