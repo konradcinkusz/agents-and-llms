@@ -216,6 +216,16 @@
     "videoUrl": ""
   },
   {
+    "id": "skills",
+    "title": "What is an AI skill?",
+    "kind": "agent",
+    "def": "A folder of instructions and resources — templates, scripts, checklists — that a model reads before doing a task. Packaged know-how, loaded on demand.",
+    "note": "A skill teaches the model HOW (it reads, then does the work itself); MCP gives it ACCESS to live systems. Runbook vs phone line — full comparison on the MCP vs REST page.",
+    "lang": "mermaid",
+    "code": "flowchart LR\n    F[Skill folder]:::n -->|read into context| M[Model]:::n -->|does the work itself| R[Result]:::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
+    "videoUrl": ""
+  },
+  {
     "id": "evals",
     "title": "Evals",
     "kind": "agent",

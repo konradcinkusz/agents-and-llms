@@ -189,7 +189,8 @@
       <a class="chip" href="#compare">5 · Quick table</a>
       <a class="chip" href="#stack">6 · They don't compete</a>
       <a class="chip" href="#choose">7 · Which one?</a>
-      <a class="chip" href="#faq">8 · Quick answers</a>
+      <a class="chip" href="#skills">8 · Skills vs MCP</a>
+      <a class="chip" href="#faq">9 · Quick answers</a>
     </div>
   </section>
 
@@ -429,6 +430,86 @@ flowchart LR
 
   <hr class="rule" />
 
+  <!-- ============ SKILLS VS MCP ============ -->
+  <section id="skills">
+    <p class="h2-note">Bonus comparison · Figure 4</p>
+    <h2>"Skills" — the other thing people mix up with MCP</h2>
+    <p class="body">One more word keeps landing in the same conversations: <strong>skills</strong>. A skill is a folder of instructions and files — templates, scripts, checklists — that the model reads <strong>before</strong> doing a task. It's packaged know-how, loaded on demand. No server, no protocol: just knowledge.</p>
+
+    <div class="verdict">
+      <div class="v v-rest"><b>SKILL</b>Teaches the model <strong>how</strong>. It reads the instructions, then does the work itself. Like handing a new employee the company <strong>runbook</strong>.</div>
+      <div class="v v-mcp"><b>MCP</b>Gives the model <strong>access</strong>. It calls live tools on an external system. Like giving that employee a <strong>phone line</strong> to another department.</div>
+    </div>
+
+    <div class="fig">
+      <div class="fig-label"><span>diagram · knowledge vs access</span>
+        <button class="copy" data-target="src-skills">copy</button></div>
+      <div class="mermaid-frame">
+<pre class="mermaid" id="src-skills">
+flowchart TB
+    subgraph skl["Skill — know-how, read BEFORE the work"]
+        direction LR
+        folder["Folder: instructions,<br/>templates, scripts"] -->|"read into context"| m1["Model"]
+        m1 -->|"does the work itself"| out1["Result:<br/>a clean .docx"]
+    end
+    subgraph mcpx["MCP — access, called DURING the work"]
+        direction LR
+        m2["Model"] -->|"tools/call"| srv["MCP server"]
+        srv -->|"acts on"| sys["External system:<br/>calendar, GitHub, shop"]
+    end
+    skl ~~~ mcpx
+    classDef cool fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px
+    classDef hot fill:#FBEEDF,stroke:#C4661F,color:#9A4E17,font-size:13px
+    class folder,m1,out1 cool
+    class m2,srv,sys hot
+</pre>
+      </div>
+      <p class="fig-cap">Top: the skill is consumed before the task starts — after that, the model works alone. Bottom: MCP is used during the task — every call crosses over to a live server. That's the whole distinction: knowledge vs access.</p>
+    </div>
+
+    <div class="table-wrap">
+      <table class="cmp">
+        <thead>
+          <tr><th></th><th class="th-rest">Skill</th><th class="th-mcp">MCP</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>What it is</td><td>A folder of instructions + files</td><td>A protocol + a running server</td></tr>
+          <tr><td>What the model gains</td><td>Know-how — <b>how</b> to do it well</td><td>Access — <b>what</b> it can reach</td></tr>
+          <tr><td>Who does the work</td><td>The model itself, following the instructions</td><td>The server, when the model calls a tool</td></tr>
+          <tr><td>Is it alive?</td><td>No — static files, versioned like docs</td><td>Yes — a live service with its own state</td></tr>
+          <tr><td>Example</td><td>"How to build a .pptx that opens cleanly"</td><td>"Read events from Google Calendar"</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="body">A real example you can point at: Claude Code works exactly this way. A <code>docx</code> skill holds the hard-won rules for generating Word files that don't fall apart — the model reads it, then writes the file itself. Meanwhile MCP servers connect the same model to GitHub or a calendar — live systems it couldn't reach with knowledge alone.</p>
+    <p class="body">One naming warning: the word is used loosely across the ecosystem — some frameworks say "skill" where they mean a single tool, and each vendor brands it differently. This section uses the most concrete meaning, the one from Claude's Agent Skills: a folder of instructions the model loads on demand.</p>
+
+    <p class="h2-note" style="margin-top:34px">How the four pieces fit together</p>
+    <div class="claims">
+      <div class="claim c-bs">
+        <h3>Tool — the atom</h3>
+        <p>One callable function with typed input: <code>get_weather(city)</code>. The smallest unit of "the model can do something".</p>
+      </div>
+      <div class="claim c-ag">
+        <h3>MCP — the plug</h3>
+        <p>The standard for how tools are discovered (<code>tools/list</code>) and called (<code>tools/call</code>), so one server of tools fits every AI client.</p>
+      </div>
+      <div class="claim c-md">
+        <h3>Skill — the know-how</h3>
+        <p>Packaged procedural knowledge the model reads into context before working. No server involved — it's the runbook, not the phone line.</p>
+      </div>
+      <div class="claim c-pd">
+        <h3>Agent — the loop</h3>
+        <p>The orchestrator that uses all three to chase a goal: think, act, observe, repeat — until the task is done.</p>
+      </div>
+    </div>
+
+    <p class="body" style="margin-top:20px">And they stack: a skill can even tell the model <strong>which MCP tools to use, and in what order</strong>. Knowledge guides access.</p>
+  </section>
+
+  <hr class="rule" />
+
   <!-- ============ FAQ ============ -->
   <section id="faq">
     <p class="h2-note">Quick answers</p>
@@ -456,6 +537,7 @@ flowchart LR
     <p class="body" style="margin-top:24px">Want to go deeper? Related cards in the knowledge base, and the full architectural story:</p>
     <div class="chips">
       <a class="chip" href="index.html#mcp">MCP</a>
+      <a class="chip" href="index.html#skills">AI skills</a>
       <a class="chip" href="index.html#tool-use">Function calling / tool use</a>
       <a class="chip" href="index.html#tool-design">Tool design</a>
       <a class="chip" href="index.html#agent-loop">The agent loop</a>
