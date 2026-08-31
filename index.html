@@ -91,6 +91,22 @@
   .icon-btn{width:36px; height:36px; border:1px solid var(--line-strong); background:transparent;
     border-radius:8px; color:var(--muted); cursor:pointer; display:grid; place-items:center; font-size:15px; padding:0;}
   .icon-btn:hover{color:var(--ink); border-color:var(--faint)}
+  /* Six page links no longer fit beside the brand on a laptop, let alone a
+     phone. The links scroll horizontally inside their own strip; Subscribe and
+     the theme toggle stay pinned outside it so they are always reachable. */
+  .brand{flex-shrink:0}
+  nav{min-width:0}
+  .nav-links{display:flex; align-items:center; gap:6px; min-width:0; overflow-x:auto;
+    scrollbar-width:none; -ms-overflow-style:none; -webkit-overflow-scrolling:touch}
+  .nav-links::-webkit-scrollbar{display:none}
+  .nav-link, .sub-btn, .icon-btn{flex-shrink:0}
+  @media (max-width:1180px){
+    .bar{gap:12px}
+    .nav-link{padding:8px 9px; font-size:13.5px}
+  }
+  @media (max-width:760px){
+    .sub-btn{display:none}   /* still reachable in the footer */
+  }
 
   main{max-width:1080px; margin:0 auto; padding:0 24px}
 
@@ -233,9 +249,14 @@
   <div class="bar">
     <a class="brand" href="index.html"><span class="glyph">&lt;/&gt;</span>Konrad's Dev Insight</a>
     <nav>
-      <a class="nav-link" href="index.html" aria-current="page">Knowledge base</a>
-      <a class="nav-link" href="architecture.html">Architecture</a>
-      <a class="nav-link" href="mcp-vs-rest.html">MCP vs REST</a>
+      <div class="nav-links">
+        <a class="nav-link" href="index.html" aria-current="page">Knowledge base</a>
+        <a class="nav-link" href="architecture.html">Architecture</a>
+        <a class="nav-link" href="mcp-vs-rest.html">MCP vs REST</a>
+        <a class="nav-link" href="rag-vs-finetuning.html">Your data</a>
+        <a class="nav-link" href="how-agents-fail.html">How agents fail</a>
+        <a class="nav-link" href="choosing-a-model.html">Choosing a model</a>
+      </div>
       <a class="sub-btn" id="nav-sub" href="#" target="_blank" rel="noopener">Subscribe</a>
       <button class="icon-btn" id="theme" aria-label="Toggle dark mode" title="Toggle theme">◐</button>
     </nav>

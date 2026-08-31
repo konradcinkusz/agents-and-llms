@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Choosing a model — size, cost, latency, open vs API | Konrad's Dev Insight</title>
+<meta name="description" content="Capability, cost, latency, context length, openness — the five axes you trade against each other, why open-weights is not open source, why most traffic never needed the flagship, and the twenty-example eval that actually makes the decision." />
+<meta property="og:title" content="Choosing a model — size, cost, latency, open vs API" />
+<meta property="og:description" content="No model names, no prices — those expire. Five axes, one trade-off, and a decision procedure that still works next quarter: twenty real examples and a pass rule you wrote first." />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Konrad's Dev Insight" />
+<meta property="og:url" content="https://konradcinkusz.github.io/agents-and-llms/choosing-a-model.html" />
+<meta property="og:image" content="https://konradcinkusz.github.io/agents-and-llms/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Agents &amp; LLMs — a searchable knowledge base of the concepts behind LLMs and agents." />
+<meta property="article:published_time" content="2026-08-31" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Choosing a model — size, cost, latency, open vs API" />
+<meta name="twitter:description" content="No model names, no prices — those expire. Five axes, one trade-off, and a decision procedure that still works next quarter: twenty real examples and a pass rule you wrote first." />
+<meta name="twitter:image" content="https://konradcinkusz.github.io/agents-and-llms/og-image.png" />
+<link rel="canonical" href="https://konradcinkusz.github.io/agents-and-llms/choosing-a-model.html" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Cdefs%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='1'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%230E9384'/%3E%3Cstop%20offset='1'%20stop-color='%23C4661F'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width='32'%20height='32'%20rx='8'%20fill='url(%23g)'/%3E%3Cg%20fill='none'%20stroke='%23fff'%20stroke-width='2.6'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M12%2012%208%2016%2012%2020'/%3E%3Cpath%20d='M20%2012%2024%2016%2020%2020'/%3E%3Cpath%20d='M17.6%2010%2014.4%2022'/%3E%3C/g%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script>
+  /* Resolve the theme before first paint — deferring this to DOMContentLoaded
+     flashes the light palette on every navigation for dark-mode readers. */
+  (function () {
+    var stored = null;
+    try { stored = localStorage.getItem("theme"); } catch (e) {}
+    var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-theme", stored || (prefersDark ? "dark" : "light"));
+  })();
+</script>
+<style>
+  :root{
+    --paper:#FBFBFD; --surface:#FFFFFF; --code:#F4F5F8;
+    --ink:#14161C; --muted:#565B67; --faint:#8A8F9A;
+    --line:#E6E7EE; --line-strong:#D5D7E0;
+    --md:#0E9384; --md-soft:#E3F4F1; --md-ink:#0A6A60;
+    --ag:#C4661F; --ag-soft:#FBEEDF; --ag-ink:#9A4E17;
+    --fo:#5A5F6B; --fo-soft:#EEEFF3; --fo-ink:#3D414B;
+    --bs:#2563A8; --bs-soft:#E9F1FA; --bs-ink:#1B4E85;
+    --pd:#7C3AED; --pd-soft:#EFE9FE; --pd-ink:#5B21B6;
+    --radius:10px;
+    --font-display:"Space Grotesk",system-ui,sans-serif;
+    --font-body:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  [data-theme="dark"]{
+    --paper:#0E1014; --surface:#15181E; --code:#1B1F27;
+    --ink:#EDEEF2; --muted:#A2A7B2; --faint:#6E7480;
+    --line:#262A33; --line-strong:#353B47;
+    --md:#34D3B8; --md-soft:#0F302B; --md-ink:#6FE3CE;
+    --ag:#E8974A; --ag-soft:#33220F; --ag-ink:#F0B074;
+    --fo:#A2A7B2; --fo-soft:#22262E; --fo-ink:#C3C6CE;
+    --bs:#5AA2E8; --bs-soft:#15273A; --bs-ink:#8EC2F0;
+    --pd:#A78BFA; --pd-soft:#241B38; --pd-ink:#C9B8F5;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--font-body); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;}
+  a{color:inherit}
+  h1,h2,h3{font-family:var(--font-display); font-weight:500; letter-spacing:-.01em; margin:0}
+
+  header{position:sticky; top:0; z-index:50;
+    background:color-mix(in srgb, var(--paper) 82%, transparent);
+    backdrop-filter:saturate(1.4) blur(10px); border-bottom:1px solid var(--line);}
+  .bar{max-width:1080px; margin:0 auto; padding:0 24px; height:60px; display:flex; align-items:center; gap:20px;}
+  .brand{display:flex; align-items:center; gap:10px; font-family:var(--font-display);
+    font-weight:700; letter-spacing:-.02em; font-size:16px; text-decoration:none; white-space:nowrap;}
+  .brand .glyph{display:inline-grid; place-items:center; width:26px; height:26px; border-radius:7px;
+    background:linear-gradient(135deg,var(--md),var(--ag)); color:#fff; font-size:13px; font-weight:700;}
+  nav{margin-left:auto; display:flex; align-items:center; gap:6px;}
+  .nav-link{font-size:14px; font-weight:500; text-decoration:none; color:var(--muted);
+    padding:8px 12px; border-radius:8px; white-space:nowrap}
+  .nav-link:hover{color:var(--ink)}
+  .nav-link[aria-current="page"]{color:var(--ink)}
+  .sub-btn{font-size:14px; font-weight:500; text-decoration:none; padding:8px 14px; border-radius:8px;
+    color:#fff; background:linear-gradient(135deg,var(--md),var(--ag)); white-space:nowrap;}
+  .sub-btn:hover{filter:brightness(1.06)}
+  .icon-btn{width:36px; height:36px; border:1px solid var(--line-strong); background:transparent;
+    border-radius:8px; color:var(--muted); cursor:pointer; display:grid; place-items:center; font-size:15px; padding:0;}
+  .icon-btn:hover{color:var(--ink); border-color:var(--faint)}
+  /* Six page links no longer fit beside the brand on a laptop, let alone a
+     phone. The links scroll horizontally inside their own strip; Subscribe and
+     the theme toggle stay pinned outside it so they are always reachable. */
+  .brand{flex-shrink:0}
+  nav{min-width:0}
+  .nav-links{display:flex; align-items:center; gap:6px; min-width:0; overflow-x:auto;
+    scrollbar-width:none; -ms-overflow-style:none; -webkit-overflow-scrolling:touch}
+  .nav-links::-webkit-scrollbar{display:none}
+  .nav-link, .sub-btn, .icon-btn{flex-shrink:0}
+  @media (max-width:1180px){
+    .bar{gap:12px}
+    .nav-link{padding:8px 9px; font-size:13.5px}
+  }
+  @media (max-width:760px){
+    .sub-btn{display:none}   /* still reachable in the footer */
+  }
+
+  main{max-width:1080px; margin:0 auto; padding:0 24px}
+
+  .hero{padding:52px 0 12px; max-width:720px}
+  .eyebrow{font-family:var(--font-mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--faint); margin:0 0 12px}
+  h1{font-size:clamp(1.9rem,4.4vw,2.7rem); line-height:1.08; font-weight:700}
+  h1 .md-w{color:var(--md)} h1 .ag-w{color:var(--ag)}
+  .lede{font-size:16.5px; color:var(--muted); margin:16px 0 0}
+  .lede + .lede{margin-top:12px}
+
+  /* ---------- the one-sentence verdict box ---------- */
+  .verdict{margin:26px 0 0; display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .verdict .v{border-radius:12px; padding:16px 18px; font-size:15.5px; line-height:1.55; border:1px solid var(--line)}
+  .verdict .v b{font-family:var(--font-mono); font-size:13px; letter-spacing:.05em; display:block; margin-bottom:6px}
+  .verdict .v-rest{background:var(--md-soft); color:var(--ink)} .verdict .v-rest b{color:var(--md-ink)}
+  .verdict .v-mcp{background:var(--ag-soft); color:var(--ink)} .verdict .v-mcp b{color:var(--ag-ink)}
+
+  section{padding:0 0 12px}
+  .rule{border:0; border-top:1px solid var(--line); margin:44px 0 32px}
+  h2{font-size:clamp(1.25rem,2.4vw,1.6rem); font-weight:700; letter-spacing:-.015em}
+  .h2-note{font-family:var(--font-mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--faint); margin:0 0 8px}
+  .body{font-size:15.5px; color:var(--muted); margin:14px 0 0; max-width:760px}
+  .body strong{color:var(--ink); font-weight:500}
+  .body code{font-family:var(--font-mono); font-size:13px; background:var(--code); padding:2px 6px; border-radius:5px; color:var(--ink)}
+  .body a{color:var(--ink); text-decoration:underline; text-decoration-color:var(--line-strong); text-underline-offset:2px}
+  .body a:hover{text-decoration-color:var(--md)}
+
+  /* ---------- figures ---------- */
+  .fig{margin:24px 0 0; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface)}
+  .fig-label{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 16px;
+    font-family:var(--font-mono); font-size:11.5px; color:var(--faint); background:var(--code);
+    border-bottom:1px solid var(--line)}
+  .copy{font-family:var(--font-mono); font-size:11px; color:var(--muted); opacity:.85; cursor:pointer;
+    background:transparent; border:1px solid var(--line-strong); border-radius:6px; padding:2px 8px; transition:opacity .15s}
+  .copy:hover{opacity:1; color:var(--ink)}
+  .mermaid-frame{padding:22px 14px; background:var(--code); overflow-x:auto}
+  /* Mermaid's own chrome (edges, arrowheads, edge labels) is drawn for a light
+     ground; node fills are handled in JS — see tintDiagrams(). !important is
+     required because mermaid scopes its rules by the svg's id, which outranks
+     anything selector specificity can do from here. */
+  [data-theme="dark"] .mermaid-frame svg .flowchart-link{stroke:var(--faint) !important}
+  [data-theme="dark"] .mermaid-frame svg marker path{fill:var(--faint) !important; stroke:var(--faint) !important}
+  [data-theme="dark"] .mermaid-frame svg .edgeLabel{background:var(--code) !important; color:var(--muted) !important}
+  [data-theme="dark"] .mermaid-frame svg .edgeLabel rect{fill:var(--code) !important; opacity:1}
+  [data-theme="dark"] .mermaid-frame svg .edgeLabel foreignObject div{background:var(--code) !important}
+  [data-theme="dark"] .mermaid-frame svg .cluster rect{fill:var(--surface) !important; stroke:var(--line-strong) !important}
+  [data-theme="dark"] .mermaid-frame svg .cluster .nodeLabel,
+  [data-theme="dark"] .mermaid-frame svg .cluster text{fill:var(--muted) !important; color:var(--muted) !important}
+  .mermaid-frame .mermaid{display:flex; justify-content:center; min-width:520px}
+  .mermaid-frame svg{max-width:100%; height:auto}
+  .fig-cap{padding:12px 16px 14px; font-size:13.5px; color:var(--muted); border-top:1px solid var(--line)}
+
+  /* ---------- side-by-side code ---------- */
+  .duo{display:grid; gap:14px; margin-top:24px; grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+  .snip{border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface)}
+  .snip-label{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 16px;
+    font-family:var(--font-mono); font-size:11.5px; color:var(--faint); background:var(--code);
+    border-bottom:1px solid var(--line)}
+  .snip pre{margin:0; padding:14px 16px; background:var(--code); overflow-x:auto}
+  .snip code{font-family:var(--font-mono); font-size:12.5px; line-height:1.7; color:var(--ink); tab-size:2}
+  .snip .hl{color:var(--ag-ink); font-weight:500}
+  .snip-cap{padding:11px 16px 13px; font-size:13px; color:var(--muted); border-top:1px solid var(--line)}
+
+  /* ---------- claim cards ---------- */
+  .claims{display:grid; gap:14px; margin-top:24px; grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+  .claim{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--kc,var(--line));
+    border-radius:12px; padding:18px 20px}
+  .claim.c-md{--kc:var(--md)} .claim.c-ag{--kc:var(--ag)}
+  .claim.c-bs{--kc:var(--bs)} .claim.c-pd{--kc:var(--pd)}
+  .claim h3{font-size:15.5px; font-weight:500; margin-bottom:8px}
+  .claim p{margin:0; font-size:14.5px; color:var(--muted); line-height:1.6}
+  .claim p + p{margin-top:8px}
+  .claim code{font-family:var(--font-mono); font-size:12px; background:var(--code); padding:2px 5px; border-radius:5px; color:var(--ink)}
+
+  /* ---------- comparison table ---------- */
+  .table-wrap{overflow-x:auto; margin-top:24px}
+  .cmp{width:100%; border-collapse:collapse; font-size:14.5px; min-width:640px}
+  .cmp th{text-align:left; font-family:var(--font-mono); font-size:11px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--faint); font-weight:400; padding:0 16px 11px 0;
+    border-bottom:1px solid var(--line-strong)}
+  .cmp th.th-rest{color:var(--md-ink)} .cmp th.th-mcp{color:var(--ag-ink)}
+  .cmp td{padding:13px 16px 13px 0; border-bottom:1px solid var(--line); vertical-align:top; color:var(--muted)}
+  .cmp td:first-child{color:var(--ink); font-weight:500; min-width:150px}
+  .cmp tr:last-child td{border-bottom:none}
+  .cmp td b{color:var(--ink); font-weight:500}
+  .cmp td code{font-family:var(--font-mono); font-size:12px; background:var(--code); padding:2px 5px; border-radius:5px; color:var(--ink); white-space:nowrap}
+
+  /* ---------- concept chips ---------- */
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin:20px 0 0}
+  .chip{font-family:var(--font-mono); font-size:12.5px; color:var(--muted); text-decoration:none;
+    background:var(--surface); border:1px solid var(--line-strong); border-radius:20px; padding:6px 13px;
+    transition:all .15s}
+  .chip:hover{color:var(--ink); border-color:var(--faint)}
+
+  footer{border-top:1px solid var(--line); margin-top:56px}
+  .foot{max-width:1080px; margin:0 auto; padding:36px 24px; display:flex; justify-content:space-between;
+    gap:20px; flex-wrap:wrap; align-items:center; color:var(--faint); font-size:13px; font-family:var(--font-mono)}
+  .foot-links{display:flex; gap:10px}
+  .foot-links a{text-decoration:none; color:var(--ink); border:1px solid var(--line-strong);
+    border-radius:8px; padding:7px 13px; font-size:13px}
+  .foot-links a:hover{border-color:var(--faint)}
+  :focus-visible{outline:2px solid var(--md); outline-offset:2px; border-radius:4px}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <a class="brand" href="index.html"><span class="glyph">&lt;/&gt;</span>Konrad's Dev Insight</a>
+    <nav>
+      <div class="nav-links">
+        <a class="nav-link" href="index.html">Knowledge base</a>
+        <a class="nav-link" href="architecture.html">Architecture</a>
+        <a class="nav-link" href="mcp-vs-rest.html">MCP vs REST</a>
+        <a class="nav-link" href="rag-vs-finetuning.html">Your data</a>
+        <a class="nav-link" href="how-agents-fail.html">How agents fail</a>
+        <a class="nav-link" href="choosing-a-model.html" aria-current="page">Choosing a model</a>
+      </div>
+      <a class="sub-btn" id="nav-sub" href="#" target="_blank" rel="noopener">Subscribe</a>
+      <button class="icon-btn" id="theme" aria-label="Toggle dark mode" title="Toggle theme">◐</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <p class="eyebrow">Model selection · decision guide</p>
+    <h1>Choosing a model: the <span class="md-w">axes</span>, not the <span class="ag-w">leaderboard</span>.</h1>
+    <p class="lede">Every team asks the same question — <em>which model should we use?</em> — and almost every answer they get is a model name. The name is the one part of that answer guaranteed to expire.</p>
+    <div class="verdict">
+      <div class="v v-rest"><b>THE QUESTION PEOPLE ASK</b>"Which model is the best one right now?" It has a new answer every quarter, and answering it leaves you with <strong>nothing you can reuse</strong> the next time it changes.</div>
+      <div class="v v-mcp"><b>THE QUESTION THAT DECIDES</b>"What is the cheapest, fastest model that passes twenty examples of <strong>my actual task</strong>?" Same procedure every quarter — and the answer is yours, not a reviewer's.</div>
+    </div>
+    <p class="lede">What doesn't expire is the shape of the decision: five axes you trade against each other, and one procedure for picking a point on them. That's the whole page.</p>
+    <div class="chips">
+      <a class="chip" href="#evergreen">1 · No model names</a>
+      <a class="chip" href="#axes">2 · The five axes</a>
+      <a class="chip" href="#open">3 · Open vs API</a>
+      <a class="chip" href="#small">4 · Small-model economics</a>
+      <a class="chip" href="#latency">5 · Latency</a>
+      <a class="chip" href="#decide-how">6 · How to actually decide</a>
+      <a class="chip" href="#table">7 · One table</a>
+      <a class="chip" href="#choose">8 · So which?</a>
+      <a class="chip" href="#faq">9 · Quick answers</a>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ GROUND RULE ============ -->
+  <section id="evergreen">
+    <p class="h2-note">Ground rule</p>
+    <h2>Why there are no model names on this page</h2>
+    <p class="body">No model names. No prices. No benchmark scores. That isn't modesty about the state of the art — it <strong>is</strong> the argument, so it gets said out loud rather than quietly obeyed.</p>
+    <p class="body">Model names, per-token prices and context limits move on a quarter's timescale. The axes they move along have not changed since the first chat API shipped: things that are more capable cost more and take longer, and someone has to run the hardware. Advice pinned to the first list is wrong by the time you read it. Advice pinned to the second is still useful in two years.</p>
+    <p class="body">The second reason matters more. A page that tells you <em>which</em> model to use trains you to re-ask the question every time the leaderboard moves — which is often, and which is somebody's afternoon every time. A page that tells you <em>how to decide</em> leaves you holding something that answers it again for free: a small set of your own examples and a rule for reading them. <strong>If a claim would need updating in a quarter, it isn't on this page.</strong></p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ THE AXES ============ -->
+  <section id="axes">
+    <p class="h2-note">Figure 1</p>
+    <h2>Five axes, and why you can't max them all</h2>
+    <p class="body">Every model decision — every one, on every menu, in every year — is a point in the same five-dimensional space. Naming the axes is most of the work, because the argument in the room is usually two people optimising different ones without saying so.</p>
+
+    <div class="claims">
+      <div class="claim c-md">
+        <h3>Capability</h3>
+        <p>How hard a task it lands without hand-holding: messy input, several steps, an unfamiliar format, an instruction it has to hold onto for eleven turns. This is the axis people mean when they say "better", and the only one you can't buy with engineering.</p>
+      </div>
+      <div class="claim c-ag">
+        <h3>Cost per request</h3>
+        <p>What one unit of traffic costs, multiplied by the traffic you hope to grow into. It's billed in tokens in and tokens out — see <a href="index.html#token-pricing" style="color:inherit">token pricing</a> — so a long prompt isn't a one-time design decision, it's a recurring bill on every call forever.</p>
+      </div>
+      <div class="claim c-bs">
+        <h3>Latency</h3>
+        <p>Two numbers that people quote as one: time to the first token, and time to done. A person watching a cursor is judging the first. A pipeline is judging the second. They rank models differently.</p>
+      </div>
+      <div class="claim c-pd">
+        <h3>Context length</h3>
+        <p>How much you can put in front of it in one go — the <a href="index.html#context" style="color:inherit">context window</a>. A bigger window is not free headroom: everything you put in it is read, paid for, and competing for the model's attention with everything else in there.</p>
+      </div>
+      <div class="claim c-md">
+        <h3>Openness and control</h3>
+        <p>Who holds the weights, and therefore who decides when the behaviour changes — <a href="index.html#open-vs-closed" style="color:inherit">open-weights vs closed</a>. It's the axis that looks like a philosophy question and turns out to be an operations and unit-economics question.</p>
+      </div>
+    </div>
+
+    <div class="fig">
+      <div class="fig-label"><span>diagram · what you want, and what pays for it</span>
+        <button class="copy" data-target="src-axes">copy</button></div>
+      <div class="mermaid-frame">
+<pre class="mermaid" id="src-axes">
+flowchart LR
+    subgraph want["What you want more of"]
+        direction TB
+        cap["Capability<br/>lands the hard cases"]
+        ctx["Context length<br/>whole documents in one pass"]
+        own["Openness<br/>you hold the weights"]
+    end
+    subgraph pay["What it is paid for with"]
+        direction TB
+        money["Cost per request"]
+        ms["Latency"]
+        ops["Ops: capacity,<br/>upgrades, on-call"]
+    end
+    cap --> money
+    cap --> ms
+    ctx --> money
+    ctx --> ms
+    own --> ops
+    own -.->|"can lower it — only if<br/>the hardware stays busy"| money
+    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px
+    classDef warn fill:#FBE7E7,stroke:#B23B3B,color:#8C2323,font-size:13px
+    class cap,ctx,own n
+    class money,ms,ops warn
+    style want fill:#F7F7F9,stroke:#C9CBD4,color:#565B67
+    style pay fill:#F7F7F9,stroke:#C9CBD4,color:#565B67
+</pre>
+      </div>
+      <p class="fig-cap">Everything on the left is something a stakeholder will ask for. Everything on the right is the invoice. The one dotted arrow is the only discount on the board, and it comes with a condition attached — an idle GPU bills exactly like a busy one.</p>
+    </div>
+
+    <p class="body">The mechanics behind the arrows are dull and reliable. Capability comes from a bigger model, from more tokens spent thinking before answering, or from both — and both are paid in money and milliseconds. Context is read on every request, so a window you actually fill shows up twice on the bill: once in tokens, once in the wait. Openness moves you from renting answers to renting hardware, which is a better deal only above a volume you have to actually measure.</p>
+    <p class="body">The honest caveat: <strong>the whole frontier moves outward every generation.</strong> This year's cheap model does what last year's expensive one did, and that is a real and large effect. What doesn't move is the shape — at any single moment, on any single menu, the trade is still in front of you. That's why this page is about the shape and not about the menu.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ OPEN VS API ============ -->
+  <section id="open">
+    <p class="h2-note">The axis people argue about</p>
+    <h2>Open-weights vs API, in plain words</h2>
+
+    <div class="verdict">
+      <div class="v v-rest"><b>OPEN-WEIGHTS</b>You get the weights and <strong>run them yourself</strong>. Control over the version, a data boundary you draw, and per-GPU-hour economics — paid for with operations you now own.</div>
+      <div class="v v-mcp"><b>API</b>Someone else runs it. <strong>Zero ops</strong>, elastic capacity, and usually the top of the capability range — paid for per request, on terms and a schedule you don't set.</div>
+    </div>
+
+    <p class="body">One correction before the argument, because it's the most common wrong sentence in this whole topic: <strong>open-weights is not open source.</strong> What you get is a downloadable set of weights, usually under a licence with conditions attached. What you almost never get is the training data or the pipeline that produced them — which means you cannot rebuild the model, audit what went into it, or fix a problem at its source. You can run it, adapt it with <a href="index.html#lora">LoRA</a>, and shrink it with <a href="index.html#quantization">quantization</a>. That is genuinely a lot. It is not "software you can build from source", and blurring the two hides the one property people actually care about: whether the thing can change under you.</p>
+
+    <div class="claims">
+      <div class="claim c-md">
+        <h3>Control — the version stops moving</h3>
+        <p>Weights on your disk don't get deprecated, retired, or silently improved. You choose the upgrade date, you rerun your evals against it, and you roll back if it's worse. On the API side the model is a supplier-controlled input: pin what you can, and treat the pin as part of your contract.</p>
+      </div>
+      <div class="claim c-bs">
+        <h3>Privacy — the request never leaves</h3>
+        <p>For some data this is the entire decision and the other four axes are tie-breakers. It's also the cleanest reason to self-host, because it's the one you can state in a sentence to a compliance officer rather than defend with a spreadsheet.</p>
+      </div>
+      <div class="claim c-ag">
+        <h3>Unit economics — you rent hardware, not answers</h3>
+        <p>Self-hosting swaps a per-token bill for a per-hour one on <a href="index.html#gpu-ai" style="color:inherit">GPUs</a>. At steady, high volume the two curves cross and open wins by a lot. At spiky or low volume they don't come close, because you pay for the idle hours too. The crossover is about <strong>utilisation</strong>, not about how big your company is.</p>
+      </div>
+      <div class="claim c-pd">
+        <h3>Zero ops — the line nobody costs</h3>
+        <p>The API side's real product is that capacity planning, upgrades, batching, quantizing, and being paged at 3am are someone else's job. Add those back and self-hosting is a headcount, not a line item. Teams under-price this exactly once.</p>
+      </div>
+    </div>
+
+    <p class="body">And then the part the framing usually misses: <strong>these two stack rather than compete.</strong> Plenty of serious systems run both — a small open model inside the boundary for the bulk of traffic, an API frontier model for the hard minority that justifies the trip. The interesting question is almost never "which side are we on". It's "which slice of my traffic goes where", which is the next section.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ SMALL-MODEL ECONOMICS ============ -->
+  <section id="small">
+    <p class="h2-note">Figure 2 · the practical one</p>
+    <h2>Most of your traffic is easy — the flagship is for the minority</h2>
+    <p class="body">This is the most useful fact about production traffic, and almost nobody designs around it: <strong>the work is not uniformly hard.</strong> Classifying a ticket, pulling three fields out of a form, rewriting a sentence, deciding which of five tools to call, summarising something short — a small model lands those all day, every day, without drama.</p>
+    <p class="body">The hard minority is real too: the ambiguous case, the long multi-step chain, the one that needs actual reasoning about a domain. That's what the flagship is for, and it's usually a small share of the volume carrying a large share of the value. Send <em>everything</em> to the flagship and you pay flagship prices for the easy majority — which is the difference between a feature that pays for itself and one that quietly dies at the next budget review.</p>
+
+    <div class="fig">
+      <div class="fig-label"><span>diagram · the easy majority and the hard minority</span>
+        <button class="copy" data-target="src-routing">copy</button></div>
+      <div class="mermaid-frame">
+<pre class="mermaid" id="src-routing">
+flowchart LR
+    req["Incoming requests"] --> triage{"Hard?"}
+    triage -->|"the easy majority"| small["Small model<br/>cheap and fast"]
+    triage -->|"the hard minority"| big["Frontier model<br/>slow and expensive"]
+    small --> check{"Does the answer<br/>hold up?"}
+    check -->|"yes"| ans["Answer"]
+    check -->|"no — escalate"| big
+    big --> ans
+    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px
+    classDef cool fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px
+    classDef hot fill:#FBEEDF,stroke:#C4661F,color:#9A4E17,font-size:13px
+    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px
+    class req,triage,check n
+    class small cool
+    class big hot
+    class ans ok
+</pre>
+      </div>
+      <p class="fig-cap">The escalation arrow is what makes this safe to build: the cheap path is allowed to fail, because failing costs one extra call rather than one wrong answer. Without it, routing is just a quality cut with better branding.</p>
+    </div>
+
+    <p class="body">Three mechanisms exist because of this shape. They're worth knowing by name, because each answers a different version of "the small model isn't quite good enough".</p>
+
+    <div class="claims">
+      <div class="claim c-md">
+        <h3>Routing — choose per request</h3>
+        <p><a href="index.html#model-routing" style="color:inherit">Model routing</a> picks the model per call rather than per product, with an escalation path when the cheap one isn't confident (<a href="index.html#retries-fallbacks" style="color:inherit">retries and fallbacks</a>). The router is itself a component that can be wrong, so it needs its own eval — otherwise you've moved the failure rather than removed it.</p>
+      </div>
+      <div class="claim c-ag">
+        <h3>Distillation — teach the small one</h3>
+        <p><a href="index.html#distillation" style="color:inherit">Distillation</a> turns a big model's outputs into training data for a small one. <em>Narrow</em> is the operative word: you're buying flagship-grade behaviour on one task, not in general, and the moment the task widens the small model is back to being a small model.</p>
+      </div>
+      <div class="claim c-bs">
+        <h3>Quantization — same model, fewer bits</h3>
+        <p><a href="index.html#quantization" style="color:inherit">Quantization</a> stores weights at lower precision so the model is cheaper and faster to serve. The quality cost ranges from unmeasurable to unacceptable depending on how far you push it — which is precisely why you measure it on your own examples rather than on somebody's chart.</p>
+      </div>
+    </div>
+
+    <p class="body">Before changing models at all, two levers cost nothing in capability. <a href="index.html#prompt-caching">Prompt caching</a> stops you paying full price for a preamble that is identical on every call. <a href="index.html#batch-processing">Batch processing</a> trades latency you weren't using for a cheaper rate on work nobody is waiting for. Most of what gets called <a href="index.html#cost-engineering">cost engineering</a> is levers like these — the model choice is one line in that discipline, not the whole of it.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ LATENCY ============ -->
+  <section id="latency">
+    <p class="h2-note">Figure 3</p>
+    <h2>Latency is a product decision, not a benchmark number</h2>
+    <p class="body">Latency gets quoted as one number and it is two: time to the first token, and time to done. Which one matters is decided by what the person is doing while they wait — which is a product fact, not a model fact, and it belongs to you rather than to the model card.</p>
+    <p class="body">That's why <a href="index.html#streaming">streaming</a> is the cheapest latency win available. It doesn't make the model faster; it makes the wait legible. A model that starts writing immediately and finishes in eight seconds usually <em>feels</em> faster than one that sits in silence for four and then drops a paragraph. Same axis, different product.</p>
+
+    <div class="fig">
+      <div class="fig-label"><span>diagram · two kinds of waiting</span>
+        <button class="copy" data-target="src-latency">copy</button></div>
+      <div class="mermaid-frame">
+<pre class="mermaid" id="src-latency">
+flowchart TB
+    subgraph chat["Interactive — perceived speed IS the product"]
+        direction LR
+        c1["Request"] -->|"first token,<br/>almost at once"| c2["Words appear while<br/>it is still writing"] --> c3["The person is<br/>already reading"]
+    end
+    subgraph deep["Offline — correctness is the product"]
+        direction LR
+        r1["Request"] -->|"a long,<br/>silent think"| r2["Reasoning tokens<br/>nobody watches"] --> r3["A better answer,<br/>much later"]
+    end
+    chat ~~~ deep
+    classDef cool fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px
+    classDef hot fill:#FBEEDF,stroke:#C4661F,color:#9A4E17,font-size:13px
+    class c1,c2,c3 cool
+    class r1,r2,r3 hot
+    style chat fill:#F7F7F9,stroke:#C9CBD4,color:#565B67
+    style deep fill:#F7F7F9,stroke:#C9CBD4,color:#565B67
+</pre>
+      </div>
+      <p class="fig-cap">Both rows can be the right answer. Putting the bottom row behind a chat box is the mistake — the silence a batch job doesn't mind is the exact thing a waiting person experiences as "broken".</p>
+    </div>
+
+    <p class="body">A <a href="index.html#reasoning-model">reasoning model</a> is the bottom row on purpose: it spends tokens thinking before it answers, trading latency and cost for correctness on hard problems. That's frequently a great trade — for a plan, a code change, an analysis that runs overnight. It is a bad trade in an interactive chat, and no amount of prompt tuning converts one row into the other.</p>
+    <p class="body">So the order is: <strong>set the latency budget from the product first, then let it eliminate candidates.</strong> A two-second budget and a model that thinks for thirty seconds isn't a tuning problem, it's a mismatch. And remember the axis interaction from Figure 1 — a long context is a delay you pay on every single request, not just a capability you bought once.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ HOW TO DECIDE ============ -->
+  <section id="decide-how">
+    <p class="h2-note">The point of the page · Figure 4</p>
+    <h2>How to actually decide: twenty examples and a rule</h2>
+    <p class="body">Here is the whole procedure. It is smaller than the meeting it replaces, and it is the reason this page can refuse to name a model: the procedure doesn't change when the models do.</p>
+
+    <p class="body"><strong>1 · Collect twenty real examples.</strong> From your own traffic if you have it, from the closest thing you have if you don't. <em>Real</em> means ugly: the truncated input, the wrong language, the customer who wrote three questions in one sentence, the case the team argues about. Twenty invented, tidy examples measure only whether the model can do the easy version — which every candidate can.</p>
+    <p class="body"><strong>2 · Write the pass rule before you run anything.</strong> One line: what makes an output right. Make it as machine-checkable as you can stand — a field that matches, a schema that parses, a decision that equals the one a human made. If you can't write that rule, you don't yet know what you're buying, and no model is going to tell you.</p>
+    <p class="body"><strong>3 · Run candidates cheapest first.</strong> The first one that passes is your model. Not the best one that passes — the <em>first</em>. Everything above it is capability you're paying for and not using.</p>
+    <p class="body"><strong>4 · Keep the set.</strong> Rerun it when the prompt changes (<a href="index.html#prompt-versioning">prompt versioning</a> exists for exactly this), when the provider ships an update, when someone proposes a switch. This is an <a href="index.html#evals">eval</a> — a small one, and small is the point. The comprehensive version is the one that never gets built.</p>
+
+    <div class="fig">
+      <div class="fig-label"><span>diagram · the decision loop</span>
+        <button class="copy" data-target="src-eval">copy</button></div>
+      <div class="mermaid-frame">
+<pre class="mermaid" id="src-eval">
+flowchart LR
+    ex["Twenty real examples<br/>from your own traffic"] --> rule["A pass rule, written<br/>BEFORE anything runs"]
+    rule --> run["Run the cheapest<br/>candidate that could work"]
+    run --> gate{"Passes?"}
+    gate -->|"no"| up["Step up one rung<br/>of capability"]
+    up --> run
+    gate -->|"yes"| ship["Ship it —<br/>and keep the set"]
+    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px
+    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px
+    class ex,rule,run,gate,up n
+    class ship ok
+</pre>
+      </div>
+      <p class="fig-cap">The loop only ever climbs, and only when it has a reason. That single property is what stops a system from defaulting to the biggest thing on the menu — which is what happens whenever the decision has no denominator.</p>
+    </div>
+
+    <p class="h2-note" style="margin-top:34px">Why leaderboards don't transfer</p>
+    <p class="body">A public benchmark is an <strong>average over someone else's distribution of tasks</strong>, and usually over tasks selected because they separate strong models from each other. Your task is one point, not an average — and typically a narrow, format-heavy point: does it emit the JSON your parser accepts, in your domain's vocabulary, calling your tools, inside your latency budget, on your ugliest inputs.</p>
+    <p class="body">A model can top every board and fail your twenty without anything being broken. That's not a paradox; it's what "different task" means. There's a second effect too: once a benchmark is public it becomes a target, and a measure that becomes a target stops being a measure. Use leaderboards to build the shortlist. Never to close the decision.</p>
+
+    <p class="h2-note" style="margin-top:34px">Why "we tried it and it felt better" is the expensive answer</p>
+    <p class="body">Vibes have no denominator. You remember the two impressive answers and not the eighteen ordinary ones. You compare a freshly-tuned prompt on the new model against last quarter's prompt on the old one. And the comparison that would show the cheap model already passing has no champion in the room — nobody's reputation improves by proving the smaller thing was fine.</p>
+    <p class="body">So the answer is always the bigger model, every time, and the bill compounds quietly. That is how teams end up paying over and over for capability they can't point at a single request that used it. <strong>The twenty examples exist to give the cheap option a way to win an argument</strong> — which, without them, it structurally cannot.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ THE TABLE ============ -->
+  <section id="table">
+    <p class="h2-note">Side by side</p>
+    <h2>The five axes in one table</h2>
+    <p class="body">Read it as five separate negotiations rather than one ranking. The right column is the useful one — it tells you which axis is actually deciding your case, and therefore which argument in the room is the real one.</p>
+
+    <div class="table-wrap">
+      <table class="cmp">
+        <thead>
+          <tr><th>Axis</th><th class="th-rest">Push it up and you gain</th><th class="th-mcp">You pay with</th><th>It decides the choice when</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Capability</td>
+            <td>Hard cases land without scaffolding; fewer retries, shorter prompts, less repair code</td>
+            <td>Cost per request, and usually latency</td>
+            <td>There's a hard minority you can't route away from or reshape into an easier task</td>
+          </tr>
+          <tr>
+            <td>Cost per request</td>
+            <td>Headroom to run more traffic, retry, check the work, and let the feature grow</td>
+            <td>A ceiling on how hard a task you can land</td>
+            <td>Volume is high and a single request is worth cents rather than dollars</td>
+          </tr>
+          <tr>
+            <td>Latency</td>
+            <td>An interface that feels alive; more turns inside the same human patience</td>
+            <td>Thinking time — which is where a lot of correctness comes from</td>
+            <td>Someone is watching a cursor while it happens</td>
+          </tr>
+          <tr>
+            <td>Context length</td>
+            <td>Whole documents in one pass; less retrieval and chunking machinery to build</td>
+            <td>Money <b>and</b> milliseconds on every call, plus attention spread thinner</td>
+            <td>The input genuinely can't be split, and losing any of it changes the answer</td>
+          </tr>
+          <tr>
+            <td>Openness</td>
+            <td>A version that never moves, data that never leaves, per-hour economics</td>
+            <td>Ops you now own — and usually giving up the very top of the capability range</td>
+            <td>Volume is steady and high, the data can't leave, or a version must be frozen</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ SO WHICH ============ -->
+  <section id="choose">
+    <p class="h2-note">Decision</p>
+    <h2>So which should you use?</h2>
+
+    <div class="claims">
+      <div class="claim c-md">
+        <h3>Start at the bottom, not the top</h3>
+        <p>Pick the cheapest model that could plausibly work, run your twenty, and move up only when it fails. The reverse never happens in practice: nobody proposes downgrading a system that already works, so starting at the top means staying there forever.</p>
+      </div>
+      <div class="claim c-ag">
+        <h3>One model is a starting point, not an architecture</h3>
+        <p>Most systems that run for a year end up with two or three — a small one for the majority, a strong one for the hard minority, sometimes a reasoning one for work that runs offline. Design the seam early. Retrofitting a router into code that assumes one model touches every call site.</p>
+      </div>
+      <div class="claim c-bs">
+        <h3>Choose openness for a reason you can name</h3>
+        <p>Steady high volume, data that can't leave, or a version you must freeze. "We might want control someday" is not one of the three, and the hardware bills either way. If none apply, rent — and revisit the moment utilisation changes.</p>
+      </div>
+      <div class="claim c-pd">
+        <h3>Set the latency budget before you compare quality</h3>
+        <p>It's the fastest filter you have and it comes from the product, not the model. Decide what the user is doing while they wait, then delete every candidate that can't meet it — before anyone runs a single quality comparison on it.</p>
+      </div>
+    </div>
+
+    <p class="body" style="margin-top:24px">One question settles most of the remaining doubt: <strong>can anyone point at a request from last week that actually needed the model you're paying for?</strong> If yes, you're on the right point of the curve and the cost is doing work. If nobody can find one, you're paying for a benchmark result your users never touch.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ FAQ ============ -->
+  <section id="faq">
+    <p class="h2-note">Quick answers</p>
+    <h2>The questions everyone asks</h2>
+
+    <div class="claims">
+      <div class="claim c-ag">
+        <h3>"Is the biggest model the safe default?"</h3>
+        <p>It's the <em>expensive</em> one. It is safe only in the narrow sense that it's rarely the reason something failed — so the failure you get instead is a cost line nobody can explain and a latency budget you can't meet, both of which arrive later and are harder to reverse.</p>
+        <p>Real safety here is cheap to buy properly: twenty examples through the small model first. If it passes, the biggest model was never protecting you from anything.</p>
+      </div>
+      <div class="claim c-bs">
+        <h3>"When does self-hosting pay off?"</h3>
+        <p>Three reasons, and you should be able to name which one is yours: <strong>volume that is high and steady</strong>, <strong>data that can't cross a boundary</strong>, or <strong>a version you must freeze</strong>.</p>
+        <p>The economics are a fixed cost against a per-request one, so the crossover is about utilisation, not company size — a GPU you keep busy is cheap, one you keep warm for spiky traffic is not. Then add the ops line: capacity, upgrades, quantizing, on-call. That's a headcount, and leaving it out of the sum is how self-hosting "pays off" on paper and not in the budget.</p>
+      </div>
+      <div class="claim c-md">
+        <h3>"Do benchmarks transfer to my task?"</h3>
+        <p>Directionally, weakly. They're an average over someone else's tasks, and once published they become a target that everyone optimises against. Both effects push the same way: the gap between board position and your result is unpredictable in size <em>and</em> in sign.</p>
+        <p>Use them for the shortlist — they're genuinely good at telling you which three candidates to test. Then let your own examples close it. Your eval has one advantage no leaderboard can have: it's your distribution.</p>
+      </div>
+      <div class="claim c-pd">
+        <h3>"How many examples does an eval need?"</h3>
+        <p>As a rule of thumb: twenty to eliminate, and a few times that to separate two candidates that are genuinely close. Twenty catches the format failures, the domain failures, and the flat "it can't do this at all" cases — which is most of what actually kills a candidate.</p>
+        <p>Twenty real examples beat two hundred invented ones, every time. And if two models tie at twenty, that's a result too, not a stalemate: take the cheaper and faster one.</p>
+      </div>
+    </div>
+
+    <p class="body" style="margin-top:24px">Want the underlying definitions? The knowledge-base cards behind every term on this page:</p>
+    <div class="chips">
+      <a class="chip" href="index.html#open-vs-closed">Open-weights vs closed</a>
+      <a class="chip" href="index.html#token-pricing">Token pricing</a>
+      <a class="chip" href="index.html#context">Context window</a>
+      <a class="chip" href="index.html#streaming">Streaming</a>
+      <a class="chip" href="index.html#reasoning-model">Reasoning models</a>
+      <a class="chip" href="index.html#model-routing">Model routing</a>
+      <a class="chip" href="index.html#distillation">Distillation</a>
+      <a class="chip" href="index.html#quantization">Quantization</a>
+      <a class="chip" href="index.html#lora">LoRA</a>
+      <a class="chip" href="index.html#gpu-ai">Why AI runs on GPUs</a>
+      <a class="chip" href="index.html#prompt-caching">Prompt caching</a>
+      <a class="chip" href="index.html#batch-processing">Batch processing</a>
+      <a class="chip" href="index.html#retries-fallbacks">Retries &amp; fallbacks</a>
+      <a class="chip" href="index.html#cost-engineering">Cost engineering</a>
+      <a class="chip" href="index.html#evals">Evals</a>
+      <a class="chip" href="index.html#prompt-versioning">Prompt versioning</a>
+      <a class="chip" href="how-agents-fail.html">How agents fail</a>
+      <a class="chip" href="rag-vs-finetuning.html">Your data: RAG vs fine-tuning</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="foot">
+    <span>© 2026 Konrad Cinkusz · Konrad's Dev Insight</span>
+    <div class="foot-links">
+      <a id="foot-sub" href="#" target="_blank" rel="noopener">▶ YouTube</a>
+      <a id="foot-gh" href="#" target="_blank" rel="noopener">★ GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   Same CONFIG block as index.html — keep the two in sync.
+   ============================================================ */
+const CONFIG = {
+  channelUrl: "https://www.youtube.com/@_dev_insight",
+  github:     "https://github.com/konradcinkusz/agents-and-llms"
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("nav-sub").href = CONFIG.channelUrl;
+  document.getElementById("foot-sub").href = CONFIG.channelUrl;
+  document.getElementById("foot-gh").href = CONFIG.github;
+
+  /* stash the source of the plain code figures so "copy" works for them too */
+  document.querySelectorAll(".snip pre").forEach(el => { el.dataset.src = el.textContent.trim(); });
+
+  /* copy the source of a figure (mermaid or code) */
+  document.body.addEventListener("click", (e) => {
+    const btn = e.target.closest(".copy");
+    if (!btn) return;
+    const src = document.getElementById(btn.dataset.target);
+    const text = (src && src.dataset.src) ? src.dataset.src : "";
+    const done = () => { btn.textContent = "copied ✓"; setTimeout(() => { btn.textContent = "copy"; }, 1300); };
+    const fallback = () => {
+      const ta = document.createElement("textarea"); ta.value = text;
+      ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta);
+      ta.select(); try { document.execCommand("copy"); done(); } catch(_){} document.body.removeChild(ta);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
+    } else fallback();
+  });
+
+  /* theme toggle — identical behaviour to index.html */
+  /* the initial value is already set by the inline script in <head> */
+  const root = document.documentElement;
+  document.getElementById("theme").addEventListener("click", () => {
+    const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch(_){}
+    if (window.tintDiagrams) window.tintDiagrams();
+  });
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) {
+    /* stash the source before mermaid replaces it with an <svg>, so "copy" still works */
+    document.querySelectorAll("pre.mermaid").forEach(el => { el.dataset.src = el.textContent.trim(); });
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "base",
+      securityLevel: "strict",
+      flowchart: { useMaxWidth: true, htmlLabels: true }
+    });
+    /* Each diagram's classDef colours are authored into the page, and mermaid
+       bakes them into inline styles marked !important — which no stylesheet can
+       override. So the rendered SVG is re-tinted here by node class, and again
+       whenever the theme flips. Keep these in step with the CSS variables. */
+    var DIAGRAM_TINT = {
+      n:    { light: ["#EFE9FE", "#7C3AED", "#5B21B6"], dark: ["#241B38", "#A78BFA", "#C9B8F5"] },
+      ok:   { light: ["#E3F4F1", "#0E9384", "#0A6A60"], dark: ["#0F302B", "#34D3B8", "#6FE3CE"] },
+      cool: { light: ["#E3F4F1", "#0E9384", "#0A6A60"], dark: ["#0F302B", "#34D3B8", "#6FE3CE"] },
+      hot:  { light: ["#FBEEDF", "#C4661F", "#9A4E17"], dark: ["#33220F", "#E8974A", "#F0B074"] },
+      warn: { light: ["#FBE7E7", "#B23B3B", "#8C2323"], dark: ["#331717", "#E8736B", "#F0A09A"] }
+    };
+    window.tintDiagrams = function () {
+      var mode = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+      document.querySelectorAll(".mermaid-frame svg .node").forEach(function (node) {
+        Object.keys(DIAGRAM_TINT).forEach(function (cls) {
+          if (!node.classList.contains(cls)) return;
+          var c = DIAGRAM_TINT[cls][mode];
+          node.querySelectorAll("rect, polygon, circle, path").forEach(function (shape) {
+            shape.style.setProperty("fill", c[0], "important");
+            shape.style.setProperty("stroke", c[1], "important");
+          });
+          node.querySelectorAll(".nodeLabel").forEach(function (label) {
+            label.style.setProperty("color", c[2], "important");
+          });
+        });
+      });
+    };
+    mermaid.run({ querySelector: "pre.mermaid" }).then(window.tintDiagrams).catch(() => {});
+  }
+</script>
+</body>
+</html>
