@@ -57,6 +57,24 @@
           "minLength": 1,
           "pattern": "\\S"
         },
+        "aliases": {
+          "type": "array",
+          "description": "Optional. Extra search terms folded into the tile's search text but never displayed — the words a viewer would type that appear nowhere in the tile's own wording (\"top-p\", \"CoT\", \"function calling\", \"vector store\"). An alias must not be the exact title of a different tile, or it would misroute the search.",
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "pattern": "\\S" },
+          "examples": [["top-p", "nucleus sampling"]]
+        },
+        "related": {
+          "type": "array",
+          "description": "Optional. Two to four ids of the tiles worth reading next, rendered as the tile's \"see also\" row. Every id must exist, and must not be this tile's own. Prefer edges that cross categories — those are the ones a flat list hides.",
+          "minItems": 1,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "examples": [["chunking", "reranking", "vector-db"]]
+        },
         "videoUrl": {
           "type": "string",
           "description": "Link to the published short. Empty string until the short exists — the tile grows a \"watch\" link automatically once it is filled in. Must be an https:// youtube.com or youtu.be URL.",

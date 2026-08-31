@@ -5,6 +5,15 @@
     "kind": "basics",
     "def": "Software that performs tasks which normally need human intelligence — recognizing images, understanding language, making decisions.",
     "note": "AI is the umbrella term. Machine learning, LLMs and agents are all specific approaches inside it, not synonyms for it.",
+    "aliases": [
+      "artificial intelligence",
+      "artifical intelligence"
+    ],
+    "related": [
+      "what-is-ml",
+      "what-is-llm",
+      "what-is-agent"
+    ],
     "videoUrl": ""
   },
   {
@@ -13,6 +22,16 @@
     "kind": "basics",
     "def": "A way of building AI where the system learns patterns from data instead of being explicitly programmed with rules.",
     "note": "Show it enough labeled examples, and it learns the pattern itself — that's the shift from classic programming to ML.",
+    "aliases": [
+      "deep learning",
+      "supervised learning",
+      "statistical learning"
+    ],
+    "related": [
+      "what-is-ai",
+      "what-is-model",
+      "training-vs-inference"
+    ],
     "videoUrl": ""
   },
   {
@@ -21,6 +40,16 @@
     "kind": "basics",
     "def": "A Large Language Model — a neural network trained on huge amounts of text, so it can read and generate language.",
     "note": "ChatGPT, Claude and Gemini are all products built around an LLM. The LLM is the model; the product is the model plus an interface.",
+    "aliases": [
+      "foundation model",
+      "frontier model"
+    ],
+    "related": [
+      "what-is-model",
+      "next-token",
+      "token",
+      "what-is-agent"
+    ],
     "videoUrl": ""
   },
   {
@@ -29,6 +58,17 @@
     "kind": "basics",
     "def": "An LLM that can take actions, not just reply with text — it can call tools, check results and decide what to do next.",
     "note": "A plain chatbot only talks. An agent can act: search the web, run code, call an API, then use what it finds to keep going.",
+    "aliases": [
+      "agentic ai",
+      "autonomous agent",
+      "llm agent"
+    ],
+    "related": [
+      "chatbot-vs-agent",
+      "tool-use",
+      "agent-loop",
+      "what-is-llm"
+    ],
     "videoUrl": ""
   },
   {
@@ -37,6 +77,16 @@
     "kind": "basics",
     "def": "The trained system itself — millions or billions of numbers (parameters) that turn an input into an output.",
     "note": "\"Model\" is the generic term; an LLM is one kind of model, specifically one trained on language.",
+    "aliases": [
+      "ai model",
+      "model weights"
+    ],
+    "related": [
+      "what-is-llm",
+      "training-vs-inference",
+      "what-is-ml",
+      "gpu-ai"
+    ],
     "videoUrl": ""
   },
   {
@@ -45,6 +95,17 @@
     "kind": "basics",
     "def": "The text you give the model as input — an instruction, a question, or both.",
     "note": "Prompting is how you steer a model without changing its underlying weights. Same model, different prompt, different behavior.",
+    "aliases": [
+      "prompt engineering",
+      "user prompt",
+      "instructions"
+    ],
+    "related": [
+      "system-prompt",
+      "messages",
+      "few-shot",
+      "context"
+    ],
     "videoUrl": ""
   },
   {
@@ -53,6 +114,15 @@
     "kind": "basics",
     "def": "Training is when the model learns from data, once, at huge cost. Inference is every time you actually use it afterward.",
     "note": "When you chat with a model, you're doing inference. The model's knowledge was fixed back when it was trained.",
+    "aliases": [
+      "serving",
+      "model serving"
+    ],
+    "related": [
+      "pretraining-post-training",
+      "fine-tuning",
+      "knowledge-cutoff"
+    ],
     "videoUrl": ""
   },
   {
@@ -61,6 +131,17 @@
     "kind": "basics",
     "def": "When a model states something false or made-up as if it were fact, with no signal that it's unsure.",
     "note": "It happens because the model is predicting plausible-sounding text, not looking facts up — confidence and correctness aren't the same thing.",
+    "aliases": [
+      "hallucinations",
+      "confabulation",
+      "making things up"
+    ],
+    "related": [
+      "rag",
+      "knowledge-cutoff",
+      "next-token",
+      "evals"
+    ],
     "videoUrl": ""
   },
   {
@@ -69,6 +150,19 @@
     "kind": "basics",
     "def": "Training stopped on a fixed date, so the model's knowledge stopped there too — anything that happened afterwards was never part of what it learned.",
     "note": "It won't reliably notice that a question falls past that line, so anything current has to be handed to it — by a search, a document, or a tool call.",
+    "aliases": [
+      "knowledge cutoff",
+      "cutoff date",
+      "training cutoff",
+      "stale knowledge",
+      "outdated answers"
+    ],
+    "related": [
+      "rag",
+      "hallucination",
+      "training-vs-inference",
+      "tool-use"
+    ],
     "videoUrl": ""
   },
   {
@@ -79,6 +173,18 @@
     "note": "It teaches behaviour far better than facts — for fresh or private information, retrieval is usually cheaper, faster to update, and easier to check.",
     "lang": "python",
     "code": "examples = [{\"prompt\": \"...\", \"completion\": \"...\"}, ...]\ntuned = finetune(base_model, examples)   # new weights, same architecture",
+    "aliases": [
+      "fine tuning",
+      "finetuning",
+      "SFT",
+      "supervised fine-tuning"
+    ],
+    "related": [
+      "lora",
+      "rag",
+      "pretraining-post-training",
+      "distillation"
+    ],
     "videoUrl": ""
   },
   {
@@ -87,6 +193,17 @@
     "kind": "basics",
     "def": "Open-weights models you can download and run on your own machines; closed models live on the provider's servers and you reach them only through an API.",
     "note": "Open-weights isn't open source — you get the numbers, rarely the training data or the code that produced them, and the licence can still restrict what you're allowed to build.",
+    "aliases": [
+      "self-hosted",
+      "local model",
+      "proprietary model",
+      "on-prem"
+    ],
+    "related": [
+      "gpu-ai",
+      "quantization",
+      "lora"
+    ],
     "videoUrl": ""
   },
   {
@@ -95,6 +212,18 @@
     "kind": "basics",
     "def": "Running a model is billions of small multiplications, and a graphics card was already built to do thousands of them at once — the same maths that shades a 3D scene.",
     "note": "The binding constraint is usually memory, not maths — the weights have to fit in the card's own memory, and once they do, generation speed is limited by how fast they can be read back out.",
+    "aliases": [
+      "GPU",
+      "VRAM",
+      "CUDA",
+      "nvidia"
+    ],
+    "related": [
+      "kv-cache",
+      "quantization",
+      "open-vs-closed",
+      "moe"
+    ],
     "videoUrl": ""
   },
   {
@@ -105,6 +234,17 @@
     "note": "Climbing the ladder isn't a smarter model, it's a wider permission grant — so every rung up needs more guardrails than the one below it.",
     "lang": "mermaid",
     "code": "flowchart LR\n    C[Chatbot: answers]:::n --> P[Copilot: you approve each step]:::n --> A[Agent: acts, then reports]:::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
+    "aliases": [
+      "co-pilot",
+      "autonomy levels",
+      "ai assistant"
+    ],
+    "related": [
+      "what-is-agent",
+      "agent-loop",
+      "guardrails-permissions",
+      "human-in-the-loop"
+    ],
     "videoUrl": ""
   },
   {
@@ -115,6 +255,17 @@
     "note": "Reading a picture and drawing one are separate abilities; plenty of models can describe a photo in detail without being able to generate an image at all.",
     "lang": "json",
     "code": "{ \"role\": \"user\", \"content\": [\n  { \"type\": \"image\", \"source\": \"receipt.png\" },\n  { \"type\": \"text\",  \"text\": \"What's the total?\" }\n] }",
+    "aliases": [
+      "multi-modal",
+      "vision model",
+      "VLM",
+      "image input"
+    ],
+    "related": [
+      "token",
+      "tokenizer",
+      "computer-use"
+    ],
     "videoUrl": ""
   },
   {
@@ -125,6 +276,17 @@
     "note": "That trade pays off on maths, code and multi-step logic; on lookup, summarizing or ordinary chat it mostly buys you latency for the same answer.",
     "lang": "trace",
     "code": "Thought: 3 apples cost 1.80, so one is 0.60.\nThought: 7 x 0.60 = 4.20.\nAnswer: 4.20   <- usually the only part you see",
+    "aliases": [
+      "thinking model",
+      "extended thinking",
+      "test-time compute",
+      "inference-time scaling"
+    ],
+    "related": [
+      "chain-of-thought",
+      "token-pricing",
+      "planning"
+    ],
     "videoUrl": ""
   },
   {
@@ -135,6 +297,15 @@
     "note": "Everything is counted, priced and limited in tokens. For English, ~4 characters is about 1 token.",
     "lang": "python",
     "code": "tokens = [\"token\", \"izing\"]   # \"tokenizing\" -> 2 tokens, not 1 word",
+    "aliases": [
+      "wordpiece",
+      "subword"
+    ],
+    "related": [
+      "tokenizer",
+      "context",
+      "token-pricing"
+    ],
     "videoUrl": ""
   },
   {
@@ -145,6 +316,17 @@
     "note": "Anything outside it is invisible. Overflow means the oldest tokens fall off or must be summarized.",
     "lang": "python",
     "code": "used = prompt_tokens + reply_tokens\nassert used <= context_window   # or it overflows",
+    "aliases": [
+      "context length",
+      "context size",
+      "long context"
+    ],
+    "related": [
+      "context-rot",
+      "context-engineering",
+      "context-compaction",
+      "kv-cache"
+    ],
     "videoUrl": ""
   },
   {
@@ -155,6 +337,15 @@
     "note": "Near 0 it's almost deterministic — good for extraction. Raise it for brainstorming.",
     "lang": "json",
     "code": "{ \"temperature\": 0.2, \"top_p\": 1.0 }",
+    "aliases": [
+      "randomness",
+      "creativity setting"
+    ],
+    "related": [
+      "sampling",
+      "softmax",
+      "next-token"
+    ],
     "videoUrl": ""
   },
   {
@@ -165,6 +356,17 @@
     "note": "system sets behaviour, user asks, assistant answers — and the whole history is resent every turn.",
     "lang": "json",
     "code": "[\n  { \"role\": \"system\", \"content\": \"You are concise.\" },\n  { \"role\": \"user\",   \"content\": \"What is a token?\" }\n]",
+    "aliases": [
+      "conversation history",
+      "roles",
+      "chat completions"
+    ],
+    "related": [
+      "system-prompt",
+      "context",
+      "what-is-prompt",
+      "prompt-caching"
+    ],
     "videoUrl": ""
   },
   {
@@ -175,6 +377,18 @@
     "note": "Similar meanings land near each other — the basis for search, clustering and retrieval.",
     "lang": "python",
     "code": "vec = embed(\"cat\")   # -> [0.02, -0.31, 0.88, ...]",
+    "aliases": [
+      "embeddings",
+      "cosine similarity",
+      "semantic search",
+      "vector representation"
+    ],
+    "related": [
+      "vector-db",
+      "rag",
+      "chunking",
+      "reranking"
+    ],
     "videoUrl": ""
   },
   {
@@ -183,6 +397,17 @@
     "kind": "found",
     "def": "A standing instruction that sits at the front of every request and sets the model's role, rules and tone — resent each turn, never shown to the end user.",
     "note": "It's a steering tool, not a security boundary — a user or a poisoned tool result can talk the model around it, so nothing secret belongs in there.",
+    "aliases": [
+      "system message",
+      "system instructions",
+      "developer message"
+    ],
+    "related": [
+      "messages",
+      "prompt-injection",
+      "prompt-caching",
+      "few-shot"
+    ],
     "videoUrl": ""
   },
   {
@@ -193,6 +418,18 @@
     "note": "Temperature reshapes the odds but never rules a token out, while these two do — turn all three at once and you won't know which one changed the output.",
     "lang": "json",
     "code": "{ \"top_p\": 0.9, \"top_k\": 40 }",
+    "aliases": [
+      "nucleus sampling",
+      "top p",
+      "top k",
+      "decoding strategy",
+      "greedy decoding"
+    ],
+    "related": [
+      "temperature",
+      "softmax",
+      "next-token"
+    ],
     "videoUrl": ""
   },
   {
@@ -201,6 +438,18 @@
     "kind": "found",
     "def": "Showing the model a couple of worked examples inside the prompt so it picks up the pattern you want — no training, no fine-tuning, just input.",
     "note": "The examples ride along on every call, and the model copies whatever is actually in them, including formatting quirks you never meant to demonstrate.",
+    "aliases": [
+      "few shot",
+      "zero-shot",
+      "one-shot",
+      "in-context learning"
+    ],
+    "related": [
+      "what-is-prompt",
+      "fine-tuning",
+      "prompt-versioning",
+      "system-prompt"
+    ],
     "videoUrl": ""
   },
   {
@@ -209,6 +458,17 @@
     "kind": "found",
     "def": "Getting the model to work the problem out in steps before it answers, so each step becomes part of the input that shapes the next one.",
     "note": "Reasoning models now do this internally by default, and either way the written steps are a plausible narrative rather than a faithful log — a tidy chain can still end at a wrong answer.",
+    "aliases": [
+      "CoT",
+      "chain-of-thought",
+      "step by step prompting",
+      "scratchpad"
+    ],
+    "related": [
+      "reasoning-model",
+      "react",
+      "reflection"
+    ],
     "videoUrl": ""
   },
   {
@@ -219,6 +479,16 @@
     "note": "Strict modes enforce the shape by constraining what the decoder may emit, so the fields will be there — whether the values are right is still your problem.",
     "lang": "json",
     "code": "{\n  \"type\": \"object\",\n  \"properties\": { \"city\": { \"type\": \"string\" }, \"temp_c\": { \"type\": \"number\" } },\n  \"required\": [\"city\", \"temp_c\"]\n}",
+    "aliases": [
+      "json schema",
+      "constrained decoding",
+      "response format"
+    ],
+    "related": [
+      "tool-use",
+      "tool-design",
+      "streaming"
+    ],
     "videoUrl": ""
   },
   {
@@ -229,6 +499,16 @@
     "note": "You can't validate what hasn't arrived yet, and a stream can still fail halfway through, after the user has already read the first half.",
     "lang": "python",
     "code": "for chunk in model.stream(messages):\n    print(chunk.text, end=\"\")   # words appear as they're written",
+    "aliases": [
+      "SSE",
+      "server-sent events",
+      "typewriter effect"
+    ],
+    "related": [
+      "stop-max-tokens",
+      "structured-output",
+      "next-token"
+    ],
     "videoUrl": ""
   },
   {
@@ -239,6 +519,17 @@
     "note": "A reply that stops mid-sentence almost always hit the ceiling rather than finishing — check the stop reason the API returns before you start rewriting the prompt.",
     "lang": "json",
     "code": "{ \"max_tokens\": 512, \"stop\": [\"Observation:\"] }",
+    "aliases": [
+      "finish reason",
+      "truncated reply",
+      "output length limit",
+      "stop token"
+    ],
+    "related": [
+      "streaming",
+      "token-pricing",
+      "cost-engineering"
+    ],
     "videoUrl": ""
   },
   {
@@ -249,6 +540,17 @@
     "note": "You pay for output you throw away too, so a reply that fails validation and gets retried costs exactly as much as one you keep.",
     "lang": "json",
     "code": "{ \"usage\": { \"input_tokens\": 1830, \"output_tokens\": 210 } }",
+    "aliases": [
+      "cost per token",
+      "price per million tokens",
+      "api pricing"
+    ],
+    "related": [
+      "cost-engineering",
+      "prompt-caching",
+      "token",
+      "context"
+    ],
     "videoUrl": ""
   },
   {
@@ -257,6 +559,18 @@
     "kind": "found",
     "def": "A model can accept a very long prompt without using all of it evenly — the material buried in the middle is the likeliest to be missed.",
     "note": "Fitting inside the window is the low bar — accuracy tends to slide as the prompt grows, so trimming what you send is a quality decision, not just a cost one.",
+    "aliases": [
+      "lost in the middle",
+      "context stuffing",
+      "needle in a haystack",
+      "long context degradation"
+    ],
+    "related": [
+      "context",
+      "context-engineering",
+      "context-compaction",
+      "chunking"
+    ],
     "videoUrl": ""
   },
   {
@@ -267,6 +581,18 @@
     "note": "Query x Key produces the weights; those weights mix the Values. It's the heart of the transformer.",
     "lang": "python",
     "code": "scores  = query @ key.T\nweights = softmax(scores)\nout     = weights @ value",
+    "aliases": [
+      "attention mechanism",
+      "multi-head attention",
+      "attention heads",
+      "QKV"
+    ],
+    "related": [
+      "transformer",
+      "positional",
+      "softmax",
+      "kv-cache"
+    ],
     "videoUrl": ""
   },
   {
@@ -275,6 +601,16 @@
     "kind": "model",
     "def": "The architecture behind modern LLMs: stacked self-attention and feed-forward layers, with no recurrence.",
     "note": "It processes a whole sequence in parallel, which is why it trains and scales so well.",
+    "aliases": [
+      "attention is all you need",
+      "transformer architecture"
+    ],
+    "related": [
+      "attention",
+      "decoder-only",
+      "positional",
+      "next-token"
+    ],
     "videoUrl": ""
   },
   {
@@ -283,6 +619,17 @@
     "kind": "model",
     "def": "Attention is order-blind on its own, so each token's position is baked into its vector.",
     "note": "Without it, \"dog bites man\" and \"man bites dog\" would look identical to the model.",
+    "aliases": [
+      "RoPE",
+      "rotary embeddings",
+      "positional embeddings",
+      "word order"
+    ],
+    "related": [
+      "attention",
+      "transformer",
+      "tokenizer"
+    ],
     "videoUrl": ""
   },
   {
@@ -293,6 +640,16 @@
     "note": "It's the final step that decides how likely each possible next token is.",
     "lang": "python",
     "code": "probs = exp(logits) / sum(exp(logits))   # sums to 1",
+    "aliases": [
+      "soft max",
+      "probabilities"
+    ],
+    "related": [
+      "next-token",
+      "temperature",
+      "sampling",
+      "attention"
+    ],
     "videoUrl": ""
   },
   {
@@ -303,6 +660,16 @@
     "note": "Everything else — chat, code, reasoning — emerges from doing this well, one token at a time.",
     "lang": "python",
     "code": "logits  = model(tokens)\nnext_id = sample(softmax(logits), temperature=0.7)",
+    "aliases": [
+      "autoregressive",
+      "next word prediction"
+    ],
+    "related": [
+      "softmax",
+      "temperature",
+      "decoder-only",
+      "what-is-llm"
+    ],
     "videoUrl": ""
   },
   {
@@ -313,6 +680,17 @@
     "note": "The cache grows with every token and lives in GPU memory, so on a long conversation the thing you run out of first is usually room for the cache, not compute.",
     "lang": "python",
     "code": "k, v = attn_kv(new_token)              # only the new token\ncache_k.append(k); cache_v.append(v)   # past work, kept\nout = softmax(q @ cache_k.T) @ cache_v",
+    "aliases": [
+      "key value cache",
+      "kv caching",
+      "attention cache"
+    ],
+    "related": [
+      "attention",
+      "context",
+      "gpu-ai",
+      "streaming"
+    ],
     "videoUrl": ""
   },
   {
@@ -323,6 +701,17 @@
     "note": "It's why letter-level tasks go wrong: the model sees chunks, never characters, so \"how many r's\" asks it about something it can't actually look at.",
     "lang": "python",
     "code": "merges = [(\"l\",\"o\"), (\"lo\",\"w\"), (\"s\",\"t\"), (\"e\",\"st\")]   # learned by frequency\nencode(\"lowest\") -> [\"low\", \"est\"]                       # pieces, never letters",
+    "aliases": [
+      "byte pair encoding",
+      "tokenization",
+      "sentencepiece",
+      "tiktoken"
+    ],
+    "related": [
+      "token",
+      "embedding",
+      "multimodal"
+    ],
     "videoUrl": ""
   },
   {
@@ -331,6 +720,16 @@
     "kind": "model",
     "def": "Every token attends only to the tokens before it — the future is masked out, so the model can never peek at the word it's being asked to predict.",
     "note": "Drop that mask and you get an encoder — very good at embedding text, useless at generating it left to right — which is why every model you chat with is decoder-only.",
+    "aliases": [
+      "causal attention",
+      "encoder vs decoder",
+      "BERT vs GPT"
+    ],
+    "related": [
+      "attention",
+      "next-token",
+      "embedding"
+    ],
     "videoUrl": ""
   },
   {
@@ -339,6 +738,17 @@
     "kind": "model",
     "def": "Pretraining is the enormous run that learns language from raw text; post-training is the much smaller pass that turns that raw predictor into something which follows instructions.",
     "note": "Nearly all the knowledge arrives in pretraining — post-training mostly reshapes behaviour, which is why fine-tuning is a poor way to bolt on facts a model never saw.",
+    "aliases": [
+      "instruction tuning",
+      "alignment",
+      "base model vs instruct model"
+    ],
+    "related": [
+      "rlhf",
+      "fine-tuning",
+      "training-vs-inference",
+      "knowledge-cutoff"
+    ],
     "videoUrl": ""
   },
   {
@@ -347,6 +757,16 @@
     "kind": "model",
     "def": "One way of doing post-training: people rank competing answers, a reward model learns to predict those rankings, and the LLM is then tuned to score well against it.",
     "note": "Optimize too hard against that reward and you get sycophancy — the model learns what raters approve of, and approval isn't the same thing as correctness.",
+    "aliases": [
+      "DPO",
+      "preference tuning",
+      "RLAIF"
+    ],
+    "related": [
+      "pretraining-post-training",
+      "fine-tuning",
+      "distillation"
+    ],
     "videoUrl": ""
   },
   {
@@ -357,6 +777,17 @@
     "note": "Every expert still has to sit in memory even though only a few fire, so a mixture of experts buys you cheaper compute per token, not cheaper hardware to host it on.",
     "lang": "python",
     "code": "chosen = router.top_k(token, k=2)   # 2 experts of many, per layer\nout = sum(w * expert(token) for w, expert in chosen)",
+    "aliases": [
+      "MoE",
+      "mixture-of-experts",
+      "expert routing",
+      "sparse model"
+    ],
+    "related": [
+      "gpu-ai",
+      "quantization",
+      "transformer"
+    ],
     "videoUrl": ""
   },
   {
@@ -365,6 +796,18 @@
     "kind": "model",
     "def": "Storing the weights at lower numeric precision — fewer bits per number — so the model shrinks and runs faster, while losing surprisingly little quality.",
     "note": "Quality doesn't collapse so much as fray — the damage shows up first on the hardest prompts, so a quantized model can pass a quick test and still drift on the long ones.",
+    "aliases": [
+      "quantisation",
+      "4-bit",
+      "int8",
+      "GGUF"
+    ],
+    "related": [
+      "gpu-ai",
+      "distillation",
+      "open-vs-closed",
+      "speculative-decoding"
+    ],
     "videoUrl": ""
   },
   {
@@ -375,6 +818,16 @@
     "note": "An adapter is megabytes rather than gigabytes, so one hosted base model can serve many LoRAs swapped in per request, or have one merged back into its weights.",
     "lang": "python",
     "code": "delta = (x @ A) @ B          # A: d x r, B: r x k, r is tiny\ny = x @ W_frozen + delta     # only A and B get gradients",
+    "aliases": [
+      "QLoRA",
+      "PEFT",
+      "parameter-efficient fine-tuning"
+    ],
+    "related": [
+      "fine-tuning",
+      "quantization",
+      "pretraining-post-training"
+    ],
     "videoUrl": ""
   },
   {
@@ -383,6 +836,16 @@
     "kind": "model",
     "def": "Training a small model to imitate a big one's outputs — how a lot of the fast, cheap models you actually use get built.",
     "note": "A student inherits the teacher's blind spots along with its strengths, because distillation compresses behaviour that already exists rather than discovering any of its own.",
+    "aliases": [
+      "knowledge distillation",
+      "teacher student model",
+      "model compression"
+    ],
+    "related": [
+      "quantization",
+      "model-routing",
+      "speculative-decoding"
+    ],
     "videoUrl": ""
   },
   {
@@ -393,6 +856,17 @@
     "note": "Unlike quantization or distillation it costs no quality at all — the accept/reject rule preserves the big model's own output distribution exactly — so the only variable is how often drafts survive.",
     "lang": "python",
     "code": "draft = small(tokens, n=4)        # cheap guesses\nok = big.verify(tokens, draft)    # one pass, all 4\ntokens += draft[:ok]              # keep accepted prefix",
+    "aliases": [
+      "speculative sampling",
+      "draft model",
+      "assisted decoding"
+    ],
+    "related": [
+      "kv-cache",
+      "quantization",
+      "streaming",
+      "distillation"
+    ],
     "videoUrl": ""
   },
   {
@@ -403,6 +877,16 @@
     "note": "You describe each tool as a schema; the model replies with the name and arguments to invoke. This is the bridge from chat to action.",
     "lang": "json",
     "code": "{\n  \"name\": \"get_weather\",\n  \"description\": \"Current weather for a city\",\n  \"parameters\": { \"city\": \"string\" }\n}",
+    "aliases": [
+      "tool calling",
+      "tool calls"
+    ],
+    "related": [
+      "react",
+      "tool-design",
+      "structured-output",
+      "mcp"
+    ],
     "videoUrl": ""
   },
   {
@@ -413,6 +897,17 @@
     "note": "Each step is grounded in a real observation instead of one long guessed-at answer.",
     "lang": "trace",
     "code": "Thought: I need today's weather.\nAction: get_weather(\"Alicante\")\nObservation: 29C, clear skies\nThought: Now I can answer.",
+    "aliases": [
+      "thought action observation",
+      "reason and act",
+      "react pattern"
+    ],
+    "related": [
+      "agent-loop",
+      "tool-use",
+      "chain-of-thought",
+      "planning"
+    ],
     "videoUrl": ""
   },
   {
@@ -423,6 +918,17 @@
     "note": "The loop plus tools plus memory is what turns a plain chat model into an agent.",
     "lang": "python",
     "code": "while not done:\n    action = model.decide(state)\n    result = run(action)\n    state  = update(state, result)\n    done   = action.is_final",
+    "aliases": [
+      "think act observe",
+      "control loop",
+      "agent execution loop"
+    ],
+    "related": [
+      "loop-engineering",
+      "react",
+      "memory",
+      "observability-tracing"
+    ],
     "videoUrl": ""
   },
   {
@@ -431,6 +937,16 @@
     "kind": "agent",
     "def": "Short-term memory is the context window; long-term memory is external storage you retrieve into it.",
     "note": "Agents summarize or store past steps so they don't forget once the window fills up.",
+    "aliases": [
+      "agent memory",
+      "conversation memory"
+    ],
+    "related": [
+      "context",
+      "memory-architecture",
+      "context-compaction",
+      "rag"
+    ],
     "videoUrl": ""
   },
   {
@@ -441,6 +957,18 @@
     "note": "Cuts hallucination and lets a model use private or fresh data it never saw during training.",
     "lang": "python",
     "code": "docs   = retrieve(query, top_k=4)\nprompt = context(docs) + query\nanswer = model(prompt)",
+    "aliases": [
+      "retrieval augmented generation",
+      "grounding",
+      "chat with your docs",
+      "knowledge base search"
+    ],
+    "related": [
+      "chunking",
+      "reranking",
+      "vector-db",
+      "fine-tuning"
+    ],
     "videoUrl": ""
   },
   {
@@ -449,6 +977,17 @@
     "kind": "agent",
     "def": "An open standard for connecting models to tools and data through one consistent interface.",
     "note": "Write a connector once and any MCP-aware client can use it — a bit like a USB port for tools.",
+    "aliases": [
+      "MCP server",
+      "MCP client",
+      "tool protocol"
+    ],
+    "related": [
+      "tool-use",
+      "tool-design",
+      "a2a",
+      "skills"
+    ],
     "videoUrl": ""
   },
   {
@@ -459,6 +998,16 @@
     "note": "A skill teaches the model HOW (it reads, then does the work itself); MCP gives it ACCESS to live systems. Runbook vs phone line — full comparison on the MCP vs REST page.",
     "lang": "mermaid",
     "code": "flowchart LR\n    F[Skill folder]:::n -->|read into context| M[Model]:::n -->|does the work itself| R[Result]:::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
+    "aliases": [
+      "agent skills",
+      "SKILL.md",
+      "playbook"
+    ],
+    "related": [
+      "mcp",
+      "agents-md",
+      "context-engineering"
+    ],
     "videoUrl": ""
   },
   {
@@ -469,6 +1018,17 @@
     "note": "Without evals you're tuning by vibes; with them, progress becomes measurable.",
     "lang": "python",
     "code": "score = sum(check(model(x)) for x in test_set) / len(test_set)",
+    "aliases": [
+      "evaluation",
+      "benchmark",
+      "llm as a judge",
+      "test set"
+    ],
+    "related": [
+      "agent-trajectory-evals",
+      "prompt-versioning",
+      "red-teaming"
+    ],
     "videoUrl": ""
   },
   {
@@ -477,6 +1037,17 @@
     "kind": "agent",
     "def": "A graph of steps an agent system runs through — not one long prompt, but a structured, typed sequence you can inspect and control.",
     "note": "This is what separates a serious agent framework from a chat loop: the orchestration itself becomes a first-class, strongly-typed object instead of hidden inside one big prompt.",
+    "aliases": [
+      "DAG",
+      "pipeline",
+      "step graph"
+    ],
+    "related": [
+      "executor-edge",
+      "checkpointing",
+      "orchestration-patterns",
+      "agent-loop"
+    ],
     "videoUrl": ""
   },
   {
@@ -485,6 +1056,17 @@
     "kind": "agent",
     "def": "An executor is one unit of work in a workflow — an agent or a plain function. An edge is the connection that routes output from one executor to the next.",
     "note": "Edges can fan out to run several executors in parallel, fan in to combine their results, or route conditionally based on what came out of the previous step.",
+    "aliases": [
+      "nodes and edges",
+      "graph node",
+      "fan-out fan-in",
+      "conditional routing"
+    ],
+    "related": [
+      "workflow",
+      "orchestration-patterns",
+      "checkpointing"
+    ],
     "videoUrl": ""
   },
   {
@@ -493,6 +1075,17 @@
     "kind": "agent",
     "def": "Saving a workflow's state mid-run, so it can be paused, killed, or crash — and resume later from exactly where it left off, not from the start.",
     "note": "This is what makes long-running or expensive agent workflows practical: a multi-hour task survives a restart instead of burning every token again.",
+    "aliases": [
+      "durable execution",
+      "resumable runs",
+      "crash recovery",
+      "pause and resume"
+    ],
+    "related": [
+      "workflow",
+      "memory-architecture",
+      "observability-tracing"
+    ],
     "videoUrl": ""
   },
   {
@@ -501,6 +1094,17 @@
     "kind": "agent",
     "def": "A multi-agent pattern where a triage agent routes a request to the right specialist agent, and any specialist can hand the conversation back or sideways if it turns out to be the wrong fit.",
     "note": "The developer defines the topology — which agents exist and who can hand off to whom — but the agents themselves decide, in the moment, when a handoff is needed.",
+    "aliases": [
+      "agent handoff",
+      "triage routing",
+      "delegation between agents"
+    ],
+    "related": [
+      "orchestration-patterns",
+      "subagents",
+      "a2a",
+      "workflow"
+    ],
     "videoUrl": ""
   },
   {
@@ -509,6 +1113,16 @@
     "kind": "agent",
     "def": "A ready-made shell around a model that turns it into a working coding agent in one step — file access, task tracking, shell execution, and approvals, all pre-wired.",
     "note": "Instead of hand-building memory, file tools, and a sandbox yourself, a harness gives you the standard agent scaffolding out of the box.",
+    "aliases": [
+      "coding assistant",
+      "agent runtime"
+    ],
+    "related": [
+      "harness-engineering",
+      "sandboxing",
+      "agents-md",
+      "code-execution"
+    ],
     "videoUrl": ""
   },
   {
@@ -517,6 +1131,16 @@
     "kind": "agent",
     "def": "A protocol that lets independent agents send each other structured messages, even across different frameworks or programming languages.",
     "note": "This is how a .NET agent and a Python agent — built by different teams on different stacks — can still delegate work to one another reliably.",
+    "aliases": [
+      "agent to agent",
+      "multi-agent protocol",
+      "agent interoperability"
+    ],
+    "related": [
+      "mcp",
+      "handoff",
+      "orchestration-patterns"
+    ],
     "videoUrl": ""
   },
   {
@@ -527,6 +1151,17 @@
     "note": "A plan made up front goes stale the moment reality disagrees with it, and pure step-by-step wanders — most working agents sketch a rough plan, then react inside each step.",
     "lang": "mermaid",
     "code": "flowchart TD\n    G[Goal]:::n --> P[Plan the whole task]:::n\n    P --> E[Execute the plan]:::ok\n    G --> D[Decide one step]:::n\n    D --> O[Observe result]:::n\n    O --> D\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
+    "aliases": [
+      "task decomposition",
+      "plan and execute",
+      "planner agent"
+    ],
+    "related": [
+      "react",
+      "agent-loop",
+      "reflection",
+      "orchestration-patterns"
+    ],
     "videoUrl": ""
   },
   {
@@ -535,6 +1170,17 @@
     "kind": "agent",
     "def": "The agent reads back its own answer, checks it against what was actually asked, and fixes what it finds before handing the work over.",
     "note": "It only helps when the critique has something concrete to check against — a test run, a spec, an error message — otherwise the model just re-approves its own mistake more confidently.",
+    "aliases": [
+      "self-correction",
+      "self-refine",
+      "self review"
+    ],
+    "related": [
+      "evals",
+      "chain-of-thought",
+      "agent-trajectory-evals",
+      "planning"
+    ],
     "videoUrl": ""
   },
   {
@@ -545,6 +1191,17 @@
     "note": "The value is in what doesn't come back: the forty files read and the three dead ends stay in the subagent's context, and the parent only pays for the answer.",
     "lang": "mermaid",
     "code": "flowchart TD\n    P[Parent agent]:::n -->|subtask| S[Subagent, fresh context]:::n\n    S --> E[Reads, tries, discards]:::n\n    E -->|conclusion only| R[Parent context stays small]:::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
+    "aliases": [
+      "sub-agent",
+      "child agent",
+      "spawning agents"
+    ],
+    "related": [
+      "context-compaction",
+      "orchestration-patterns",
+      "handoff",
+      "context-engineering"
+    ],
     "videoUrl": ""
   },
   {
@@ -553,6 +1210,18 @@
     "kind": "agent",
     "def": "An agent that drives a real screen the way a person does — it reads what's displayed, moves the pointer, clicks and types.",
     "note": "It's the fallback for software with no API: slower and far more brittle than a real tool call, and a redesigned button can break it overnight.",
+    "aliases": [
+      "browser automation",
+      "GUI agent",
+      "screen control",
+      "RPA"
+    ],
+    "related": [
+      "tool-use",
+      "sandboxing",
+      "least-privilege",
+      "multimodal"
+    ],
     "videoUrl": ""
   },
   {
@@ -563,6 +1232,17 @@
     "note": "The tool that can run anything is also the tool that can break anything, so it belongs in a sandbox with no secrets, no credentials and no network you didn't intend.",
     "lang": "python",
     "code": "code   = model.write_code(task)\nresult = sandbox.run(code)        # no network, no secrets\nanswer = model.explain(result)",
+    "aliases": [
+      "code interpreter",
+      "python tool",
+      "REPL"
+    ],
+    "related": [
+      "sandboxing",
+      "tool-design",
+      "least-privilege",
+      "agent-harness"
+    ],
     "videoUrl": ""
   },
   {
@@ -571,6 +1251,18 @@
     "kind": "agent",
     "def": "The store your embeddings live in — you query it by similarity, asking for the vectors nearest to yours, instead of matching a field exactly.",
     "note": "Nearest isn't the same as relevant — a top-k query hands back k results whether or not the store holds anything that actually answers the question.",
+    "aliases": [
+      "vector store",
+      "vector index",
+      "similarity search",
+      "pinecone"
+    ],
+    "related": [
+      "embedding",
+      "rag",
+      "reranking",
+      "chunking"
+    ],
     "videoUrl": ""
   },
   {
@@ -581,6 +1273,17 @@
     "note": "Too big and every hit drags in irrelevant text; too small and the sentence arrives stripped of the paragraph that explained it.",
     "lang": "python",
     "code": "size, overlap = 800, 100\nchunks = [text[i:i + size]\n          for i in range(0, len(text), size - overlap)]",
+    "aliases": [
+      "text splitting",
+      "chunk size",
+      "document splitter"
+    ],
+    "related": [
+      "embedding",
+      "rag",
+      "reranking",
+      "context-rot"
+    ],
     "videoUrl": ""
   },
   {
@@ -591,6 +1294,17 @@
     "note": "Vector search is cheap and approximate on purpose — retrieve far more than you need, then let the reranker throw most of it away.",
     "lang": "python",
     "code": "candidates = vector_search(query, top_k=50)     # fast, approximate\nranked     = reranker.score(query, candidates)  # slow, careful\ncontext    = ranked[:5]                         # only these reach the prompt",
+    "aliases": [
+      "cross-encoder",
+      "re-ranking",
+      "two-stage retrieval"
+    ],
+    "related": [
+      "vector-db",
+      "rag",
+      "chunking",
+      "embedding"
+    ],
     "videoUrl": ""
   },
   {
@@ -601,6 +1315,17 @@
     "note": "Compaction is lossy by design, so anything the rest of the run can't do without belongs in a file or a memory store rather than in a summary that may drop it.",
     "lang": "mermaid",
     "code": "flowchart TD\n    R[Run so far]:::n --> F{Window full?}:::n\n    F -->|no| C[Keep going]:::ok\n    F -->|yes| S[Summarize and drop detail]:::n\n    S --> C\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
+    "aliases": [
+      "auto-compact",
+      "conversation summarization",
+      "context trimming"
+    ],
+    "related": [
+      "context",
+      "memory",
+      "context-engineering",
+      "subagents"
+    ],
     "videoUrl": ""
   },
   {
@@ -609,6 +1334,17 @@
     "kind": "agent",
     "def": "A file checked into the repo that the agent reads at the start of a session — the conventions, the commands that actually work here, and what not to touch.",
     "note": "It rots faster than the code does, and a stale command in there gets trusted and run anyway, so prune it as ruthlessly as you would a README.",
+    "aliases": [
+      "agent instructions file",
+      "cursor rules",
+      "repo conventions"
+    ],
+    "related": [
+      "skills",
+      "context-engineering",
+      "prompt-versioning",
+      "agent-harness"
+    ],
     "videoUrl": ""
   },
   {
@@ -619,6 +1355,16 @@
     "note": "A harness decides what's even possible for the agent to attempt. No amount of clever prompting fixes a missing file permission or a shell it can't reach.",
     "lang": "mermaid",
     "code": "flowchart TD\n    A[Agent]:::n --> H[Harness]:::n\n    H --> SB[Sandbox]:::n\n    H --> FS[File system]:::n\n    H --> RT[Runtime surface]:::n\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px",
+    "aliases": [
+      "agent environment design",
+      "execution environment"
+    ],
+    "related": [
+      "agent-harness",
+      "sandboxing",
+      "tool-design",
+      "guardrails-permissions"
+    ],
     "videoUrl": ""
   },
   {
@@ -629,6 +1375,17 @@
     "note": "Stop too early and the task is unfinished. Stop too late and you burn tokens on a loop that already found its answer three steps ago.",
     "lang": "mermaid",
     "code": "flowchart TD\n    T[Think]:::n --> Ac[Act]:::n --> O[Observe]:::n\n    O -->|not done| T\n    O -->|done| S([Stop]):::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
+    "aliases": [
+      "stopping criteria",
+      "termination condition",
+      "max iterations"
+    ],
+    "related": [
+      "agent-loop",
+      "cost-engineering",
+      "observability-tracing",
+      "react"
+    ],
     "videoUrl": ""
   },
   {
@@ -639,6 +1396,17 @@
     "note": "Most 'prompt engineering' problems that show up in production are really context problems: too much irrelevant history, not too few clever words.",
     "lang": "mermaid",
     "code": "flowchart TD\n    H[History]:::n --> Sel[Selector]:::n\n    Tl[Tool output]:::n --> Sel\n    M[Memory]:::n --> Sel\n    Sel --> W[Context window]:::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
+    "aliases": [
+      "context curation",
+      "context selection",
+      "prompt assembly"
+    ],
+    "related": [
+      "context",
+      "context-rot",
+      "context-compaction",
+      "memory-architecture"
+    ],
     "videoUrl": ""
   },
   {
@@ -649,6 +1417,17 @@
     "note": "A tool that fails silently or accepts unchecked input hands the agent a way to cause real damage without anyone actually deciding it should be allowed to.",
     "lang": "mermaid",
     "code": "flowchart TD\n    C[Model call]:::n --> Sc[Tool schema]:::n --> V[Validate]:::n --> Ex[Execute]:::ok --> R[Result]:::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
+    "aliases": [
+      "tool api design",
+      "tool interface design",
+      "writing good tools"
+    ],
+    "related": [
+      "tool-use",
+      "guardrails-permissions",
+      "least-privilege",
+      "prompt-injection"
+    ],
     "videoUrl": ""
   },
   {
@@ -659,6 +1438,17 @@
     "note": "Not everything belongs in long-term storage — a well-designed architecture decides what gets promoted from a single run into something durable.",
     "lang": "mermaid",
     "code": "flowchart TD\n    C[Context window]:::n -->|fills up| Su[Summarize / evict]:::n\n    Su --> L[Long-term store]:::ok\n    L -->|retrieve| C\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
+    "aliases": [
+      "memory design",
+      "episodic memory",
+      "memory tiers"
+    ],
+    "related": [
+      "memory",
+      "context-compaction",
+      "vector-db",
+      "context-engineering"
+    ],
     "videoUrl": ""
   },
   {
@@ -669,6 +1459,17 @@
     "note": "A single agent fails by running out of context. A swarm fails by agents stepping on each other's work. Pick the shape for the failure mode you can live with.",
     "lang": "mermaid",
     "code": "flowchart TD\n    P[Planner]:::n --> W1[Worker A]:::n\n    P --> W2[Worker B]:::n\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px",
+    "aliases": [
+      "multi-agent system",
+      "supervisor pattern",
+      "manager worker pattern"
+    ],
+    "related": [
+      "workflow",
+      "handoff",
+      "subagents",
+      "agent-loop"
+    ],
     "videoUrl": ""
   },
   {
@@ -679,6 +1480,18 @@
     "note": "A guardrail that only logs a violation after the fact isn't a guardrail — it has to be able to block or reroute before the action actually runs.",
     "lang": "mermaid",
     "code": "flowchart TD\n    A[Agent action]:::n --> P{Policy check}:::n\n    P -->|allowed| E[Execute]:::ok\n    P -->|denied| B[Block / ask human]:::warn\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px\n    classDef warn fill:#FBE7E7,stroke:#B23B3B,color:#8C2323,font-size:13px",
+    "aliases": [
+      "policy enforcement",
+      "allowlist",
+      "action approval",
+      "safety checks"
+    ],
+    "related": [
+      "least-privilege",
+      "human-in-the-loop",
+      "prompt-injection",
+      "tool-design"
+    ],
     "videoUrl": ""
   },
   {
@@ -689,6 +1502,17 @@
     "note": "Two runs can land on the same correct answer through very different paths, and one of those paths might have touched something it shouldn't have.",
     "lang": "mermaid",
     "code": "flowchart TD\n    S1[Step 1]:::n --> S2[Step 2]:::n --> S3[Step N]:::n --> F[Final answer]:::n\n    F -.-> Sc[Trajectory score]:::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
+    "aliases": [
+      "trajectory evaluation",
+      "agent benchmarks",
+      "process supervision"
+    ],
+    "related": [
+      "evals",
+      "observability-tracing",
+      "red-teaming",
+      "reflection"
+    ],
     "videoUrl": ""
   },
   {
@@ -699,6 +1523,17 @@
     "note": "The line isn't drawn per-request in the moment — it's drawn in the design, before the agent is ever capable of proposing that action.",
     "lang": "mermaid",
     "code": "flowchart TD\n    A[Agent proposes]:::n --> D{High-stakes?}:::n\n    D -->|no| Au[Auto-run]:::ok\n    D -->|yes| H[Human approves]:::warn --> Ex[Execute]:::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px\n    classDef warn fill:#FBE7E7,stroke:#B23B3B,color:#8C2323,font-size:13px",
+    "aliases": [
+      "HITL",
+      "human approval",
+      "human oversight",
+      "approval gate"
+    ],
+    "related": [
+      "guardrails-permissions",
+      "chatbot-vs-agent",
+      "least-privilege"
+    ],
     "videoUrl": ""
   },
   {
@@ -709,6 +1544,18 @@
     "note": "When a 30-step run breaks at step 14, a trace lets you look straight at step 14, instead of re-running the whole thing and guessing where it went wrong.",
     "lang": "mermaid",
     "code": "flowchart TD\n    R[Run: steps 1-30]:::n -->|logs every step| T[Trace log]:::n\n    T --> J[Jump to step 14]:::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
+    "aliases": [
+      "telemetry",
+      "OpenTelemetry",
+      "logging",
+      "spans"
+    ],
+    "related": [
+      "agent-trajectory-evals",
+      "pii-boundaries",
+      "loop-engineering",
+      "checkpointing"
+    ],
     "videoUrl": ""
   },
   {
@@ -719,6 +1566,18 @@
     "note": "Per token the reply usually costs more, but the bill comes from the input — the whole history and every tool result get resent on each turn.",
     "lang": "python",
     "code": "cost = in_tokens * in_rate + out_tokens * out_rate\n# out_rate is higher, but in_tokens is the bigger number",
+    "aliases": [
+      "token budget",
+      "cost optimization",
+      "cost per request",
+      "unit economics"
+    ],
+    "related": [
+      "token-pricing",
+      "prompt-caching",
+      "model-routing",
+      "context-engineering"
+    ],
     "videoUrl": ""
   },
   {
@@ -729,6 +1588,17 @@
     "note": "A bad route doesn't throw an error — it just quietly answers worse, which is why every tier needs its own evals before you trust the router.",
     "lang": "mermaid",
     "code": "flowchart TD\n    R[Request]:::n --> C{Simple request?}:::n\n    C -->|yes| S[Small model]:::ok\n    C -->|no| L[Large model]:::ok\n    S -->|not confident| L\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
+    "aliases": [
+      "model selection",
+      "llm router",
+      "cascading models"
+    ],
+    "related": [
+      "cost-engineering",
+      "evals",
+      "distillation",
+      "retries-fallbacks"
+    ],
     "videoUrl": ""
   },
   {
@@ -737,6 +1607,17 @@
     "kind": "prod",
     "def": "Reusing an identical prompt prefix across calls so the provider can serve it from a cache instead of processing those same tokens fresh every time — cheaper and faster.",
     "note": "It only hits if the prefix is identical every time, so anything volatile — a timestamp, the user's name, today's data — belongs after the cached block, never inside it.",
+    "aliases": [
+      "prefix caching",
+      "context caching",
+      "cache hit rate"
+    ],
+    "related": [
+      "token-pricing",
+      "cost-engineering",
+      "system-prompt",
+      "messages"
+    ],
     "videoUrl": ""
   },
   {
@@ -747,6 +1628,17 @@
     "note": "Retry blindly and you make an overload worse — cap the attempts, add jitter, and never auto-retry a step whose tool already sent the email or charged the card.",
     "lang": "mermaid",
     "code": "flowchart TD\n    C[Call model]:::n --> E{Failed?}:::n\n    E -->|no| R[Return]:::ok\n    E -->|retryable| B[Backoff and retry]:::warn --> C\n    E -->|attempts spent| F[Fallback model]:::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px\n    classDef warn fill:#FBE7E7,stroke:#B23B3B,color:#8C2323,font-size:13px",
+    "aliases": [
+      "exponential backoff",
+      "rate limit",
+      "429 errors",
+      "idempotency"
+    ],
+    "related": [
+      "model-routing",
+      "tool-design",
+      "observability-tracing"
+    ],
     "videoUrl": ""
   },
   {
@@ -755,6 +1647,17 @@
     "kind": "prod",
     "def": "Treating prompts as code — every change versioned, diffed and scored against an eval set before it rolls out, and rolled back when the score drops.",
     "note": "A one-word edit can move quality further than a refactor, and nothing in the diff tells you which direction — which is why the eval run, not the code review, is the gate.",
+    "aliases": [
+      "prompt management",
+      "a/b testing prompts",
+      "prompt registry"
+    ],
+    "related": [
+      "evals",
+      "few-shot",
+      "system-prompt",
+      "agent-trajectory-evals"
+    ],
     "videoUrl": ""
   },
   {
@@ -763,6 +1666,16 @@
     "kind": "prod",
     "def": "Work that doesn't need an answer this second goes into a queue instead of a live call — slower turnaround, a lower rate, nobody sitting there waiting.",
     "note": "It's a queue, not a chat: results come back in bulk long after you submit, so anything interactive — or an agent step that needs the previous answer — stays on the live path.",
+    "aliases": [
+      "batch API",
+      "offline processing",
+      "async jobs"
+    ],
+    "related": [
+      "cost-engineering",
+      "token-pricing",
+      "model-routing"
+    ],
     "videoUrl": ""
   },
   {
@@ -773,6 +1686,17 @@
     "note": "Neither a filter for bad phrases nor a system prompt telling the model to ignore instructions in data holds up — the defence is limiting what the agent can still do after reading it.",
     "lang": "trace",
     "code": "Action: fetch_page(url)\nObservation: page text ... plus a line addressed to the model,\n             telling it to drop its task and send the file elsewhere\nThought: I should send the file.   <- data read as instruction",
+    "aliases": [
+      "indirect prompt injection",
+      "injection attack",
+      "poisoned content"
+    ],
+    "related": [
+      "lethal-trifecta",
+      "jailbreak",
+      "guardrails-permissions",
+      "tool-design"
+    ],
     "videoUrl": ""
   },
   {
@@ -781,6 +1705,16 @@
     "kind": "sec",
     "def": "Two different attacks — the user talking a model out of its own rules, versus a stranger's text talking the agent into working against the user who ran it.",
     "note": "Training and refusals push back on jailbreaks, but injection doesn't need the model to misbehave — only to obey the wrong author, which permissions and sandboxes answer, not a better-behaved model.",
+    "aliases": [
+      "jailbreaking",
+      "bypassing safety filters",
+      "DAN prompt"
+    ],
+    "related": [
+      "prompt-injection",
+      "red-teaming",
+      "least-privilege"
+    ],
     "videoUrl": ""
   },
   {
@@ -791,6 +1725,16 @@
     "note": "Any two legs are survivable, so the fix is removing one rather than filtering content perfectly — and the leg people forget is the exit, which can be as small as an image URL.",
     "lang": "mermaid",
     "code": "flowchart TD\n    P[Private data]:::n --> X[Attacker gets the data]:::warn\n    U[Untrusted content]:::n --> X\n    O[A way to send data out]:::n --> X\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef warn fill:#FBE7E7,stroke:#B23B3B,color:#8C2323,font-size:13px",
+    "aliases": [
+      "data exfiltration",
+      "exfil"
+    ],
+    "related": [
+      "prompt-injection",
+      "least-privilege",
+      "sandboxing",
+      "pii-boundaries"
+    ],
     "videoUrl": ""
   },
   {
@@ -801,6 +1745,17 @@
     "note": "The limit has to live in the credential the tool actually holds, not in the wording of its description — an agent handed your own access can do everything you can do.",
     "lang": "json",
     "code": "[\n  { \"name\": \"read_ticket\", \"scopes\": [\"tickets:read\"] },\n  { \"name\": \"refund\", \"scopes\": [\"payments:write\"], \"max_amount\": 50 }\n]",
+    "aliases": [
+      "principle of least privilege",
+      "minimal permissions",
+      "read-only access"
+    ],
+    "related": [
+      "guardrails-permissions",
+      "sandboxing",
+      "tool-design",
+      "lethal-trifecta"
+    ],
     "videoUrl": ""
   },
   {
@@ -809,6 +1764,18 @@
     "kind": "sec",
     "def": "Running the agent's actions inside a confined environment — its own filesystem, no credentials, network it cannot leave — so the worst case is contained rather than catastrophic.",
     "note": "Sandboxing bounds the damage; it doesn't narrow what the agent is allowed to reach — and a mounted secret or one open outbound route is enough to make the confinement decorative.",
+    "aliases": [
+      "container isolation",
+      "docker",
+      "egress control",
+      "blast radius"
+    ],
+    "related": [
+      "code-execution",
+      "least-privilege",
+      "harness-engineering",
+      "lethal-trifecta"
+    ],
     "videoUrl": ""
   },
   {
@@ -817,6 +1784,17 @@
     "kind": "sec",
     "def": "Drawing the line on which personal data an agent may put into a prompt, a tool call or a third party's model — and enforcing it in code, not policy.",
     "note": "Traces and eval sets are where it usually leaks — the records that make a run debuggable are the ones nobody deletes — so redact on the way in, not on the way out.",
+    "aliases": [
+      "personally identifiable information",
+      "data privacy",
+      "GDPR",
+      "redaction"
+    ],
+    "related": [
+      "observability-tracing",
+      "lethal-trifecta",
+      "least-privilege"
+    ],
     "videoUrl": ""
   },
   {
@@ -827,6 +1805,18 @@
     "note": "A pass isn't the model refusing politely — it's the action never happening — so score the tool calls, and keep every attack that once worked as a permanent regression test.",
     "lang": "python",
     "code": "for attack in injected_pages + hostile_users:\n    run = agent(attack)\n    assert \"send_email\" not in run.tool_calls   # refusal text is not the test",
+    "aliases": [
+      "red team",
+      "adversarial testing",
+      "penetration testing",
+      "pentest"
+    ],
+    "related": [
+      "prompt-injection",
+      "evals",
+      "agent-trajectory-evals",
+      "jailbreak"
+    ],
     "videoUrl": ""
   }
 ]

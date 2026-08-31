@@ -1,0 +1,91 @@
+[
+  {
+    "id": "beginner",
+    "title": "Total beginner",
+    "blurb": "For someone who has never used an LLM API and wants the vocabulary in the order it actually builds.",
+    "steps": [
+      "what-is-ai",
+      "what-is-ml",
+      "what-is-model",
+      "what-is-llm",
+      "what-is-prompt",
+      "training-vs-inference",
+      "token",
+      "context",
+      "what-is-agent",
+      "chatbot-vs-agent",
+      "tool-use",
+      "knowledge-cutoff",
+      "hallucination"
+    ]
+  },
+  {
+    "id": "builder",
+    "title": "I want to build something",
+    "blurb": "For a developer wiring an LLM into an app, from the first API call through tools, retrieval and evals.",
+    "steps": [
+      "messages",
+      "system-prompt",
+      "few-shot",
+      "token",
+      "context",
+      "temperature",
+      "stop-max-tokens",
+      "structured-output",
+      "streaming",
+      "tool-use",
+      "agent-loop",
+      "embedding",
+      "chunking",
+      "vector-db",
+      "rag",
+      "evals"
+    ]
+  },
+  {
+    "id": "production",
+    "title": "Shipping to production",
+    "blurb": "For the person on call for an LLM feature — the cost, reliability, observability and security disciplines.",
+    "steps": [
+      "token-pricing",
+      "cost-engineering",
+      "prompt-caching",
+      "model-routing",
+      "retries-fallbacks",
+      "observability-tracing",
+      "agent-trajectory-evals",
+      "guardrails-permissions",
+      "human-in-the-loop",
+      "prompt-injection",
+      "jailbreak",
+      "lethal-trifecta",
+      "least-privilege",
+      "sandboxing",
+      "pii-boundaries",
+      "red-teaming"
+    ]
+  },
+  {
+    "id": "internals",
+    "title": "How the model actually works",
+    "blurb": "For anyone who wants to open the box, from raw text in to the tricks that make generation fast.",
+    "steps": [
+      "tokenizer",
+      "embedding",
+      "attention",
+      "positional",
+      "transformer",
+      "decoder-only",
+      "softmax",
+      "next-token",
+      "kv-cache",
+      "pretraining-post-training",
+      "rlhf",
+      "lora",
+      "moe",
+      "quantization",
+      "distillation",
+      "speculative-decoding"
+    ]
+  }
+]

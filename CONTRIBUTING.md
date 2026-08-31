@@ -64,25 +64,59 @@ never be surprised.
 |---|---|---|
 | `id` | yes | kebab-case, unique, **permanent** — it's the anchor |
 | `title` | yes | what a viewer would type into search |
-| `kind` | yes | exactly one of `basics`, `found`, `model`, `agent`, `prod` |
+| `kind` | yes | exactly one of `basics`, `found`, `model`, `agent`, `prod`, `sec` |
 | `def` | yes | one plain-language sentence |
 | `note` | no | one sentence of extra nuance |
 | `lang` | no | `python`, `json`, `trace`, or `mermaid` |
 | `code` | no | `lang` and `code` come as a pair — both or neither |
+| `aliases` | no | up to 8 extra search terms, never displayed |
+| `related` | no | 2–4 ids for the tile's "see also" row |
 | `videoUrl` | no | `""` until the short is published, then the YouTube link |
 
 No other fields. Anything unrecognized is a validator error, so a field you invent won't
 silently sit in the file doing nothing.
 
+### `aliases` — the words people type, not the words you wrote
+
+Search already covers the tile's own text, so an alias is only worth adding when it is a
+term a viewer would realistically **type** and that appears nowhere in the tile: `top-p`
+for `sampling`, `CoT` for `chain-of-thought`, `function calling` for `tool-use`,
+`vector store` for `vector-db`. Abbreviations, competing industry names, and the
+hyphenation the title happens not to use are all fair game.
+
+Two rules the validator enforces: an alias may not be the exact `title` of a **different**
+tile (that would send the searcher to the wrong place), and the list must not repeat itself.
+An alias already contained in the tile's own title, def or note is not an error, but it is
+dead weight — that text is searched already.
+
+### `related` — a shortlist, not an index
+
+Two to four ids, rendered as the tile's "see also" row. Ask: *having understood this tile,
+what is the next thing that makes it land?* Prefer edges that **cross categories**, because
+those are exactly what a flat list hides — `embedding` (found) → `vector-db` (agent),
+`context` (found) → `context-engineering` (prod), `prompt-injection` (sec) →
+`guardrails-permissions` (prod).
+
+Every id must exist and none may be the tile's own; both are validator errors, since a
+dangling entry renders as a link that goes nowhere. Edges need not be symmetric.
+
+### `paths.json` — the ordered routes
+
+Separate from `concepts.json`. Each path is `{ id, title, blurb, steps }`, where `steps` is
+an ordered list of concept ids, and `id` becomes `?path=<id>` in the URL. A path answers
+"where do I start?", which search cannot — so **order is the content**: never reference an
+idea before the tile that defines it. The validator checks that every step resolves and
+that no path repeats a tile.
+
 Mechanics worth knowing before you write:
 
-- **Array order is display order.** There is no sort. Put your object next to the tiles it
-  belongs with — the file is loosely grouped by category.
-- **Search matches `title` + category label + `def` + `note` + `code`**, lowercased. Words
-  you leave out of all four are words nobody can find the tile by.
+- **Array order is display order.** There is no sort. Put your object with the tiles of its
+  category — the file is grouped by category, in the same order as the chip row.
+- **Search matches `title` + category label + `def` + `note` + `code` + `aliases`**,
+  lowercased. Words in none of those are words nobody can find the tile by.
 - `code` is a JSON string, so newlines are `\n` and inner quotes are escaped. Keep the file
   at 2-space indent, no trailing commas.
-- 18 of the 42 tiles have no `code` at all. That is a normal, finished tile.
+- Plenty of tiles have no `code` at all. That is a normal, finished tile.
 
 ---
 
