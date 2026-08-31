@@ -64,13 +64,67 @@
     "videoUrl": ""
   },
   {
-    "id": "tool-use",
-    "title": "Function calling / tool use",
-    "kind": "agent",
-    "def": "The model doesn't run code — it emits a structured request to call a function you defined, and your code runs it.",
-    "note": "You describe each tool as a schema; the model replies with the name and arguments to invoke. This is the bridge from chat to action.",
+    "id": "knowledge-cutoff",
+    "title": "Why doesn't the model know yesterday's news?",
+    "kind": "basics",
+    "def": "Training stopped on a fixed date, so the model's knowledge stopped there too — anything that happened afterwards was never part of what it learned.",
+    "note": "It won't reliably notice that a question falls past that line, so anything current has to be handed to it — by a search, a document, or a tool call.",
+    "videoUrl": ""
+  },
+  {
+    "id": "fine-tuning",
+    "title": "What is fine-tuning?",
+    "kind": "basics",
+    "def": "Taking a model that's already trained and training it a little further on your own examples, so it picks up your task, tone or format.",
+    "note": "It teaches behaviour far better than facts — for fresh or private information, retrieval is usually cheaper, faster to update, and easier to check.",
+    "lang": "python",
+    "code": "examples = [{\"prompt\": \"...\", \"completion\": \"...\"}, ...]\ntuned = finetune(base_model, examples)   # new weights, same architecture",
+    "videoUrl": ""
+  },
+  {
+    "id": "open-vs-closed",
+    "title": "Open-weights vs closed models — what's the difference?",
+    "kind": "basics",
+    "def": "Open-weights models you can download and run on your own machines; closed models live on the provider's servers and you reach them only through an API.",
+    "note": "Open-weights isn't open source — you get the numbers, rarely the training data or the code that produced them, and the licence can still restrict what you're allowed to build.",
+    "videoUrl": ""
+  },
+  {
+    "id": "gpu-ai",
+    "title": "Why does AI run on graphics cards?",
+    "kind": "basics",
+    "def": "Running a model is billions of small multiplications, and a graphics card was already built to do thousands of them at once — the same maths that shades a 3D scene.",
+    "note": "The binding constraint is usually memory, not maths — the weights have to fit in the card's own memory, and once they do, generation speed is limited by how fast they can be read back out.",
+    "videoUrl": ""
+  },
+  {
+    "id": "chatbot-vs-agent",
+    "title": "Chatbot, copilot, agent — the autonomy ladder",
+    "kind": "basics",
+    "def": "Same model underneath, three levels of autonomy — a chatbot answers, a copilot proposes changes you approve, an agent goes and does the work itself.",
+    "note": "Climbing the ladder isn't a smarter model, it's a wider permission grant — so every rung up needs more guardrails than the one below it.",
+    "lang": "mermaid",
+    "code": "flowchart LR\n    C[Chatbot: answers]:::n --> P[Copilot: you approve each step]:::n --> A[Agent: acts, then reports]:::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
+    "videoUrl": ""
+  },
+  {
+    "id": "multimodal",
+    "title": "What is a multimodal model?",
+    "kind": "basics",
+    "def": "A model that takes more than text — images, audio, sometimes video — and turns each of them into tokens it reads alongside your words.",
+    "note": "Reading a picture and drawing one are separate abilities; plenty of models can describe a photo in detail without being able to generate an image at all.",
     "lang": "json",
-    "code": "{\n  \"name\": \"get_weather\",\n  \"description\": \"Current weather for a city\",\n  \"parameters\": { \"city\": \"string\" }\n}",
+    "code": "{ \"role\": \"user\", \"content\": [\n  { \"type\": \"image\", \"source\": \"receipt.png\" },\n  { \"type\": \"text\",  \"text\": \"What's the total?\" }\n] }",
+    "videoUrl": ""
+  },
+  {
+    "id": "reasoning-model",
+    "title": "What is a reasoning model?",
+    "kind": "basics",
+    "def": "A model trained to work a problem through step by step before it answers — it spends extra tokens thinking, so you wait longer and pay more.",
+    "note": "That trade pays off on maths, code and multi-step logic; on lookup, summarizing or ordinary chat it mostly buys you latency for the same answer.",
+    "lang": "trace",
+    "code": "Thought: 3 apples cost 1.80, so one is 0.60.\nThought: 7 x 0.60 = 4.20.\nAnswer: 4.20   <- usually the only part you see",
     "videoUrl": ""
   },
   {
@@ -124,6 +178,88 @@
     "videoUrl": ""
   },
   {
+    "id": "system-prompt",
+    "title": "System prompt",
+    "kind": "found",
+    "def": "A standing instruction that sits at the front of every request and sets the model's role, rules and tone — resent each turn, never shown to the end user.",
+    "note": "It's a steering tool, not a security boundary — a user or a poisoned tool result can talk the model around it, so nothing secret belongs in there.",
+    "videoUrl": ""
+  },
+  {
+    "id": "sampling",
+    "title": "Top-p / top-k sampling",
+    "kind": "found",
+    "def": "Two ways of cutting the candidate next tokens down before one is drawn: top-k keeps a fixed number, top-p keeps as many as it takes to cover that share of the probability.",
+    "note": "Temperature reshapes the odds but never rules a token out, while these two do — turn all three at once and you won't know which one changed the output.",
+    "lang": "json",
+    "code": "{ \"top_p\": 0.9, \"top_k\": 40 }",
+    "videoUrl": ""
+  },
+  {
+    "id": "few-shot",
+    "title": "Few-shot prompting",
+    "kind": "found",
+    "def": "Showing the model a couple of worked examples inside the prompt so it picks up the pattern you want — no training, no fine-tuning, just input.",
+    "note": "The examples ride along on every call, and the model copies whatever is actually in them, including formatting quirks you never meant to demonstrate.",
+    "videoUrl": ""
+  },
+  {
+    "id": "chain-of-thought",
+    "title": "Chain of thought",
+    "kind": "found",
+    "def": "Getting the model to work the problem out in steps before it answers, so each step becomes part of the input that shapes the next one.",
+    "note": "Reasoning models now do this internally by default, and either way the written steps are a plausible narrative rather than a faithful log — a tidy chain can still end at a wrong answer.",
+    "videoUrl": ""
+  },
+  {
+    "id": "structured-output",
+    "title": "Structured output / JSON mode",
+    "kind": "found",
+    "def": "Handing the model a schema along with the request so the reply comes back as JSON your code can parse, instead of prose you have to scrape.",
+    "note": "Strict modes enforce the shape by constraining what the decoder may emit, so the fields will be there — whether the values are right is still your problem.",
+    "lang": "json",
+    "code": "{\n  \"type\": \"object\",\n  \"properties\": { \"city\": { \"type\": \"string\" }, \"temp_c\": { \"type\": \"number\" } },\n  \"required\": [\"city\", \"temp_c\"]\n}",
+    "videoUrl": ""
+  },
+  {
+    "id": "streaming",
+    "title": "Streaming",
+    "kind": "found",
+    "def": "Tokens are pushed to the client as they're generated instead of being held back until the reply is finished — the total time barely moves, the waiting does.",
+    "note": "You can't validate what hasn't arrived yet, and a stream can still fail halfway through, after the user has already read the first half.",
+    "lang": "python",
+    "code": "for chunk in model.stream(messages):\n    print(chunk.text, end=\"\")   # words appear as they're written",
+    "videoUrl": ""
+  },
+  {
+    "id": "stop-max-tokens",
+    "title": "Max tokens & stop sequences",
+    "kind": "found",
+    "def": "The two limits you set on where a reply ends — a ceiling on how many tokens it may generate, and strings that cut it off the moment they appear.",
+    "note": "A reply that stops mid-sentence almost always hit the ceiling rather than finishing — check the stop reason the API returns before you start rewriting the prompt.",
+    "lang": "json",
+    "code": "{ \"max_tokens\": 512, \"stop\": [\"Observation:\"] }",
+    "videoUrl": ""
+  },
+  {
+    "id": "token-pricing",
+    "title": "Token pricing",
+    "kind": "found",
+    "def": "Billing counts tokens rather than requests — every token you send and every token the model generates, with the output side normally charged at the higher rate.",
+    "note": "You pay for output you throw away too, so a reply that fails validation and gets retried costs exactly as much as one you keep.",
+    "lang": "json",
+    "code": "{ \"usage\": { \"input_tokens\": 1830, \"output_tokens\": 210 } }",
+    "videoUrl": ""
+  },
+  {
+    "id": "context-rot",
+    "title": "Context rot",
+    "kind": "found",
+    "def": "A model can accept a very long prompt without using all of it evenly — the material buried in the middle is the likeliest to be missed.",
+    "note": "Fitting inside the window is the low bar — accuracy tends to slide as the prompt grows, so trimming what you send is a quality decision, not just a cost one.",
+    "videoUrl": ""
+  },
+  {
     "id": "attention",
     "title": "Self-attention",
     "kind": "model",
@@ -167,6 +303,106 @@
     "note": "Everything else — chat, code, reasoning — emerges from doing this well, one token at a time.",
     "lang": "python",
     "code": "logits  = model(tokens)\nnext_id = sample(softmax(logits), temperature=0.7)",
+    "videoUrl": ""
+  },
+  {
+    "id": "kv-cache",
+    "title": "KV cache",
+    "kind": "model",
+    "def": "The keys and values attention already computed for earlier tokens, kept in memory and reused — so generating the next token means processing one token, not the whole conversation again.",
+    "note": "The cache grows with every token and lives in GPU memory, so on a long conversation the thing you run out of first is usually room for the cache, not compute.",
+    "lang": "python",
+    "code": "k, v = attn_kv(new_token)              # only the new token\ncache_k.append(k); cache_v.append(v)   # past work, kept\nout = softmax(q @ cache_k.T) @ cache_v",
+    "videoUrl": ""
+  },
+  {
+    "id": "tokenizer",
+    "title": "Tokenizer (BPE)",
+    "kind": "model",
+    "def": "The fixed vocabulary of word-pieces that text gets chopped into before the model sees anything — byte-pair encoding builds it by repeatedly merging whichever adjacent pair appears most often.",
+    "note": "It's why letter-level tasks go wrong: the model sees chunks, never characters, so \"how many r's\" asks it about something it can't actually look at.",
+    "lang": "python",
+    "code": "merges = [(\"l\",\"o\"), (\"lo\",\"w\"), (\"s\",\"t\"), (\"e\",\"st\")]   # learned by frequency\nencode(\"lowest\") -> [\"low\", \"est\"]                       # pieces, never letters",
+    "videoUrl": ""
+  },
+  {
+    "id": "decoder-only",
+    "title": "Decoder-only & causal masking",
+    "kind": "model",
+    "def": "Every token attends only to the tokens before it — the future is masked out, so the model can never peek at the word it's being asked to predict.",
+    "note": "Drop that mask and you get an encoder — very good at embedding text, useless at generating it left to right — which is why every model you chat with is decoder-only.",
+    "videoUrl": ""
+  },
+  {
+    "id": "pretraining-post-training",
+    "title": "Pretraining vs post-training",
+    "kind": "model",
+    "def": "Pretraining is the enormous run that learns language from raw text; post-training is the much smaller pass that turns that raw predictor into something which follows instructions.",
+    "note": "Nearly all the knowledge arrives in pretraining — post-training mostly reshapes behaviour, which is why fine-tuning is a poor way to bolt on facts a model never saw.",
+    "videoUrl": ""
+  },
+  {
+    "id": "rlhf",
+    "title": "RLHF (reinforcement learning from human feedback)",
+    "kind": "model",
+    "def": "One way of doing post-training: people rank competing answers, a reward model learns to predict those rankings, and the LLM is then tuned to score well against it.",
+    "note": "Optimize too hard against that reward and you get sycophancy — the model learns what raters approve of, and approval isn't the same thing as correctness.",
+    "videoUrl": ""
+  },
+  {
+    "id": "moe",
+    "title": "Mixture of experts",
+    "kind": "model",
+    "def": "Each layer's feed-forward block is split into many expert sub-networks, and a router sends every token through just a couple of them — huge total capacity, small compute per token.",
+    "note": "Every expert still has to sit in memory even though only a few fire, so a mixture of experts buys you cheaper compute per token, not cheaper hardware to host it on.",
+    "lang": "python",
+    "code": "chosen = router.top_k(token, k=2)   # 2 experts of many, per layer\nout = sum(w * expert(token) for w, expert in chosen)",
+    "videoUrl": ""
+  },
+  {
+    "id": "quantization",
+    "title": "Quantization",
+    "kind": "model",
+    "def": "Storing the weights at lower numeric precision — fewer bits per number — so the model shrinks and runs faster, while losing surprisingly little quality.",
+    "note": "Quality doesn't collapse so much as fray — the damage shows up first on the hardest prompts, so a quantized model can pass a quick test and still drift on the long ones.",
+    "videoUrl": ""
+  },
+  {
+    "id": "lora",
+    "title": "LoRA (low-rank adaptation)",
+    "kind": "model",
+    "def": "Fine-tuning that freezes the original weights and trains a small low-rank pair of matrices beside each one it targets — the reason a fine-tune fits on a single GPU.",
+    "note": "An adapter is megabytes rather than gigabytes, so one hosted base model can serve many LoRAs swapped in per request, or have one merged back into its weights.",
+    "lang": "python",
+    "code": "delta = (x @ A) @ B          # A: d x r, B: r x k, r is tiny\ny = x @ W_frozen + delta     # only A and B get gradients",
+    "videoUrl": ""
+  },
+  {
+    "id": "distillation",
+    "title": "Distillation",
+    "kind": "model",
+    "def": "Training a small model to imitate a big one's outputs — how a lot of the fast, cheap models you actually use get built.",
+    "note": "A student inherits the teacher's blind spots along with its strengths, because distillation compresses behaviour that already exists rather than discovering any of its own.",
+    "videoUrl": ""
+  },
+  {
+    "id": "speculative-decoding",
+    "title": "Speculative decoding",
+    "kind": "model",
+    "def": "A small fast model drafts the next few tokens and the big model checks them all in one pass, keeping whichever prefix it would have written anyway.",
+    "note": "Unlike quantization or distillation it costs no quality at all — the accept/reject rule preserves the big model's own output distribution exactly — so the only variable is how often drafts survive.",
+    "lang": "python",
+    "code": "draft = small(tokens, n=4)        # cheap guesses\nok = big.verify(tokens, draft)    # one pass, all 4\ntokens += draft[:ok]              # keep accepted prefix",
+    "videoUrl": ""
+  },
+  {
+    "id": "tool-use",
+    "title": "Function calling / tool use",
+    "kind": "agent",
+    "def": "The model doesn't run code — it emits a structured request to call a function you defined, and your code runs it.",
+    "note": "You describe each tool as a schema; the model replies with the name and arguments to invoke. This is the bridge from chat to action.",
+    "lang": "json",
+    "code": "{\n  \"name\": \"get_weather\",\n  \"description\": \"Current weather for a city\",\n  \"parameters\": { \"city\": \"string\" }\n}",
     "videoUrl": ""
   },
   {
@@ -284,6 +520,98 @@
     "videoUrl": ""
   },
   {
+    "id": "planning",
+    "title": "Planning vs reacting",
+    "kind": "agent",
+    "def": "Two ways to spend an agent's decisions: work the whole task out up front and then execute the plan, or choose one step at a time and let each result steer the next.",
+    "note": "A plan made up front goes stale the moment reality disagrees with it, and pure step-by-step wanders — most working agents sketch a rough plan, then react inside each step.",
+    "lang": "mermaid",
+    "code": "flowchart TD\n    G[Goal]:::n --> P[Plan the whole task]:::n\n    P --> E[Execute the plan]:::ok\n    G --> D[Decide one step]:::n\n    D --> O[Observe result]:::n\n    O --> D\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
+    "videoUrl": ""
+  },
+  {
+    "id": "reflection",
+    "title": "Reflection / self-critique",
+    "kind": "agent",
+    "def": "The agent reads back its own answer, checks it against what was actually asked, and fixes what it finds before handing the work over.",
+    "note": "It only helps when the critique has something concrete to check against — a test run, a spec, an error message — otherwise the model just re-approves its own mistake more confidently.",
+    "videoUrl": ""
+  },
+  {
+    "id": "subagents",
+    "title": "Subagents",
+    "kind": "agent",
+    "def": "Handing a subtask to a separate agent that starts fresh — it sees only the task you give it, not the parent's history — and reports back just its conclusion.",
+    "note": "The value is in what doesn't come back: the forty files read and the three dead ends stay in the subagent's context, and the parent only pays for the answer.",
+    "lang": "mermaid",
+    "code": "flowchart TD\n    P[Parent agent]:::n -->|subtask| S[Subagent, fresh context]:::n\n    S --> E[Reads, tries, discards]:::n\n    E -->|conclusion only| R[Parent context stays small]:::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
+    "videoUrl": ""
+  },
+  {
+    "id": "computer-use",
+    "title": "Computer use",
+    "kind": "agent",
+    "def": "An agent that drives a real screen the way a person does — it reads what's displayed, moves the pointer, clicks and types.",
+    "note": "It's the fallback for software with no API: slower and far more brittle than a real tool call, and a redesigned button can break it overnight.",
+    "videoUrl": ""
+  },
+  {
+    "id": "code-execution",
+    "title": "Code execution as a tool",
+    "kind": "agent",
+    "def": "Instead of one tool per task, give the agent a sandboxed interpreter — it writes the small program a job needs, runs it, and reads the output.",
+    "note": "The tool that can run anything is also the tool that can break anything, so it belongs in a sandbox with no secrets, no credentials and no network you didn't intend.",
+    "lang": "python",
+    "code": "code   = model.write_code(task)\nresult = sandbox.run(code)        # no network, no secrets\nanswer = model.explain(result)",
+    "videoUrl": ""
+  },
+  {
+    "id": "vector-db",
+    "title": "Vector database",
+    "kind": "agent",
+    "def": "The store your embeddings live in — you query it by similarity, asking for the vectors nearest to yours, instead of matching a field exactly.",
+    "note": "Nearest isn't the same as relevant — a top-k query hands back k results whether or not the store holds anything that actually answers the question.",
+    "videoUrl": ""
+  },
+  {
+    "id": "chunking",
+    "title": "Chunking",
+    "kind": "agent",
+    "def": "Cutting documents into retrieval-sized pieces before embedding them, because what you get back later is a whole chunk — not a whole file, not one sentence.",
+    "note": "Too big and every hit drags in irrelevant text; too small and the sentence arrives stripped of the paragraph that explained it.",
+    "lang": "python",
+    "code": "size, overlap = 800, 100\nchunks = [text[i:i + size]\n          for i in range(0, len(text), size - overlap)]",
+    "videoUrl": ""
+  },
+  {
+    "id": "reranking",
+    "title": "Reranking",
+    "kind": "agent",
+    "def": "A second, slower model re-scores the candidates retrieval returned and reorders them, so only the genuinely relevant ones make it into the prompt.",
+    "note": "Vector search is cheap and approximate on purpose — retrieve far more than you need, then let the reranker throw most of it away.",
+    "lang": "python",
+    "code": "candidates = vector_search(query, top_k=50)     # fast, approximate\nranked     = reranker.score(query, candidates)  # slow, careful\ncontext    = ranked[:5]                         # only these reach the prompt",
+    "videoUrl": ""
+  },
+  {
+    "id": "context-compaction",
+    "title": "Context compaction",
+    "kind": "agent",
+    "def": "When the window fills up mid-task, the agent summarizes the run so far and carries on from that summary instead of hitting a wall.",
+    "note": "Compaction is lossy by design, so anything the rest of the run can't do without belongs in a file or a memory store rather than in a summary that may drop it.",
+    "lang": "mermaid",
+    "code": "flowchart TD\n    R[Run so far]:::n --> F{Window full?}:::n\n    F -->|no| C[Keep going]:::ok\n    F -->|yes| S[Summarize and drop detail]:::n\n    S --> C\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
+    "videoUrl": ""
+  },
+  {
+    "id": "agents-md",
+    "title": "AGENTS.md / CLAUDE.md",
+    "kind": "agent",
+    "def": "A file checked into the repo that the agent reads at the start of a session — the conventions, the commands that actually work here, and what not to touch.",
+    "note": "It rots faster than the code does, and a stale command in there gets trusted and run anyway, so prune it as ruthlessly as you would a README.",
+    "videoUrl": ""
+  },
+  {
     "id": "harness-engineering",
     "title": "Harness engineering",
     "kind": "prod",
@@ -381,6 +709,60 @@
     "note": "When a 30-step run breaks at step 14, a trace lets you look straight at step 14, instead of re-running the whole thing and guessing where it went wrong.",
     "lang": "mermaid",
     "code": "flowchart TD\n    R[Run: steps 1-30]:::n -->|logs every step| T[Trace log]:::n\n    T --> J[Jump to step 14]:::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
+    "videoUrl": ""
+  },
+  {
+    "id": "cost-engineering",
+    "title": "Cost engineering",
+    "kind": "prod",
+    "def": "Working out what one request actually costs in tokens before it ships, then treating that number as a budget the prompt, the retrieved context and the model choice all have to fit.",
+    "note": "Per token the reply usually costs more, but the bill comes from the input — the whole history and every tool result get resent on each turn.",
+    "lang": "python",
+    "code": "cost = in_tokens * in_rate + out_tokens * out_rate\n# out_rate is higher, but in_tokens is the bigger number",
+    "videoUrl": ""
+  },
+  {
+    "id": "model-routing",
+    "title": "Model routing",
+    "kind": "prod",
+    "def": "Sending each request to the smallest model that can actually handle it, and escalating to a bigger one only when the small one falls short.",
+    "note": "A bad route doesn't throw an error — it just quietly answers worse, which is why every tier needs its own evals before you trust the router.",
+    "lang": "mermaid",
+    "code": "flowchart TD\n    R[Request]:::n --> C{Simple request?}:::n\n    C -->|yes| S[Small model]:::ok\n    C -->|no| L[Large model]:::ok\n    S -->|not confident| L\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px",
+    "videoUrl": ""
+  },
+  {
+    "id": "prompt-caching",
+    "title": "Prompt caching",
+    "kind": "prod",
+    "def": "Reusing an identical prompt prefix across calls so the provider can serve it from a cache instead of processing those same tokens fresh every time — cheaper and faster.",
+    "note": "It only hits if the prefix is identical every time, so anything volatile — a timestamp, the user's name, today's data — belongs after the cached block, never inside it.",
+    "videoUrl": ""
+  },
+  {
+    "id": "retries-fallbacks",
+    "title": "Retries & fallbacks",
+    "kind": "prod",
+    "def": "Providers time out, rate-limit and degrade, so production calls retry with backoff and fail over to a second model instead of handing the user an error.",
+    "note": "Retry blindly and you make an overload worse — cap the attempts, add jitter, and never auto-retry a step whose tool already sent the email or charged the card.",
+    "lang": "mermaid",
+    "code": "flowchart TD\n    C[Call model]:::n --> E{Failed?}:::n\n    E -->|no| R[Return]:::ok\n    E -->|retryable| B[Backoff and retry]:::warn --> C\n    E -->|attempts spent| F[Fallback model]:::ok\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px\n    classDef warn fill:#FBE7E7,stroke:#B23B3B,color:#8C2323,font-size:13px",
+    "videoUrl": ""
+  },
+  {
+    "id": "prompt-versioning",
+    "title": "Prompt versioning",
+    "kind": "prod",
+    "def": "Treating prompts as code — every change versioned, diffed and scored against an eval set before it rolls out, and rolled back when the score drops.",
+    "note": "A one-word edit can move quality further than a refactor, and nothing in the diff tells you which direction — which is why the eval run, not the code review, is the gate.",
+    "videoUrl": ""
+  },
+  {
+    "id": "batch-processing",
+    "title": "Batch processing",
+    "kind": "prod",
+    "def": "Work that doesn't need an answer this second goes into a queue instead of a live call — slower turnaround, a lower rate, nobody sitting there waiting.",
+    "note": "It's a queue, not a chat: results come back in bulk long after you submit, so anything interactive — or an agent step that needs the previous answer — stays on the live path.",
     "videoUrl": ""
   }
 ]
