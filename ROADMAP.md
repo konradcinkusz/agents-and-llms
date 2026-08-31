@@ -9,7 +9,8 @@
 - **Six pages**: the searchable knowledge base ([`index.html`](index.html)) and five essays
   — architecture, MCP vs REST, your data, how agents fail, choosing a model
 - **Learning features**: 334 curated "see also" edges and 292 search aliases across every
-  tile, plus four ordered routes in [`paths.json`](paths.json)
+  tile, four ordered routes in [`paths.json`](paths.json), and a flashcard quiz over
+  whatever the current filter shows
 - **Zero published video links** — every tile still has `videoUrl: ""`
 - **CI, contributing docs and issue templates are in place** — every push and PR runs
   `node scripts/validate.mjs`, which checks `concepts.json` against the same rules as

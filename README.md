@@ -36,6 +36,9 @@ new short is one JSON object, no HTML editing:**
 - `related` is 2–4 ids rendered as the tile's **See also** row.
 - `paths.json` holds the ordered learning routes shown in the **Start here** row
   (`index.html?path=builder`).
+- **◇ quiz me** turns whatever is currently on screen into a flashcard deck — `def` on
+  the front, title and note on the back. It's a view over the same JSON, so every tile
+  is already a card and there is nothing extra to maintain.
 - `videoUrl` is optional; leave it `""` until the short is published, then fill it in
   and the tile grows a **▶ watch** link automatically.
 - Every tile gets a stable anchor (`index.html#kv-cache`) for pinned comments or

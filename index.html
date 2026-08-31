@@ -171,11 +171,38 @@
     background:var(--surface); border:1px solid var(--line-strong); border-radius:20px; padding:6px 13px;
     white-space:nowrap; transition:all .15s}
   .share-btn:hover{color:var(--ink); border-color:var(--faint)}
+  .share-btn:disabled{opacity:.45; cursor:not-allowed}
+  .share-btn:disabled:hover{color:var(--muted); border-color:var(--line-strong)}
 
   main > section{padding-bottom:56px}
+  .bar-actions{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end}
+
+  /* ---------- quiz mode ---------- */
+  .quiz{max-width:720px; margin:0 auto}
+  .quiz-bar{display:flex; align-items:center; gap:14px; margin-bottom:16px}
+  .quiz-scope{font-family:var(--font-mono); font-size:12.5px; color:var(--faint)}
+  .quiz-score{margin-left:auto; font-family:var(--font-mono); font-size:12.5px; color:var(--muted)}
+  .quiz-card{cursor:default; border-left-color:var(--md)}
+  .quiz-card:hover{transform:none}
+  .quiz-prompt{margin:0; font-size:19px; line-height:1.5}
+  .quiz-reveal{margin-top:20px; padding-top:18px; border-top:1px solid var(--line)}
+  .quiz-answer{font-size:20px; font-weight:500; color:var(--md)}
+  .quiz-links{margin:12px 0 0; font-size:13.5px; font-family:var(--font-mono)}
+  .quiz-links a{color:var(--muted)}
+  .quiz-actions{display:flex; gap:10px; padding:0 20px 20px; flex-wrap:wrap}
+  .quiz-grade{display:flex; gap:10px; flex-wrap:wrap}
+  .quiz-btn{font-family:var(--font-body); font-size:14px; cursor:pointer; padding:9px 16px;
+    border-radius:9px; border:1px solid var(--line-strong); background:var(--surface); color:var(--ink)}
+  .quiz-btn:hover{border-color:var(--faint)}
+  .quiz-btn.primary{background:var(--ink); color:var(--paper); border-color:var(--ink)}
+  .quiz-btn.ok{border-color:var(--md); color:var(--md-ink); background:var(--md-soft)}
+  .quiz-done{text-align:center; padding:40px 0; color:var(--muted)}
+  .quiz-done p{font-size:16px; margin:0 0 18px}
 
   /* ---------- tiles ---------- */
   .grid{display:flex; flex-direction:column; gap:16px}
+  /* display:flex would otherwise beat the UA rule for the hidden attribute */
+  .grid[hidden]{display:none}
   .card{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--kc,var(--line));
     border-radius:12px; overflow:hidden; scroll-margin-top:80px; cursor:pointer;
     transition:border-color .18s ease, transform .18s ease, box-shadow .2s ease, background .18s ease;}
@@ -285,7 +312,10 @@
 
     <div class="result-bar">
       <span class="count" id="count"></span>
-      <button class="share-btn" id="share-link" type="button" title="Copy a link to exactly this search + filter">🔗 copy link to this view</button>
+      <span class="bar-actions">
+        <button class="share-btn" id="quiz-start" type="button" title="Quiz yourself on whatever is on screen right now">◇ quiz me</button>
+        <button class="share-btn" id="share-link" type="button" title="Copy a link to exactly this search + filter">🔗 copy link to this view</button>
+      </span>
     </div>
   </section>
 
@@ -294,6 +324,38 @@
       <div class="loading" id="loading">Loading concepts…</div>
     </div>
     <div class="empty" id="empty" hidden>Nothing matches that. Try clearing the search or picking <code>All</code>.</div>
+
+    <!-- Quiz mode: the same tiles, definition-first. Hidden until started. -->
+    <div class="quiz" id="quiz" hidden>
+      <div class="quiz-bar">
+        <span class="quiz-scope" id="quiz-scope"></span>
+        <span class="quiz-score" id="quiz-score"></span>
+        <button class="share-btn" id="quiz-exit" type="button">✕ end quiz</button>
+      </div>
+
+      <article class="card quiz-card" id="quiz-card">
+        <div class="card-body">
+          <p class="quiz-prompt" id="quiz-def"></p>
+          <div class="quiz-reveal" id="quiz-reveal" hidden>
+            <h3 class="quiz-answer" id="quiz-title"></h3>
+            <p class="note" id="quiz-note"></p>
+            <p class="quiz-links"><a id="quiz-anchor" href="#">open this tile ↗</a></p>
+          </div>
+        </div>
+        <div class="quiz-actions">
+          <button class="quiz-btn primary" id="quiz-show" type="button">Show answer</button>
+          <span class="quiz-grade" id="quiz-grade" hidden>
+            <button class="quiz-btn" id="quiz-miss" type="button">Didn't know it</button>
+            <button class="quiz-btn ok" id="quiz-hit" type="button">Knew it</button>
+          </span>
+        </div>
+      </article>
+
+      <div class="quiz-done" id="quiz-done" hidden>
+        <p id="quiz-summary"></p>
+        <button class="quiz-btn primary" id="quiz-again" type="button">Go again</button>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -538,6 +600,22 @@ async function init(){
 
   document.getElementById("search").addEventListener("input", () => { render(); syncURL(); });
 
+  document.getElementById("quiz-start").addEventListener("click", startQuiz);
+  document.getElementById("quiz-exit").addEventListener("click", endQuiz);
+  document.getElementById("quiz-again").addEventListener("click", startQuiz);
+  document.getElementById("quiz-show").addEventListener("click", () => {
+    document.getElementById("quiz-reveal").hidden = false;
+    document.getElementById("quiz-show").hidden = true;
+    document.getElementById("quiz-grade").hidden = false;
+  });
+  document.getElementById("quiz-hit").addEventListener("click", () => gradeQuiz(true));
+  document.getElementById("quiz-miss").addEventListener("click", () => gradeQuiz(false));
+  document.getElementById("quiz-anchor").addEventListener("click", (e) => {
+    e.preventDefault();
+    endQuiz();
+    goToTile(e.currentTarget.dataset.goto);
+  });
+
   document.getElementById("share-link").addEventListener("click", () => {
     const btn = document.getElementById("share-link");
     const text = location.href;
@@ -551,6 +629,92 @@ async function init(){
       navigator.clipboard.writeText(text).then(done).catch(fallback);
     } else fallback();
   });
+}
+
+/* The set of tiles the current filter, path and search resolve to. render()
+   draws these; the quiz deals them as cards. One definition, so the two can
+   never disagree about what "on screen" means. */
+function currentlyVisible(){
+  const qLower = document.getElementById("search").value.trim().toLowerCase();
+  const path = activePath ? pathById(activePath) : null;
+  const pool = path ? path.steps.map(id => BY_ID[id]).filter(Boolean) : CONCEPTS;
+  return pool.filter(c => {
+    const okKind = path || active === "All" || KINDS[c.kind] === active;
+    const okQ = !qLower || searchBlob(c).includes(qLower);
+    return okKind && okQ;
+  });
+}
+
+/* ---------- quiz mode ----------
+   No new content: the tiles are already a deck, with "def" on one side and the
+   title on the other. The quiz runs over whatever is currently on screen, so
+   the category chips and paths double as deck pickers. Self-graded, no storage,
+   no scheduling — spaced repetition would be an app, not a companion page. */
+let quizDeck = [];
+let quizAt = 0;
+let quizHits = 0;
+
+function quizScope(){
+  if (activePath) { const p = pathById(activePath); return p ? p.title : "path"; }
+  return active === "All" ? "all concepts" : active;
+}
+
+function startQuiz(){
+  // deck = exactly what the current filter/search is showing, shuffled
+  quizDeck = currentlyVisible().slice();
+  for (let i = quizDeck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [quizDeck[i], quizDeck[j]] = [quizDeck[j], quizDeck[i]];
+  }
+  quizAt = 0;
+  quizHits = 0;
+  if (quizDeck.length === 0) return;   // the button is disabled in this state anyway
+  document.getElementById("grid").hidden = true;
+  document.getElementById("empty").hidden = true;
+  document.getElementById("quiz").hidden = false;
+  document.getElementById("quiz-scope").textContent = `${quizDeck.length} card${quizDeck.length === 1 ? "" : "s"} · ${quizScope()}`;
+  showQuizCard();
+}
+
+function endQuiz(){
+  document.getElementById("quiz").hidden = true;
+  document.getElementById("grid").hidden = false;
+  render();
+}
+
+function showQuizCard(){
+  const done = quizAt >= quizDeck.length;
+  document.getElementById("quiz-card").hidden = done;
+  document.getElementById("quiz-done").hidden = !done;
+  document.getElementById("quiz-score").textContent = done
+    ? ""
+    : `${quizAt + 1} / ${quizDeck.length} · ${quizHits} known`;
+
+  if (done) {
+    const pct = quizDeck.length ? Math.round((quizHits / quizDeck.length) * 100) : 0;
+    document.getElementById("quiz-summary").textContent =
+      `${quizHits} of ${quizDeck.length} known — ${pct}%.`;
+    return;
+  }
+
+  const c = quizDeck[quizAt];
+  document.getElementById("quiz-def").textContent = c.def;
+  document.getElementById("quiz-title").textContent = c.title;
+  const noteEl = document.getElementById("quiz-note");
+  noteEl.textContent = c.note || "";
+  noteEl.hidden = !c.note;
+  const anchor = document.getElementById("quiz-anchor");
+  anchor.href = "#" + c.id;
+  anchor.dataset.goto = c.id;
+  document.getElementById("quiz-reveal").hidden = true;
+  document.getElementById("quiz-show").hidden = false;
+  document.getElementById("quiz-grade").hidden = true;
+}
+
+function gradeQuiz(knew){
+  if (knew) quizHits += 1;
+  quizAt += 1;
+  showQuizCard();
 }
 
 function buildChips(){
@@ -625,11 +789,7 @@ function render(){
   const stepOf = new Map();
   if (path) pool.forEach((c, i) => stepOf.set(c.id, i + 1));
 
-  const filtered = pool.filter(c => {
-    const okKind = path || active === "All" || KINDS[c.kind] === active;
-    const okQ = !qLower || searchBlob(c).includes(qLower);
-    return okKind && okQ;
-  });
+  const filtered = currentlyVisible();
 
   if (blurbEl) {
     blurbEl.hidden = !path;
@@ -638,6 +798,15 @@ function render(){
 
   grid.innerHTML = filtered.map(c => cardHTML(c, q, stepOf.get(c.id))).join("");
   empty.hidden = filtered.length !== 0;
+
+  // nothing on screen means nothing to be quizzed on
+  const quizBtn = document.getElementById("quiz-start");
+  if (quizBtn) {
+    quizBtn.disabled = filtered.length === 0;
+    quizBtn.title = filtered.length === 0
+      ? "Nothing to quiz — clear the search or pick another category"
+      : `Quiz yourself on these ${filtered.length} concept${filtered.length === 1 ? "" : "s"}`;
+  }
   const total = path ? pool.length : CONCEPTS.length;
   const noun = path ? `in ${path.title}` : "concepts";
   countEl.innerHTML = q
