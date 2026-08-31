@@ -9,7 +9,11 @@
 - **Three pages**: the searchable knowledge base ([`index.html`](index.html)) and two essays
   ([`architecture.html`](architecture.html), [`mcp-vs-rest.html`](mcp-vs-rest.html))
 - **Zero published video links** — every tile still has `videoUrl: ""`
-- **No CI, no contributing docs, no issue templates** — everything is hand-checked
+- **CI, contributing docs and issue templates are in place** — every push and PR runs
+  `node scripts/validate.mjs`, which checks `concepts.json` against the same rules as
+  [`concepts.schema.json`](concepts.schema.json) and verifies every `index.html#<id>` link
+  in the pages resolves; [`CONTRIBUTING.md`](CONTRIBUTING.md) is the field and style
+  reference. Prose is still hand-checked.
 
 ## North star
 

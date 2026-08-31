@@ -1,0 +1,60 @@
+name: Fix a tile
+description: Something in an existing tile is wrong, stale, confusing, or broken.
+title: "[fix] "
+labels: ["content", "fix"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One tile per issue. If the fix is a word or two, a PR is faster than an issue — see
+        [CONTRIBUTING.md](https://github.com/konradcinkusz/agents-and-llms/blob/main/CONTRIBUTING.md).
+
+  - type: input
+    id: tile-id
+    attributes:
+      label: Tile id
+      description: >-
+        The id from the tile's anchor — the part after the `#` in `index.html#<id>`. The title
+        works too if you cannot find the id.
+      placeholder: guardrails-permissions
+    validations:
+      required: true
+
+  - type: dropdown
+    id: problem
+    attributes:
+      label: What is wrong
+      options:
+        - "Inaccurate — the tile states something false"
+        - "Outdated — it was right once and is not now"
+        - "Confusing — correct, but it does not read plainly"
+        - "Typo or formatting"
+        - "Broken link"
+    validations:
+      required: true
+
+  - type: textarea
+    id: current
+    attributes:
+      label: What it says now
+      description: Paste the line as it stands, so the diff is obvious.
+      placeholder: A guardrail is a rule that logs agent actions for later review.
+
+  - type: textarea
+    id: correction
+    attributes:
+      label: Suggested correction
+      description: >-
+        Write the replacement text, not a description of it — one plain sentence for a `def`,
+        one sentence of nuance for a `note`.
+      placeholder: A rule that decides which actions an agent is allowed to take, and blocks the rest before they run.
+    validations:
+      required: true
+
+  - type: textarea
+    id: source
+    attributes:
+      label: Source (optional)
+      description: >-
+        A link or citation backing the correction — docs, a paper, a spec. Skip it for a typo or
+        a wording change.

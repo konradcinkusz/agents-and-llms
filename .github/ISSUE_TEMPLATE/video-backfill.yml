@@ -1,0 +1,25 @@
+name: Video published
+description: A short is live — record its URL so the tile grows its watch link.
+title: "[video] "
+labels: ["series-ops"]
+body:
+  - type: input
+    id: tile-id
+    attributes:
+      label: Tile id
+      description: The part after the `#` in `index.html#<id>`.
+      placeholder: agent-loop
+    validations:
+      required: true
+
+  - type: input
+    id: video-url
+    attributes:
+      label: Published short URL
+      description: >-
+        Must be an `https://` link on youtube.com or youtu.be, pointing at the video itself —
+        the validator rejects anything else, including `http://`, a bare channel or host URL,
+        and shortened redirects.
+      placeholder: https://www.youtube.com/shorts/abc123
+    validations:
+      required: true
