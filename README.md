@@ -11,7 +11,7 @@ A searchable knowledge base for the "Agents & LLMs" short series. Companion to t
 
 [`index.html`](index.html) is a static, search-first page. Type a term or filter by
 category (Absolute basics / Foundations / Model internals / Agents & tools /
-Production & ops) and it filters instantly — no backend, no build step.
+Production & ops / Security & safety) and it filters instantly — no backend, no build step.
 
 Content lives in [`concepts.json`](concepts.json), separate from the page. **Adding a
 new short is one JSON object, no HTML editing:**
@@ -29,7 +29,7 @@ new short is one JSON object, no HTML editing:**
 }
 ```
 
-- `kind` is one of `basics` (Absolute basics), `found` (Foundations), `model` (Model internals), `agent` (Agents & tools), `prod` (Production & ops).
+- `kind` is one of `basics` (Absolute basics), `found` (Foundations), `model` (Model internals), `agent` (Agents & tools), `prod` (Production & ops), `sec` (Security & safety).
 - `lang` and `code` are optional — omit both for a definition-only tile.
 - `videoUrl` is optional; leave it `""` until the short is published, then fill it in
   and the tile grows a **▶ watch** link automatically.

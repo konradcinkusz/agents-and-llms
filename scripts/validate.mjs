@@ -24,13 +24,15 @@ import { fileURLToPath } from "node:url";
  * ------------------------------------------------------------------ */
 
 // The category keys, mapped to their labels in index.html's KINDS object.
-// Adding the planned "sec" ("Security & safety") category is one line here.
+// Keep this in step with KINDS there, the enum in concepts.schema.json, the
+// table in CONTRIBUTING.md and the dropdown in .github/ISSUE_TEMPLATE.
 const KINDS = {
   basics: "Absolute basics",
   found: "Foundations",
   model: "Model internals",
   agent: "Agents & tools",
   prod: "Production & ops",
+  sec: "Security & safety",
 };
 
 // Languages the tile renderer in index.html knows how to highlight or draw.

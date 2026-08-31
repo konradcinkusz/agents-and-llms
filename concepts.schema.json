@@ -31,8 +31,8 @@
         },
         "kind": {
           "type": "string",
-          "description": "Category key. Maps to a filter chip label in index.html's KINDS object: basics = Absolute basics, found = Foundations, model = Model internals, agent = Agents & tools, prod = Production & ops.",
-          "enum": ["basics", "found", "model", "agent", "prod"]
+          "description": "Category key. Maps to a filter chip label in index.html's KINDS object: basics = Absolute basics, found = Foundations, model = Model internals, agent = Agents & tools, prod = Production & ops, sec = Security & safety.",
+          "enum": ["basics", "found", "model", "agent", "prod", "sec"]
         },
         "def": {
           "type": "string",

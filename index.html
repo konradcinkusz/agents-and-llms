@@ -33,6 +33,7 @@
     --fo:#5A5F6B; --fo-soft:#EEEFF3; --fo-ink:#3D414B;
     --bs:#2563A8; --bs-soft:#E9F1FA; --bs-ink:#1B4E85;
     --pd:#7C3AED; --pd-soft:#EFE9FE; --pd-ink:#5B21B6;
+    --se:#B23B3B; --se-soft:#FBE7E7; --se-ink:#8C2323;
     --tk-kw:#8250DF; --tk-type:#1B7F79; --tk-str:#227A4B;
     --tk-num:#B5691A; --tk-com:#9296A1; --tk-fn:#2563A8; --tk-key:#0A6A60;
     --radius:10px;
@@ -49,6 +50,7 @@
     --fo:#A2A7B2; --fo-soft:#22262E; --fo-ink:#C3C6CE;
     --bs:#5AA2E8; --bs-soft:#15273A; --bs-ink:#8EC2F0;
     --pd:#A78BFA; --pd-soft:#241B38; --pd-ink:#C9B8F5;
+    --se:#E8736B; --se-soft:#331717; --se-ink:#F0A09A;
     --tk-kw:#C792EA; --tk-type:#4EC9B0; --tk-str:#7EC699;
     --tk-num:#E0A458; --tk-com:#6E7480; --tk-fn:#6CB6FF; --tk-key:#4EC9B0;
   }
@@ -137,6 +139,7 @@
   .card.k-found{--kc:var(--fo); --kc-soft:var(--fo-soft); --kc-ink:var(--fo-ink)}
   .card.k-basics{--kc:var(--bs); --kc-soft:var(--bs-soft); --kc-ink:var(--bs-ink)}
   .card.k-prod{--kc:var(--pd); --kc-soft:var(--pd-soft); --kc-ink:var(--pd-ink)}
+  .card.k-sec{--kc:var(--se); --kc-soft:var(--se-soft); --kc-ink:var(--se-ink)}
   .card.is-target{box-shadow:0 0 0 2px var(--kc)}
   .card.is-active{background:var(--kc-soft); border-color:var(--kc); box-shadow:0 0 0 1px var(--kc)}
   .card-head{padding:16px 20px 12px; display:flex; align-items:center; gap:12px; flex-wrap:wrap}
@@ -252,7 +255,7 @@ const CONFIG = {
   github:     "https://github.com/konradcinkusz/agents-and-llms"
 };
 
-const KINDS = { basics:"Absolute basics", found:"Foundations", model:"Model internals", agent:"Agents & tools", prod:"Production & ops" };
+const KINDS = { basics:"Absolute basics", found:"Foundations", model:"Model internals", agent:"Agents & tools", prod:"Production & ops", sec:"Security & safety" };
 
 /* ---------- tiny syntax highlighter (no deps): python-ish, json, trace ---------- */
 const PY_KW = new Set(["def","return","class","for","in","if","elif","else","while","async","await","or","and","not","is","None","True","False","try","except","finally","as","import","from","with","lambda","yield","pass","raise","assert","break","continue","self"]);
