@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://konradcinkusz.github.io/agents-and-llms/sitemap.xml

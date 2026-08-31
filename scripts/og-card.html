@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<style>
+  /* Rendered to PNG at 1200x630 by scripts/make-og.mjs.
+     Uses only locally-available fonts so the render is reproducible offline. */
+  *{box-sizing:border-box; margin:0; padding:0}
+  :root{
+    --paper:#FBFBFD; --ink:#14161C; --muted:#565B67; --faint:#8A8F9A;
+    --line:#E6E7EE; --line-strong:#D5D7E0; --surface:#FFFFFF;
+    --md:#0E9384; --ag:#C4661F; --pd:#7C3AED; --bs:#2563A8; --fo:#5A5F6B;
+    --font:"Liberation Sans","DejaVu Sans",system-ui,sans-serif;
+    --mono:"DejaVu Sans Mono","Liberation Mono",monospace;
+  }
+  html,body{width:1200px; height:630px}
+  body{
+    background:var(--paper); color:var(--ink); font-family:var(--font);
+    position:relative; overflow:hidden;
+  }
+  /* soft brand wash in the corners, echoing the tile accent colours */
+  .wash{position:absolute; inset:0; pointer-events:none}
+  .wash::before{
+    content:""; position:absolute; width:720px; height:720px; right:-260px; top:-300px;
+    border-radius:50%; background:radial-gradient(circle, rgba(14,147,132,.13), transparent 68%);
+  }
+  .wash::after{
+    content:""; position:absolute; width:640px; height:640px; left:-240px; bottom:-320px;
+    border-radius:50%; background:radial-gradient(circle, rgba(196,102,31,.12), transparent 68%);
+  }
+  .frame{position:absolute; inset:0; padding:64px 72px; display:flex; flex-direction:column}
+
+  .brand{display:flex; align-items:center; gap:14px}
+  .glyph{
+    width:52px; height:52px; border-radius:14px; display:grid; place-items:center;
+    background:linear-gradient(135deg,var(--md),var(--ag)); color:#fff;
+    font-family:var(--mono); font-size:22px; font-weight:700; letter-spacing:-1px;
+  }
+  .brand-name{font-size:22px; font-weight:700; letter-spacing:-.02em}
+  .brand-sub{
+    margin-left:auto; font-family:var(--mono); font-size:15px; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--faint);
+  }
+
+  .mid{flex:1; display:flex; flex-direction:column; justify-content:center; padding-bottom:8px}
+  h1{
+    font-size:76px; line-height:1.06; font-weight:700; letter-spacing:-.028em; max-width:1000px;
+  }
+  h1 .md{color:var(--md)}
+  h1 .ag{color:var(--ag)}
+  .lede{margin-top:24px; font-size:27px; color:var(--muted); max-width:840px; line-height:1.4}
+
+  .chips{display:flex; gap:11px; flex-wrap:wrap; margin-top:36px}
+  .chip{
+    font-family:var(--mono); font-size:16px; padding:9px 17px; border-radius:22px;
+    border:1.5px solid var(--line-strong); background:var(--surface); color:var(--muted);
+  }
+  .chip.b{border-color:rgba(37,99,168,.4);  color:#1B4E85}
+  .chip.f{border-color:rgba(90,95,107,.4);  color:#3D414B}
+  .chip.m{border-color:rgba(14,147,132,.45); color:#0A6A60}
+  .chip.a{border-color:rgba(196,102,31,.45); color:#9A4E17}
+  .chip.p{border-color:rgba(124,58,237,.4);  color:#5B21B6}
+
+  .foot{
+    display:flex; align-items:center; justify-content:space-between;
+    border-top:1.5px solid var(--line); padding-top:22px;
+    font-family:var(--mono); font-size:17px; color:var(--faint);
+  }
+  .foot .url{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wash"></div>
+<div class="frame">
+
+  <div class="brand">
+    <span class="glyph">&lt;/&gt;</span>
+    <span class="brand-name">Konrad's Dev Insight</span>
+    <span class="brand-sub">knowledge base</span>
+  </div>
+
+  <div class="mid">
+    <h1>The concepts behind<br /><span class="md">LLMs</span> and <span class="ag">agents</span>.</h1>
+    <p class="lede">Search every term from the shorts series — one plain-language answer each, no backend, no fluff.</p>
+    <div class="chips">
+      <span class="chip b">Absolute basics</span>
+      <span class="chip f">Foundations</span>
+      <span class="chip m">Model internals</span>
+      <span class="chip a">Agents &amp; tools</span>
+      <span class="chip p">Production &amp; ops</span>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span class="url">konradcinkusz.github.io/agents-and-llms</span>
+    <span>open source · MIT</span>
+  </div>
+
+</div>
+</body>
+</html>

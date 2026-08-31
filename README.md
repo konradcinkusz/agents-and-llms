@@ -1,7 +1,11 @@
 # Agents & LLMs
 
+### **→ [konradcinkusz.github.io/agents-and-llms](https://konradcinkusz.github.io/agents-and-llms/)**
+
+[![validate](https://github.com/konradcinkusz/agents-and-llms/actions/workflows/validate.yml/badge.svg)](https://github.com/konradcinkusz/agents-and-llms/actions/workflows/validate.yml)
+
 A searchable knowledge base for the "Agents & LLMs" short series. Companion to the
-[Konrad's Dev Insight](https://www.youtube.com) YouTube shorts.
+[Konrad's Dev Insight](https://www.youtube.com/@_dev_insight) YouTube shorts.
 
 ## The knowledge base
 
@@ -84,16 +88,38 @@ python3 -m http.server 8000
 
 GitHub Pages serves everything over `https://`, so this only matters for local preview.
 
-## Publish on GitHub Pages
+## Where it's published
 
-1. Push this repo to GitHub.
-2. Settings → **Pages** → deploy from `main`, folder `/ (root)`.
-3. Live at `https://<username>.github.io/agents-and-llms/`.
+The site is live on GitHub Pages, deployed from `main` at the repository root:
 
-`.nojekyll` is included so Pages serves the files as-is.
+| | |
+|---|---|
+| Knowledge base | <https://konradcinkusz.github.io/agents-and-llms/> |
+| Architecture essay | <https://konradcinkusz.github.io/agents-and-llms/architecture.html> |
+| MCP vs REST essay | <https://konradcinkusz.github.io/agents-and-llms/mcp-vs-rest.html> |
 
-> **One edit before you publish:** set `channelUrl` in the `CONFIG` block near the
-> bottom of `index.html` to your channel URL.
+Every merge to `main` redeploys automatically — there is nothing to build.
+`.nojekyll` makes Pages serve the files as-is.
+
+**Linking a short to its tile.** The canonical form for a pinned YouTube comment is the
+tile anchor, not a search query:
+
+```
+https://konradcinkusz.github.io/agents-and-llms/index.html#kv-cache
+```
+
+It scrolls to the tile and highlights it. Use `?kind=…&q=…` only when you mean to share a
+*filtered view* rather than a single concept — the 🔗 button on the page copies that form
+for you. Tile ids never change, so an anchor under a published video keeps working.
+
+**Social previews.** [`og-image.png`](og-image.png) is the shared 1200×630 card. It is a
+committed raster because scrapers don't run JavaScript and most reject SVG; regenerate it
+with `node scripts/make-og.mjs` after editing [`scripts/og-card.html`](scripts/og-card.html).
+That script is the one thing in the repo that needs a tool installed (Playwright) — the site
+itself still has no dependencies.
+
+**Channel and repo links** come from the `CONFIG` block near the bottom of each of the three
+HTML pages. All three carry their own copy, so a change to one has to be made in all three.
 
 ## Structure
 
@@ -109,8 +135,13 @@ agents-and-llms/
 ├─ mcp-vs-rest.html         ← MCP vs REST essay (third tab)
 ├─ concepts.json            ← every tile's data — edit this to add a short
 ├─ concepts.schema.json     ← the field reference for concepts.json
+├─ og-image.png             ← 1200×630 social preview card
+├─ sitemap.xml
+├─ robots.txt
 ├─ scripts/
-│  └─ validate.mjs          ← the only check: node scripts/validate.mjs
+│  ├─ validate.mjs          ← the only check: node scripts/validate.mjs
+│  ├─ og-card.html          ← source of og-image.png
+│  └─ make-og.mjs           ← redraws og-image.png from the card
 └─ .github/
    ├─ workflows/validate.yml   ← runs the validator on every push and PR
    ├─ ISSUE_TEMPLATE/          ← new tile · fix a tile · video published
