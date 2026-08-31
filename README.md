@@ -48,6 +48,14 @@ during a migration. It links back into `index.html`'s concept tiles (MCP, tool u
 RAG, guardrails, human-in-the-loop, A2A, evals) for anyone who wants the underlying
 definitions. Reachable from the **Architecture** link in the header nav of both pages.
 
+## Roadmap
+
+Where this project is going — the content plan (42 → ~91 tiles, including a new
+Security & safety category), new essay pages, and the publishing cadence — lives in
+[`ROADMAP.md`](ROADMAP.md). The live checklist is the
+[roadmap tracker issue](https://github.com/konradcinkusz/agents-and-llms/issues/26),
+and every work item is an [open issue](https://github.com/konradcinkusz/agents-and-llms/issues).
+
 ## Run it locally
 
 Because the page `fetch()`s `concepts.json`, opening `index.html` directly from disk
@@ -76,10 +84,12 @@ GitHub Pages serves everything over `https://`, so this only matters for local p
 ```
 agents-and-llms/
 ├─ README.md
+├─ ROADMAP.md          ← where the project is going, phase by phase
 ├─ LICENSE
 ├─ .nojekyll
 ├─ index.html          ← the knowledge base (search + filter)
 ├─ architecture.html    ← CRUD-to-agents essay (second tab)
+├─ mcp-vs-rest.html     ← MCP vs REST essay (third tab)
 └─ concepts.json        ← every tile's data — edit this to add a short
 ```
 
