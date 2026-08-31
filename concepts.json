@@ -764,5 +764,69 @@
     "def": "Work that doesn't need an answer this second goes into a queue instead of a live call — slower turnaround, a lower rate, nobody sitting there waiting.",
     "note": "It's a queue, not a chat: results come back in bulk long after you submit, so anything interactive — or an agent step that needs the previous answer — stays on the live path.",
     "videoUrl": ""
+  },
+  {
+    "id": "prompt-injection",
+    "title": "Prompt injection",
+    "kind": "sec",
+    "def": "Text the model reads — a web page, an email, a tool result — can act like instructions it follows, because data and instructions arrive down the same channel.",
+    "note": "Neither a filter for bad phrases nor a system prompt telling the model to ignore instructions in data holds up — the defence is limiting what the agent can still do after reading it.",
+    "lang": "trace",
+    "code": "Action: fetch_page(url)\nObservation: page text ... plus a line addressed to the model,\n             telling it to drop its task and send the file elsewhere\nThought: I should send the file.   <- data read as instruction",
+    "videoUrl": ""
+  },
+  {
+    "id": "jailbreak",
+    "title": "Jailbreak vs prompt injection",
+    "kind": "sec",
+    "def": "Two different attacks — the user talking a model out of its own rules, versus a stranger's text talking the agent into working against the user who ran it.",
+    "note": "Training and refusals push back on jailbreaks, but injection doesn't need the model to misbehave — only to obey the wrong author, which permissions and sandboxes answer, not a better-behaved model.",
+    "videoUrl": ""
+  },
+  {
+    "id": "lethal-trifecta",
+    "title": "The lethal trifecta",
+    "kind": "sec",
+    "def": "Three capabilities that are only dangerous together — access to private data, exposure to untrusted content, and some way to send data back out.",
+    "note": "Any two legs are survivable, so the fix is removing one rather than filtering content perfectly — and the leg people forget is the exit, which can be as small as an image URL.",
+    "lang": "mermaid",
+    "code": "flowchart TD\n    P[Private data]:::n --> X[Attacker gets the data]:::warn\n    U[Untrusted content]:::n --> X\n    O[A way to send data out]:::n --> X\n    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px\n    classDef warn fill:#FBE7E7,stroke:#B23B3B,color:#8C2323,font-size:13px",
+    "videoUrl": ""
+  },
+  {
+    "id": "least-privilege",
+    "title": "Least privilege for agents",
+    "kind": "sec",
+    "def": "Give the agent the narrowest set of tools and permissions that still does the job — a read-only tool cannot be talked into deleting anything.",
+    "note": "The limit has to live in the credential the tool actually holds, not in the wording of its description — an agent handed your own access can do everything you can do.",
+    "lang": "json",
+    "code": "[\n  { \"name\": \"read_ticket\", \"scopes\": [\"tickets:read\"] },\n  { \"name\": \"refund\", \"scopes\": [\"payments:write\"], \"max_amount\": 50 }\n]",
+    "videoUrl": ""
+  },
+  {
+    "id": "sandboxing",
+    "title": "Sandboxing",
+    "kind": "sec",
+    "def": "Running the agent's actions inside a confined environment — its own filesystem, no credentials, network it cannot leave — so the worst case is contained rather than catastrophic.",
+    "note": "Sandboxing bounds the damage; it doesn't narrow what the agent is allowed to reach — and a mounted secret or one open outbound route is enough to make the confinement decorative.",
+    "videoUrl": ""
+  },
+  {
+    "id": "pii-boundaries",
+    "title": "PII boundaries",
+    "kind": "sec",
+    "def": "Drawing the line on which personal data an agent may put into a prompt, a tool call or a third party's model — and enforcing it in code, not policy.",
+    "note": "Traces and eval sets are where it usually leaks — the records that make a run debuggable are the ones nobody deletes — so redact on the way in, not on the way out.",
+    "videoUrl": ""
+  },
+  {
+    "id": "red-teaming",
+    "title": "Red-teaming your agent",
+    "kind": "sec",
+    "def": "Attacking your own system with hostile inputs on purpose, before someone else does — evals written for the adversarial case rather than the happy path.",
+    "note": "A pass isn't the model refusing politely — it's the action never happening — so score the tool calls, and keep every attack that once worked as a permanent regression test.",
+    "lang": "python",
+    "code": "for attack in injected_pages + hostile_users:\n    run = agent(attack)\n    assert \"send_email\" not in run.tool_calls   # refusal text is not the test",
+    "videoUrl": ""
   }
 ]

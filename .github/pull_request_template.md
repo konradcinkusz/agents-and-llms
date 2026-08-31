@@ -17,7 +17,7 @@ green build.
 - [ ] Every new `id` is kebab-case and unique across the file
 - [ ] No existing tile's `id` was renamed (ids are permanent anchors — pinned YouTube comments
       and the essay pages point at them)
-- [ ] `kind` is one of `basics`, `found`, `model`, `agent`, `prod` (there is no `sec` yet)
+- [ ] `kind` is one of `basics`, `found`, `model`, `agent`, `prod`, `sec`
 - [ ] `def` is one plain-language sentence
 - [ ] Any `code` has a matching `lang` — `python`, `json`, `trace` or `mermaid`, both fields or
       neither

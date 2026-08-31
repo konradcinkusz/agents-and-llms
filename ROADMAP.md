@@ -4,8 +4,8 @@
 
 ## Where the project is today
 
-- **84 concept tiles** in [`concepts.json`](concepts.json) across five categories:
-  Absolute basics (15) · Foundations (14) · Model internals (15) · Agents & tools (24) · Production & ops (16)
+- **91 concept tiles** in [`concepts.json`](concepts.json) across six categories:
+  Absolute basics (15) · Foundations (14) · Model internals (15) · Agents & tools (24) · Production & ops (16) · Security & safety (7)
 - **Three pages**: the searchable knowledge base ([`index.html`](index.html)) and two essays
   ([`architecture.html`](architecture.html), [`mcp-vs-rest.html`](mcp-vs-rest.html))
 - **Zero published video links** — every tile still has `videoUrl: ""`

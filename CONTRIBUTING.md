@@ -230,10 +230,10 @@ Five categories, exactly these keys (the labels come from the `KINDS` object in
 | `model` | Model internals | What happens inside the network |
 | `agent` | Agents & tools | What makes it an agent rather than a chatbot |
 | `prod` | Production & ops | The disciplines of running one for real |
+| `sec` | Security & safety | The threats specific to a model that reads untrusted text and can act |
 
-There is **no sixth category**. A `sec` / "Security & safety" category is planned in
-[`ROADMAP.md`](ROADMAP.md) but does not exist yet — adding a tile with `"kind": "sec"`
-fails the validator and renders nothing, because the chip row is built from `KINDS`.
+Six categories, and that is the whole list — `KINDS` in `index.html` builds the chip row
+from it, so a `kind` outside this table fails the validator and would render nothing.
 
 ### The boundary cases that actually come up
 

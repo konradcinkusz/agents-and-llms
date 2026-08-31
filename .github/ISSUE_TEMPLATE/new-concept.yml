@@ -30,7 +30,7 @@ body:
     attributes:
       label: Suggested category
       description: >-
-        Five categories, no more. The line that blurs: Agents & tools is the mechanism,
+        Six categories, no more. The line that blurs: Agents & tools is the mechanism,
         Production & ops is the discipline of running the mechanism well.
       options:
         - "Absolute basics — vocabulary needed before the other tiles parse"
@@ -38,6 +38,7 @@ body:
         - "Model internals — what happens inside the network"
         - "Agents & tools — what makes it an agent rather than a chatbot"
         - "Production & ops — the disciplines of running one for real"
+        - "Security & safety — the threats a model that reads untrusted text and can act creates"
     validations:
       required: true
 
