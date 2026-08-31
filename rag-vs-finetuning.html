@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RAG vs fine-tuning vs long context — three ways to give a model your data | Konrad's Dev Insight</title>
+<meta name="description" content="RAG, fine-tuning and long context are three different ways to give a model your data, and they answer three different questions. What each is actually for, why fine-tuning is not how you teach a model your wiki, and how the three stack in a real system." />
+<meta property="og:title" content="Three ways to give a model your data" />
+<meta property="og:description" content="RAG, fine-tuning, long context. One is for facts, one is for behaviour, one is for a bounded one-off — and in real systems they stack rather than compete." />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Konrad's Dev Insight" />
+<meta property="og:url" content="https://konradcinkusz.github.io/agents-and-llms/rag-vs-finetuning.html" />
+<meta property="og:image" content="https://konradcinkusz.github.io/agents-and-llms/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Agents &amp; LLMs — a searchable knowledge base of the concepts behind LLMs and agents." />
+<meta property="article:published_time" content="2026-08-31" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Three ways to give a model your data" />
+<meta name="twitter:description" content="RAG, fine-tuning, long context. One is for facts, one is for behaviour, one is for a bounded one-off — and in real systems they stack rather than compete." />
+<meta name="twitter:image" content="https://konradcinkusz.github.io/agents-and-llms/og-image.png" />
+<link rel="canonical" href="https://konradcinkusz.github.io/agents-and-llms/rag-vs-finetuning.html" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Cdefs%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='1'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%230E9384'/%3E%3Cstop%20offset='1'%20stop-color='%23C4661F'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width='32'%20height='32'%20rx='8'%20fill='url(%23g)'/%3E%3Cg%20fill='none'%20stroke='%23fff'%20stroke-width='2.6'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M12%2012%208%2016%2012%2020'/%3E%3Cpath%20d='M20%2012%2024%2016%2020%2020'/%3E%3Cpath%20d='M17.6%2010%2014.4%2022'/%3E%3C/g%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script>
+  /* Resolve the theme before first paint — deferring this to DOMContentLoaded
+     flashes the light palette on every navigation for dark-mode readers. */
+  (function () {
+    var stored = null;
+    try { stored = localStorage.getItem("theme"); } catch (e) {}
+    var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-theme", stored || (prefersDark ? "dark" : "light"));
+  })();
+</script>
+<style>
+  :root{
+    --paper:#FBFBFD; --surface:#FFFFFF; --code:#F4F5F8;
+    --ink:#14161C; --muted:#565B67; --faint:#8A8F9A;
+    --line:#E6E7EE; --line-strong:#D5D7E0;
+    --md:#0E9384; --md-soft:#E3F4F1; --md-ink:#0A6A60;
+    --ag:#C4661F; --ag-soft:#FBEEDF; --ag-ink:#9A4E17;
+    --fo:#5A5F6B; --fo-soft:#EEEFF3; --fo-ink:#3D414B;
+    --bs:#2563A8; --bs-soft:#E9F1FA; --bs-ink:#1B4E85;
+    --pd:#7C3AED; --pd-soft:#EFE9FE; --pd-ink:#5B21B6;
+    --radius:10px;
+    --font-display:"Space Grotesk",system-ui,sans-serif;
+    --font-body:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  [data-theme="dark"]{
+    --paper:#0E1014; --surface:#15181E; --code:#1B1F27;
+    --ink:#EDEEF2; --muted:#A2A7B2; --faint:#6E7480;
+    --line:#262A33; --line-strong:#353B47;
+    --md:#34D3B8; --md-soft:#0F302B; --md-ink:#6FE3CE;
+    --ag:#E8974A; --ag-soft:#33220F; --ag-ink:#F0B074;
+    --fo:#A2A7B2; --fo-soft:#22262E; --fo-ink:#C3C6CE;
+    --bs:#5AA2E8; --bs-soft:#15273A; --bs-ink:#8EC2F0;
+    --pd:#A78BFA; --pd-soft:#241B38; --pd-ink:#C9B8F5;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--font-body); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;}
+  a{color:inherit}
+  h1,h2,h3{font-family:var(--font-display); font-weight:500; letter-spacing:-.01em; margin:0}
+
+  header{position:sticky; top:0; z-index:50;
+    background:color-mix(in srgb, var(--paper) 82%, transparent);
+    backdrop-filter:saturate(1.4) blur(10px); border-bottom:1px solid var(--line);}
+  .bar{max-width:1080px; margin:0 auto; padding:0 24px; height:60px; display:flex; align-items:center; gap:20px;}
+  .brand{display:flex; align-items:center; gap:10px; font-family:var(--font-display);
+    font-weight:700; letter-spacing:-.02em; font-size:16px; text-decoration:none; white-space:nowrap;}
+  .brand .glyph{display:inline-grid; place-items:center; width:26px; height:26px; border-radius:7px;
+    background:linear-gradient(135deg,var(--md),var(--ag)); color:#fff; font-size:13px; font-weight:700;}
+  nav{margin-left:auto; display:flex; align-items:center; gap:6px;}
+  .nav-link{font-size:14px; font-weight:500; text-decoration:none; color:var(--muted);
+    padding:8px 12px; border-radius:8px; white-space:nowrap}
+  .nav-link:hover{color:var(--ink)}
+  .nav-link[aria-current="page"]{color:var(--ink)}
+  .sub-btn{font-size:14px; font-weight:500; text-decoration:none; padding:8px 14px; border-radius:8px;
+    color:#fff; background:linear-gradient(135deg,var(--md),var(--ag)); white-space:nowrap;}
+  .sub-btn:hover{filter:brightness(1.06)}
+  .icon-btn{width:36px; height:36px; border:1px solid var(--line-strong); background:transparent;
+    border-radius:8px; color:var(--muted); cursor:pointer; display:grid; place-items:center; font-size:15px; padding:0;}
+  .icon-btn:hover{color:var(--ink); border-color:var(--faint)}
+  /* Six page links no longer fit beside the brand on a laptop, let alone a
+     phone. The links scroll horizontally inside their own strip; Subscribe and
+     the theme toggle stay pinned outside it so they are always reachable. */
+  .brand{flex-shrink:0}
+  nav{min-width:0}
+  .nav-links{display:flex; align-items:center; gap:6px; min-width:0; overflow-x:auto;
+    scrollbar-width:none; -ms-overflow-style:none; -webkit-overflow-scrolling:touch}
+  .nav-links::-webkit-scrollbar{display:none}
+  .nav-link, .sub-btn, .icon-btn{flex-shrink:0}
+  @media (max-width:1180px){
+    .bar{gap:12px}
+    .nav-link{padding:8px 9px; font-size:13.5px}
+  }
+  @media (max-width:760px){
+    .sub-btn{display:none}   /* still reachable in the footer */
+  }
+
+  main{max-width:1080px; margin:0 auto; padding:0 24px}
+
+  .hero{padding:52px 0 12px; max-width:720px}
+  .eyebrow{font-family:var(--font-mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--faint); margin:0 0 12px}
+  h1{font-size:clamp(1.9rem,4.4vw,2.7rem); line-height:1.08; font-weight:700}
+  h1 .md-w{color:var(--md)} h1 .ag-w{color:var(--ag)} h1 .pd-w{color:var(--pd)}
+  .lede{font-size:16.5px; color:var(--muted); margin:16px 0 0}
+  .lede + .lede{margin-top:12px}
+
+  /* ---------- the one-sentence verdict box ---------- */
+  .verdict{margin:26px 0 0; display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .verdict .v{border-radius:12px; padding:16px 18px; font-size:15.5px; line-height:1.55; border:1px solid var(--line)}
+  .verdict .v b{font-family:var(--font-mono); font-size:13px; letter-spacing:.05em; display:block; margin-bottom:6px}
+  .verdict .v-rag{background:var(--md-soft); color:var(--ink)} .verdict .v-rag b{color:var(--md-ink)}
+  .verdict .v-ft{background:var(--ag-soft); color:var(--ink)} .verdict .v-ft b{color:var(--ag-ink)}
+  .verdict .v-ctx{background:var(--pd-soft); color:var(--ink)} .verdict .v-ctx b{color:var(--pd-ink)}
+
+  section{padding:0 0 12px}
+  .rule{border:0; border-top:1px solid var(--line); margin:44px 0 32px}
+  h2{font-size:clamp(1.25rem,2.4vw,1.6rem); font-weight:700; letter-spacing:-.015em}
+  .h2-note{font-family:var(--font-mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--faint); margin:0 0 8px}
+  .body{font-size:15.5px; color:var(--muted); margin:14px 0 0; max-width:760px}
+  .body strong{color:var(--ink); font-weight:500}
+  .body code{font-family:var(--font-mono); font-size:13px; background:var(--code); padding:2px 6px; border-radius:5px; color:var(--ink)}
+  .body a{color:var(--ink); text-decoration:underline; text-decoration-color:var(--line-strong); text-underline-offset:2px}
+  .body a:hover{text-decoration-color:var(--md)}
+
+  /* ---------- figures ---------- */
+  .fig{margin:24px 0 0; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface)}
+  .fig-label{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 16px;
+    font-family:var(--font-mono); font-size:11.5px; color:var(--faint); background:var(--code);
+    border-bottom:1px solid var(--line)}
+  .copy{font-family:var(--font-mono); font-size:11px; color:var(--muted); opacity:.85; cursor:pointer;
+    background:transparent; border:1px solid var(--line-strong); border-radius:6px; padding:2px 8px; transition:opacity .15s}
+  .copy:hover{opacity:1; color:var(--ink)}
+  .mermaid-frame{padding:22px 14px; background:var(--code); overflow-x:auto}
+  /* Mermaid's own chrome (edges, arrowheads, edge labels) is drawn for a light
+     ground; node fills are handled in JS — see tintDiagrams(). !important is
+     required because mermaid scopes its rules by the svg's id, which outranks
+     anything selector specificity can do from here. */
+  [data-theme="dark"] .mermaid-frame svg .flowchart-link{stroke:var(--faint) !important}
+  [data-theme="dark"] .mermaid-frame svg marker path{fill:var(--faint) !important; stroke:var(--faint) !important}
+  [data-theme="dark"] .mermaid-frame svg .edgeLabel{background:var(--code) !important; color:var(--muted) !important}
+  [data-theme="dark"] .mermaid-frame svg .edgeLabel rect{fill:var(--code) !important; opacity:1}
+  [data-theme="dark"] .mermaid-frame svg .edgeLabel foreignObject div{background:var(--code) !important}
+  [data-theme="dark"] .mermaid-frame svg .cluster rect{fill:var(--surface) !important; stroke:var(--line-strong) !important}
+  [data-theme="dark"] .mermaid-frame svg .cluster .nodeLabel,
+  [data-theme="dark"] .mermaid-frame svg .cluster text{fill:var(--muted) !important; color:var(--muted) !important}
+  .mermaid-frame .mermaid{display:flex; justify-content:center; min-width:520px}
+  .mermaid-frame svg{max-width:100%; height:auto}
+  .fig-cap{padding:12px 16px 14px; font-size:13.5px; color:var(--muted); border-top:1px solid var(--line)}
+
+  /* ---------- side-by-side code ---------- */
+  .duo{display:grid; gap:14px; margin-top:24px; grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+  .snip{border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface)}
+  .snip-label{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 16px;
+    font-family:var(--font-mono); font-size:11.5px; color:var(--faint); background:var(--code);
+    border-bottom:1px solid var(--line)}
+  .snip pre{margin:0; padding:14px 16px; background:var(--code); overflow-x:auto}
+  .snip code{font-family:var(--font-mono); font-size:12.5px; line-height:1.7; color:var(--ink); tab-size:2}
+  .snip .hl{color:var(--ag-ink); font-weight:500}
+  .snip-cap{padding:11px 16px 13px; font-size:13px; color:var(--muted); border-top:1px solid var(--line)}
+
+  /* ---------- claim cards ---------- */
+  .claims{display:grid; gap:14px; margin-top:24px; grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+  .claim{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--kc,var(--line));
+    border-radius:12px; padding:18px 20px}
+  .claim.c-md{--kc:var(--md)} .claim.c-ag{--kc:var(--ag)}
+  .claim.c-bs{--kc:var(--bs)} .claim.c-pd{--kc:var(--pd)}
+  .claim h3{font-size:15.5px; font-weight:500; margin-bottom:8px}
+  .claim p{margin:0; font-size:14.5px; color:var(--muted); line-height:1.6}
+  .claim p + p{margin-top:8px}
+  .claim code{font-family:var(--font-mono); font-size:12px; background:var(--code); padding:2px 5px; border-radius:5px; color:var(--ink)}
+
+  /* ---------- comparison table ---------- */
+  .table-wrap{overflow-x:auto; margin-top:24px}
+  .cmp{width:100%; border-collapse:collapse; font-size:14.5px; min-width:640px}
+  .cmp th{text-align:left; font-family:var(--font-mono); font-size:11px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--faint); font-weight:400; padding:0 16px 11px 0;
+    border-bottom:1px solid var(--line-strong)}
+  .cmp th.th-rag{color:var(--md-ink)} .cmp th.th-ft{color:var(--ag-ink)} .cmp th.th-ctx{color:var(--pd-ink)}
+  .cmp td{padding:13px 16px 13px 0; border-bottom:1px solid var(--line); vertical-align:top; color:var(--muted)}
+  .cmp td:first-child{color:var(--ink); font-weight:500; min-width:150px}
+  .cmp tr:last-child td{border-bottom:none}
+  .cmp td b{color:var(--ink); font-weight:500}
+  .cmp td code{font-family:var(--font-mono); font-size:12px; background:var(--code); padding:2px 5px; border-radius:5px; color:var(--ink); white-space:nowrap}
+
+  /* ---------- concept chips ---------- */
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin:20px 0 0}
+  .chip{font-family:var(--font-mono); font-size:12.5px; color:var(--muted); text-decoration:none;
+    background:var(--surface); border:1px solid var(--line-strong); border-radius:20px; padding:6px 13px;
+    transition:all .15s}
+  .chip:hover{color:var(--ink); border-color:var(--faint)}
+
+  footer{border-top:1px solid var(--line); margin-top:56px}
+  .foot{max-width:1080px; margin:0 auto; padding:36px 24px; display:flex; justify-content:space-between;
+    gap:20px; flex-wrap:wrap; align-items:center; color:var(--faint); font-size:13px; font-family:var(--font-mono)}
+  .foot-links{display:flex; gap:10px}
+  .foot-links a{text-decoration:none; color:var(--ink); border:1px solid var(--line-strong);
+    border-radius:8px; padding:7px 13px; font-size:13px}
+  .foot-links a:hover{border-color:var(--faint)}
+  :focus-visible{outline:2px solid var(--md); outline-offset:2px; border-radius:4px}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <a class="brand" href="index.html"><span class="glyph">&lt;/&gt;</span>Konrad's Dev Insight</a>
+    <nav>
+      <div class="nav-links">
+        <a class="nav-link" href="index.html">Knowledge base</a>
+        <a class="nav-link" href="architecture.html">Architecture</a>
+        <a class="nav-link" href="mcp-vs-rest.html">MCP vs REST</a>
+        <a class="nav-link" href="rag-vs-finetuning.html" aria-current="page">Your data</a>
+        <a class="nav-link" href="how-agents-fail.html">How agents fail</a>
+        <a class="nav-link" href="choosing-a-model.html">Choosing a model</a>
+      </div>
+      <a class="sub-btn" id="nav-sub" href="#" target="_blank" rel="noopener">Subscribe</a>
+      <button class="icon-btn" id="theme" aria-label="Toggle dark mode" title="Toggle theme">◐</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <p class="eyebrow">Your data · plain-language guide</p>
+    <h1>Three ways to give a model <span class="ag-w">your data</span>.</h1>
+    <p class="lede">People argue about which one wins. They aren't answering the same question. The useful question is much smaller: <strong style="color:var(--ink);font-weight:500">where does your data enter — the weights, part of the prompt, or all of the prompt?</strong></p>
+    <div class="verdict">
+      <div class="v v-rag"><b>RAG</b><strong>Retrieve it into the prompt.</strong> The data stays outside the model. At the moment of the question, the right few pieces get fetched and pasted in.</div>
+      <div class="v v-ft"><b>FINE-TUNING</b><strong>Train it into the weights.</strong> You show the model a few thousand worked examples, and it comes out doing the job that way by default.</div>
+      <div class="v v-ctx"><b>LONG CONTEXT</b><strong>Just paste it all in.</strong> No index, no training run. The whole corpus goes into one prompt and the model reads it fresh, every time you ask.</div>
+    </div>
+    <p class="lede">Three places, three bills, three failure modes. Nearly everything else on this page follows from which one you picked — and from the fact that mature systems pick all three, for different jobs.</p>
+    <div class="chips">
+      <a class="chip" href="#three">1 · Three mechanisms</a>
+      <a class="chip" href="#enters">2 · Where data enters</a>
+      <a class="chip" href="#for">3 · What each is for</a>
+      <a class="chip" href="#myth">4 · The misconception</a>
+      <a class="chip" href="#examples">5 · What a tune teaches</a>
+      <a class="chip" href="#stack">6 · They stack</a>
+      <a class="chip" href="#compare">7 · One table</a>
+      <a class="chip" href="#choose">8 · Which one?</a>
+      <a class="chip" href="#faq">9 · Quick answers</a>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ THE THREE MECHANISMS ============ -->
+  <section id="three">
+    <p class="h2-note">Step 1</p>
+    <h2>The three mechanisms, one paragraph each</h2>
+    <p class="body">No maths, no vendor names. Just what physically happens to your documents in each case.</p>
+
+    <div class="claims">
+      <div class="claim c-md">
+        <h3>RAG — retrieve it into the prompt</h3>
+        <p>Your documents get cut into pieces, each piece turned into a vector, and the vectors stored. When a question arrives you search that store for the pieces closest in meaning, paste the winners into the prompt, and ask the model to answer from them. The model learns nothing and keeps nothing — it just gets handed the right page at the right moment.</p>
+        <p>Four tiles cover the moving parts: <a href="index.html#chunking" style="color:inherit">chunking</a>, <a href="index.html#embedding" style="color:inherit">embedding</a>, the <a href="index.html#vector-db" style="color:inherit">vector store</a>, and <a href="index.html#reranking" style="color:inherit">reranking</a> — the second pass that throws most of the candidates away. The whole thing is <a href="index.html#rag" style="color:inherit">RAG</a>.</p>
+      </div>
+      <div class="claim c-ag">
+        <h3>Fine-tuning — train it into the weights</h3>
+        <p>You assemble a dataset of input-and-ideal-output pairs and run a short training pass on top of an already-trained model. The weights move a little. What comes out is a model that does <em>your</em> version of the task without being told how, every time, with no instructions in the prompt.</p>
+        <p>In practice almost nobody moves all the weights — <a href="index.html#lora" style="color:inherit">LoRA</a> trains a small adapter beside them instead, which is why a <a href="index.html#fine-tuning" style="color:inherit">fine-tune</a> is now an afternoon rather than a datacentre.</p>
+      </div>
+      <div class="claim c-pd">
+        <h3>Long context — paste it all in</h3>
+        <p>Skip the machinery. Put the entire handbook, the whole contract, all forty files in one prompt and ask your question at the end. Modern <a href="index.html#context" style="color:inherit">context windows</a> are large enough that this is a real option for a surprising number of tasks, and it takes no engineering at all.</p>
+        <p>It is the only one of the three with no build step, no index to keep fresh, and no training job. That is its entire pitch, and it is a good one — right up to the point where you ask the same question twice.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ WHERE THE DATA ENTERS ============ -->
+  <section id="enters">
+    <p class="h2-note">Figure 1</p>
+    <h2>Where the data enters</h2>
+    <p class="body">Same documents, same question, three completely different paths. Read the diagram for <strong>when</strong> each arrow fires: once, at build time, or on every single request.</p>
+
+    <div class="fig">
+      <div class="fig-label"><span>diagram · three routes in</span>
+        <button class="copy" data-target="src-enters">copy</button></div>
+      <div class="mermaid-frame">
+<pre class="mermaid" id="src-enters">
+flowchart TB
+    subgraph ftP["Fine-tuning — enters the weights, once, before any request"]
+        direction LR
+        ex["Your examples"] -->|"training run"| w["New weights"]
+        w --> m1["Model that behaves your way"]
+    end
+    subgraph ragP["RAG — enters the prompt, at the moment of the question"]
+        direction LR
+        docs[("Your documents")] -->|"chunk + embed, once"| idx["Vector store"]
+        q["Question"] --> ret["Search + rerank"]
+        idx --> ret
+        ret -->|"the few pieces that matter"| p1["Prompt"]
+    end
+    subgraph lcP["Long context — enters the prompt, all of it, every time"]
+        direction LR
+        corpus["Whole corpus"] -->|"pasted in, again and again"| p2["Prompt"]
+    end
+    ftP ~~~ ragP
+    ragP ~~~ lcP
+    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px
+    classDef cool fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px
+    classDef hot fill:#FBEEDF,stroke:#C4661F,color:#9A4E17,font-size:13px
+    class ex,w,m1 hot
+    class docs,idx,q,ret,p1 cool
+    class corpus,p2 n
+    style ftP fill:#F7F7F9,stroke:#C9CBD4,color:#565B67
+    style ragP fill:#F7F7F9,stroke:#C9CBD4,color:#565B67
+    style lcP fill:#F7F7F9,stroke:#C9CBD4,color:#565B67
+</pre>
+      </div>
+      <p class="fig-cap">The middle lane is the only one where the data has an address at answer time — you know exactly which pieces you sent, so the answer can point at them. The top lane dissolved your examples into weights. The bottom lane sent everything and let the model find it.</p>
+    </div>
+
+    <p class="body">One consequence worth naming early: in the middle lane you can filter <em>before</em> the model sees anything. Retrieval can run as the asking user, so a document they aren't allowed to read is never fetched. Neither of the other two lanes has that seam — weights don't know who is asking, and a pasted corpus is all-or-nothing.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ WHAT EACH IS FOR ============ -->
+  <section id="for">
+    <p class="h2-note">Step 3</p>
+    <h2>What each one is actually for</h2>
+    <p class="body">This is where most of the confusion lives, and it clears up fast once you notice the three are answering different questions. One handles <strong>what the model knows</strong>, one handles <strong>how the model behaves</strong>, and one handles <strong>a job you only do once</strong>.</p>
+
+    <div class="claims">
+      <div class="claim c-md">
+        <h3>RAG is for facts</h3>
+        <p>Specifically: facts that are <strong style="color:var(--ink);font-weight:500">fresh, private, or too big to fit</strong>. Yesterday's incident report. The customer's contract. A wiki that four people edit daily. Anything past the model's <a href="index.html#knowledge-cutoff" style="color:inherit">knowledge cutoff</a>, and anything it was never allowed to see.</p>
+        <p>It is also the only one of the three that can show its work, which is why it is the standard answer to <a href="index.html#hallucination" style="color:inherit">hallucination</a>. Not a cure — the model can still misread a source — but a retrieved answer comes with the source attached, and a wrong one is checkable in seconds.</p>
+      </div>
+      <div class="claim c-ag">
+        <h3>Fine-tuning is for behaviour</h3>
+        <p>Format, tone, a domain's conventions, the shape of a task. A model that always returns your five fields in your order. A model that writes release notes the way your team writes release notes. A classifier that has internalised the fifteen edge cases your policy document argues about.</p>
+        <p>The test: could you get this by writing a very long prompt with a dozen examples in it? If yes, a fine-tune does the same thing permanently, with a shorter prompt and less drift. If no amount of prompting gets you there, a fine-tune is the honest next step.</p>
+      </div>
+      <div class="claim c-pd">
+        <h3>Long context is for the bounded one-off</h3>
+        <p>The corpus fits, and you ask about it once — or a handful of times, by a person, in one sitting. Review this contract. Summarise these forty tickets. Find every place this repo talks about retries.</p>
+        <p>Building an index for that is engineering you throw away. Paste it in, get the answer, close the tab. The moment it becomes a feature that thousands of requests hit, the arithmetic flips — see the second half of the next section.</p>
+      </div>
+    </div>
+
+    <p class="body" style="margin-top:24px">Said in one line each: <strong>RAG changes what the model sees. Fine-tuning changes what the model is. Long context changes neither — it just sends more.</strong></p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ THE MISCONCEPTION ============ -->
+  <section id="myth">
+    <p class="h2-note">Correction · Figure 2</p>
+    <h2>Fine-tuning is not how you teach a model your wiki</h2>
+    <p class="body">This is the single most expensive misunderstanding in the space, and it is completely reasonable to hold. "Training" sounds like teaching, teaching sounds like facts, and every vendor page uses the word "custom". So teams spend a quarter building a dataset out of their documentation, fine-tune on it, and get back a model that <em>sounds</em> exactly like their documentation and gets the details wrong.</p>
+    <p class="body">The reason is in where knowledge comes from. Nearly all of a model's factual knowledge arrives in <strong>pretraining</strong> — the enormous run over a corpus you can't see. The much smaller pass afterwards mostly reshapes <strong>behaviour</strong>: following instructions, answering rather than continuing, refusing some things. Your fine-tune sits at the end of that line and is smaller again. Against the weight of pretraining, four thousand wiki pages are a rounding error — enough to teach the <em>register</em> of your wiki, not the contents of it. The <a href="index.html#pretraining-post-training" style="color:inherit">pretraining vs post-training</a> tile is the one-sentence version.</p>
+
+    <div class="fig">
+      <div class="fig-label"><span>diagram · knowledge vs behaviour, and when each lands</span>
+        <button class="copy" data-target="src-when">copy</button></div>
+      <div class="mermaid-frame">
+<pre class="mermaid" id="src-when">
+flowchart TB
+    subgraph onceP["Happens once — baked into weights you ship"]
+        direction LR
+        pre["Pretraining<br/>where the knowledge arrives"] --> post["Post-training<br/>where behaviour is shaped"]
+        post --> ft["Your fine-tune<br/>more behaviour, barely any facts"]
+    end
+    subgraph eachP["Happens on every request — stays outside the weights"]
+        direction LR
+        src[("Your documents")] --> ret["Retrieve the relevant few"]
+        ret --> ctx["Context window"]
+        ctx --> ans["Answer, with the source attached"]
+    end
+    onceP ~~~ eachP
+    classDef hot fill:#FBEEDF,stroke:#C4661F,color:#9A4E17,font-size:13px
+    classDef cool fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px
+    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px
+    class pre,post,ft hot
+    class src,ret,ctx cool
+    class ans ok
+    style onceP fill:#F7F7F9,stroke:#C9CBD4,color:#565B67
+    style eachP fill:#F7F7F9,stroke:#C9CBD4,color:#565B67
+</pre>
+      </div>
+      <p class="fig-cap">Facts that change belong on the bottom row, where updating one means editing one document. Put them on the top row and updating one means rebuilding a dataset and retraining a model.</p>
+    </div>
+
+    <p class="body">Three practical consequences fall out, and each one is a reason on its own:</p>
+
+    <div class="claims">
+      <div class="claim c-ag">
+        <h3>Expensive to update</h3>
+        <p>A fact in a document is edited in a text box. A fact in weights is edited by rebuilding the training set and running the tune again — and you can't remove one fact, only retrain without it. Every correction is a release. Every deletion request is a release.</p>
+      </div>
+      <div class="claim c-bs">
+        <h3>Impossible to verify or cite</h3>
+        <p>A tuned fact has no address. There is no chunk to point at, no line to quote, no way to answer "where did that come from?" other than trusting the output. And a half-absorbed fact is stated with exactly the same confidence as a solid one — that is what <a href="index.html#hallucination" style="color:inherit">hallucination</a> is.</p>
+      </div>
+      <div class="claim c-pd">
+        <h3>No permissions, no freshness</h3>
+        <p>Weights don't know who is asking. Anything tuned in is readable by every user of that model, and no filter can put it back. It is also frozen at the moment you trained — a second <a href="index.html#knowledge-cutoff" style="color:inherit">knowledge cutoff</a>, this one of your own making.</p>
+      </div>
+    </div>
+
+    <p class="body" style="margin-top:24px">To be fair to the mechanism: a fine-tune <em>can</em> memorise, given enough repetition of the same fact. That's precisely why the misconception survives — the demo works. The claim here isn't that it's impossible. It's that it is the most expensive, least verifiable, hardest-to-update way to store a fact that a text file stores for free.</p>
+
+    <p class="h2-note" style="margin-top:34px">The other half: long context is not free</p>
+    <p class="body">The mirror-image mistake is newer and spreading faster: windows got big, so paste everything, always. Two things quietly go wrong.</p>
+    <p class="body"><strong>You pay for it on every request.</strong> Billing counts tokens in and tokens out, not questions — see <a href="index.html#token-pricing" style="color:inherit">token pricing</a>. A 300-page handbook in the prompt is 300 pages billed per question, forever, including all the pages irrelevant to that question. <a href="index.html#prompt-caching" style="color:inherit">Prompt caching</a> takes a real bite out of this when the pasted block is byte-identical and sits at the front — that is the correct optimisation and you should use it — but it only discounts a repeated prefix, and it does nothing for the second problem.</p>
+    <p class="body"><strong>Accuracy slides as the prompt grows.</strong> Fitting inside the window is the low bar, not the goal. A model handed an enormous prompt does not attend to it evenly; the material buried in the middle is the likeliest to be missed, and the effect gets worse as you add more. That is <a href="index.html#context-rot" style="color:inherit">context rot</a>, and it means "just send everything" can be <em>less</em> accurate than sending the right eight paragraphs. Retrieval isn't only a cost optimisation. It is frequently a quality one.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ WHAT A TUNE TEACHES ============ -->
+  <section id="examples">
+    <p class="h2-note">Step 5 · the concrete version</p>
+    <h2>What a training example actually teaches</h2>
+    <p class="body">The abstract argument lands harder as two short files. On the left, one row of a fine-tuning dataset. On the right, the prompt a retrieval system assembles. Look at what the highlighted part of each is <strong>teaching</strong>.</p>
+
+    <div class="duo">
+      <div class="snip">
+        <div class="snip-label"><span>fine-tuning · one row of the dataset</span>
+          <button class="copy" data-target="src-ft">copy</button></div>
+        <pre id="src-ft"><code>{
+  "messages": [
+    { "role": "user",
+      "content": "Summarise ticket 8812" },
+    { "role": "assistant",
+      "content": "<span class="hl">SEV2 · billing · EU
+        Impact:  3 tenants, no data loss
+        Owner:   payments
+        Next:    rerun the refund job</span>" }
+  ]
+}</code></pre>
+        <p class="snip-cap"><strong>A thousand of these teach one thing: the shape.</strong> Not what is in ticket 8812 — the model will not reliably recall that. The house format for summarising <em>any</em> ticket, applied without being asked.</p>
+      </div>
+      <div class="snip">
+        <div class="snip-label"><span>RAG · the prompt that actually gets sent</span>
+          <button class="copy" data-target="src-rag">copy</button></div>
+        <pre id="src-rag"><code>system:
+  Answer only from the sources below.
+  Cite the id of every one you use.
+
+sources:
+  <span class="hl">[kb-231] EU refunds settle in 3-5
+           working days after approval.
+  [kb-118] Approval is automatic under
+           the 500-unit threshold.</span>
+
+user:
+  How long does a small EU refund take?</code></pre>
+        <p class="snip-cap"><strong>The fact arrives at request time, with an address.</strong> Edit <code>kb-231</code> tonight and tomorrow's answer changes — nothing retrained, nothing redeployed, and the answer can name its source.</p>
+      </div>
+    </div>
+
+    <p class="body">Now swap them and watch both fail. Fine-tune on ten thousand tickets to teach the facts of ticket 8812, and you get fluent summaries of tickets that don't exist. Retrieve your style guide into every prompt to teach the format, and you pay for the style guide on every request while the model half-follows it — because a document describing a format is not the same as a thousand demonstrations of it.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ THEY STACK ============ -->
+  <section id="stack">
+    <p class="h2-note">Figure 3</p>
+    <h2>They don't compete — they stack</h2>
+    <p class="body">The versus framing is the artefact of a headline. A serious system uses all three at once, because it has all three problems at once: it needs a consistent output shape, it needs current facts, and it needs the working set of the current task in view.</p>
+    <p class="body">The division of labour is clean: <strong>fine-tune for the output shape, retrieve for the facts, and spend the context window generously on the working set</strong> — the open document, the last few turns, the rows the user just filtered to.</p>
+
+    <div class="fig">
+      <div class="fig-label"><span>diagram · one request through all three</span>
+        <button class="copy" data-target="src-stack">copy</button></div>
+      <div class="mermaid-frame">
+<pre class="mermaid" id="src-stack">
+flowchart LR
+    user["User question"] --> app["Your app"]
+    kb[("Your documents")] --> ret["Retrieve + rerank<br/>as this user"]
+    app --> ret
+    ret -->|"the eight pieces that matter"| ctx["Context window"]
+    app -->|"working set: open file,<br/>last few turns"| ctx
+    ctx --> model["Fine-tuned model<br/>knows your output shape"]
+    model --> out["Answer in house format,<br/>with sources"]
+    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px
+    classDef cool fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px
+    classDef hot fill:#FBEEDF,stroke:#C4661F,color:#9A4E17,font-size:13px
+    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px
+    class user,app,ctx n
+    class kb,ret cool
+    class model hot
+    class out ok
+</pre>
+      </div>
+      <p class="fig-cap">Three colours, three mechanisms, one request. The teal path changes hourly, the orange node changes quarterly, and the purple middle is decided fresh on every turn. Nothing here is a substitute for anything else.</p>
+    </div>
+
+    <p class="body">Notice the ordering that falls out of this. Retrieval and context are things you tune every week; a fine-tune is a thing you ship every few months. Building the slow one first, before you know what the fast ones can already do, is how teams end up with an expensive model trained to do something a better prompt would have handled. Which is the whole reason the decision section below has a strong default.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ ONE TABLE ============ -->
+  <section id="compare">
+    <p class="h2-note">Side by side</p>
+    <h2>The whole thing in one table</h2>
+
+    <div class="table-wrap">
+      <table class="cmp">
+        <thead>
+          <tr><th></th><th class="th-rag">RAG</th><th class="th-ft">Fine-tuning</th><th class="th-ctx">Long context</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>What it changes</td><td>What the model <b>sees</b> on this request</td><td>What the model <b>is</b>, on every request</td><td>Nothing — it just sends <b>more</b></td></tr>
+          <tr><td>What it's for</td><td>Facts: fresh, private, or too big to fit</td><td>Behaviour: format, tone, conventions, task shape</td><td>A bounded one-off that fits and is asked once</td></tr>
+          <tr><td>Update cost</td><td>Edit a document, re-index it. Minutes.</td><td>Rebuild the dataset, retrain, re-evaluate, redeploy.</td><td>Paste the new version. Instant — and billed again.</td></tr>
+          <tr><td>Can it cite?</td><td><b>Yes</b> — you know exactly which pieces you sent</td><td><b>No</b> — a tuned fact has no address</td><td>Partly — it's all in the prompt, but attribution is left to the model</td></tr>
+          <tr><td>Cost shape</td><td>An index to run, plus a small per-request add-on</td><td>One-off training, then normal per-request serving</td><td>No setup at all, then the largest per-request bill of the three</td></tr>
+          <tr><td>Per-user permissions</td><td>Natural — filter at retrieval time</td><td>None — weights don't know who is asking</td><td>All-or-nothing per prompt</td></tr>
+          <tr><td>Bad at</td><td>Teaching a style or a format; questions with no good search term</td><td>Facts, freshness, anything private that changes</td><td>Anything asked more than a few times; long-prompt accuracy</td></tr>
+          <tr><td>Fails like</td><td>Retrieves the wrong piece and answers confidently from it</td><td>Sounds exactly right, states the old fact</td><td>Misses the detail buried in the middle</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="body">If you read one row, read the last one. The three fail in genuinely different ways, and each failure is diagnosed differently: a bad retrieval is visible in the sources you sent, a bad tune is visible only against a held-out set, and a long-prompt miss is invisible until someone checks the answer against page 190.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ WHICH ONE ============ -->
+  <section id="choose">
+    <p class="h2-note">Decision · Figure 4</p>
+    <h2>So which should you use?</h2>
+    <p class="body">Five questions, in order. Most systems get their answer in the first two.</p>
+
+    <div class="claims">
+      <div class="claim c-md">
+        <h3>1 · Does the answer change when your data changes?</h3>
+        <p>If editing a document should change tomorrow's answer, the data has to live outside the weights. That is retrieval, and it is not a close call.</p>
+      </div>
+      <div class="claim c-md">
+        <h3>2 · Is it private, or per-user?</h3>
+        <p>If two users must get different answers from the same system, you need a filter at request time. Only retrieval has one. Weights are shared by everyone who calls the model.</p>
+      </div>
+      <div class="claim c-bs">
+        <h3>3 · Does the answer need a citation?</h3>
+        <p>Anyone in support, legal, medicine or finance answers yes without thinking. A cited answer requires that you know what you sent — retrieval, again.</p>
+      </div>
+      <div class="claim c-ag">
+        <h3>4 · Is it about <em>what</em> it knows, or <em>how</em> it answers?</h3>
+        <p>"How" is the fine-tuning question — and even then, try the prompt first. Fine-tune when a well-written prompt with examples still can't hold the shape, or when the prompt needed to hold it has become absurd.</p>
+      </div>
+      <div class="claim c-pd">
+        <h3>5 · Does the whole thing fit, and do you ask once?</h3>
+        <p>Both true: paste it in and go home. Either false — it doesn't fit, or you'll ask a thousand times — and you're back to retrieval.</p>
+      </div>
+    </div>
+
+    <div class="fig">
+      <div class="fig-label"><span>diagram · the decision, end to end</span>
+        <button class="copy" data-target="src-choose">copy</button></div>
+      <div class="mermaid-frame">
+<pre class="mermaid" id="src-choose">
+flowchart TB
+    q1{"Does the answer change<br/>when your data changes?"}
+    q2{"Is it about WHAT it knows,<br/>or HOW it answers?"}
+    q3{"Can a good prompt with<br/>a few examples hold the shape?"}
+    q4{"Does the whole corpus fit,<br/>and you ask about it once?"}
+    pr["Prompt it. You are done."]
+    ft["Fine-tune the behaviour"]
+    lc["Paste it in. No index."]
+    rag["Retrieve it — RAG"]
+    q1 -->|"yes"| q4
+    q1 -->|"no"| q2
+    q2 -->|"what it knows"| pr
+    q2 -->|"how it answers"| q3
+    q3 -->|"yes"| pr
+    q3 -->|"no"| ft
+    q4 -->|"yes"| lc
+    q4 -->|"no"| rag
+    classDef n fill:#EFE9FE,stroke:#7C3AED,color:#5B21B6,font-size:13px
+    classDef ok fill:#E3F4F1,stroke:#0E9384,color:#0A6A60,font-size:13px
+    classDef hot fill:#FBEEDF,stroke:#C4661F,color:#9A4E17,font-size:13px
+    class q1,q2,q3,q4,lc n
+    class pr,rag ok
+    class ft hot
+</pre>
+      </div>
+      <p class="fig-cap">Two of the four exits cost you almost nothing to try. Take those first, and only spend the quarter on a fine-tune once the cheap exits have been genuinely ruled out — with <a href="index.html#evals" style="color:inherit">evals</a>, not with a feeling.</p>
+    </div>
+
+    <p class="body" style="margin-top:24px">And the sentence that settles most arguments before they start: <strong>if the answer changes when your data changes, it is retrieval.</strong> Everything else is a refinement of that.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ FAQ ============ -->
+  <section id="faq">
+    <p class="h2-note">Quick answers</p>
+    <h2>The questions everyone asks</h2>
+
+    <div class="claims">
+      <div class="claim c-ag">
+        <h3>"Can I fine-tune to add knowledge?"</h3>
+        <p>Technically yes, practically no. With enough repetition a tune will memorise, but you get a fact you can't update without retraining, can't cite, can't scope to a user, and can't delete. Compare that with editing a text file. The mechanism isn't broken — it's just the wrong storage.</p>
+      </div>
+      <div class="claim c-pd">
+        <h3>"Is RAG dead now that context windows are huge?"</h3>
+        <p>No, and the reason isn't nostalgia — it's the bill and the <a href="index.html#context-rot" style="color:inherit">accuracy curve</a>. Big windows killed the <em>fiddly</em> RAG people built when nothing fit: aggressive summarising, tiny chunks, elaborate compression. What survives is simpler and still wins — send the right material rather than all of it. Big windows made RAG easier, not unnecessary.</p>
+      </div>
+      <div class="claim c-bs">
+        <h3>"Do I need a vector database?"</h3>
+        <p>Often not. RAG means "retrieve, then generate" — it never specified how. Your existing full-text search, a SQL query, or a plain file listing all count, and for a few thousand documents keyword search is frequently better because people search with exact terms. Reach for a <a href="index.html#vector-db" style="color:inherit">vector store</a> when meaning-based matching is doing real work, and expect the best setups to run both and merge.</p>
+      </div>
+      <div class="claim c-md">
+        <h3>"Which do I try first?"</h3>
+        <p><strong style="color:var(--ink);font-weight:500">RAG, almost always.</strong> It's the fastest to build, the easiest to debug — you can read exactly what you sent — the only one you can fix by editing a document, and it improves the moment the underlying model does. Try it first even when you suspect the answer is a fine-tune: a working retrieval pipeline is how you find out what the model still gets wrong, which is the dataset your tune would have needed anyway.</p>
+      </div>
+      <div class="claim c-ag">
+        <h3>"Isn't fine-tuning cheaper at scale?"</h3>
+        <p>It can be, and that's a legitimate reason to do it — a tune that removes two thousand tokens of instructions and examples from every request pays for itself at volume. Note what that argument is about: shorter prompts, not better knowledge. Check <a href="index.html#prompt-caching" style="color:inherit">prompt caching</a> first, since it attacks the same cost without a training run.</p>
+      </div>
+      <div class="claim c-pd">
+        <h3>"How do I know if it worked?"</h3>
+        <p>The same way for all three: a fixed set of real questions with known-good answers, scored before and after. Without <a href="index.html#evals" style="color:inherit">evals</a> you can't tell a better retriever from a luckier day, and this is exactly where a fine-tune goes wrong quietly — the output looks more like yours while being no more correct.</p>
+      </div>
+    </div>
+
+    <p class="body" style="margin-top:24px">Want to go deeper? The underlying definitions live in the knowledge base:</p>
+    <div class="chips">
+      <a class="chip" href="index.html#rag">RAG</a>
+      <a class="chip" href="index.html#fine-tuning">Fine-tuning</a>
+      <a class="chip" href="index.html#lora">LoRA</a>
+      <a class="chip" href="index.html#pretraining-post-training">Pretraining vs post-training</a>
+      <a class="chip" href="index.html#embedding">Embedding</a>
+      <a class="chip" href="index.html#vector-db">Vector database</a>
+      <a class="chip" href="index.html#chunking">Chunking</a>
+      <a class="chip" href="index.html#reranking">Reranking</a>
+      <a class="chip" href="index.html#context">Context window</a>
+      <a class="chip" href="index.html#context-rot">Context rot</a>
+      <a class="chip" href="index.html#knowledge-cutoff">Knowledge cutoff</a>
+      <a class="chip" href="index.html#hallucination">Hallucination</a>
+      <a class="chip" href="index.html#token-pricing">Token pricing</a>
+      <a class="chip" href="index.html#prompt-caching">Prompt caching</a>
+      <a class="chip" href="index.html#evals">Evals</a>
+      <a class="chip" href="architecture.html">Architecture · the full story</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="foot">
+    <span>© 2026 Konrad Cinkusz · Konrad's Dev Insight</span>
+    <div class="foot-links">
+      <a id="foot-sub" href="#" target="_blank" rel="noopener">▶ YouTube</a>
+      <a id="foot-gh" href="#" target="_blank" rel="noopener">★ GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   Same CONFIG block as index.html — keep the two in sync.
+   ============================================================ */
+const CONFIG = {
+  channelUrl: "https://www.youtube.com/@_dev_insight",
+  github:     "https://github.com/konradcinkusz/agents-and-llms"
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("nav-sub").href = CONFIG.channelUrl;
+  document.getElementById("foot-sub").href = CONFIG.channelUrl;
+  document.getElementById("foot-gh").href = CONFIG.github;
+
+  /* stash the source of the plain code figures so "copy" works for them too */
+  document.querySelectorAll(".snip pre").forEach(el => { el.dataset.src = el.textContent.trim(); });
+
+  /* copy the source of a figure (mermaid or code) */
+  document.body.addEventListener("click", (e) => {
+    const btn = e.target.closest(".copy");
+    if (!btn) return;
+    const src = document.getElementById(btn.dataset.target);
+    const text = (src && src.dataset.src) ? src.dataset.src : "";
+    const done = () => { btn.textContent = "copied ✓"; setTimeout(() => { btn.textContent = "copy"; }, 1300); };
+    const fallback = () => {
+      const ta = document.createElement("textarea"); ta.value = text;
+      ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta);
+      ta.select(); try { document.execCommand("copy"); done(); } catch(_){} document.body.removeChild(ta);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
+    } else fallback();
+  });
+
+  /* theme toggle — identical behaviour to index.html */
+  /* the initial value is already set by the inline script in <head> */
+  const root = document.documentElement;
+  document.getElementById("theme").addEventListener("click", () => {
+    const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch(_){}
+    if (window.tintDiagrams) window.tintDiagrams();
+  });
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) {
+    /* stash the source before mermaid replaces it with an <svg>, so "copy" still works */
+    document.querySelectorAll("pre.mermaid").forEach(el => { el.dataset.src = el.textContent.trim(); });
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "base",
+      securityLevel: "strict",
+      flowchart: { useMaxWidth: true, htmlLabels: true }
+    });
+    /* Each diagram's classDef colours are authored into the page, and mermaid
+       bakes them into inline styles marked !important — which no stylesheet can
+       override. So the rendered SVG is re-tinted here by node class, and again
+       whenever the theme flips. Keep these in step with the CSS variables. */
+    var DIAGRAM_TINT = {
+      n:    { light: ["#EFE9FE", "#7C3AED", "#5B21B6"], dark: ["#241B38", "#A78BFA", "#C9B8F5"] },
+      ok:   { light: ["#E3F4F1", "#0E9384", "#0A6A60"], dark: ["#0F302B", "#34D3B8", "#6FE3CE"] },
+      cool: { light: ["#E3F4F1", "#0E9384", "#0A6A60"], dark: ["#0F302B", "#34D3B8", "#6FE3CE"] },
+      hot:  { light: ["#FBEEDF", "#C4661F", "#9A4E17"], dark: ["#33220F", "#E8974A", "#F0B074"] },
+      warn: { light: ["#FBE7E7", "#B23B3B", "#8C2323"], dark: ["#331717", "#E8736B", "#F0A09A"] }
+    };
+    window.tintDiagrams = function () {
+      var mode = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+      document.querySelectorAll(".mermaid-frame svg .node").forEach(function (node) {
+        Object.keys(DIAGRAM_TINT).forEach(function (cls) {
+          if (!node.classList.contains(cls)) return;
+          var c = DIAGRAM_TINT[cls][mode];
+          node.querySelectorAll("rect, polygon, circle, path").forEach(function (shape) {
+            shape.style.setProperty("fill", c[0], "important");
+            shape.style.setProperty("stroke", c[1], "important");
+          });
+          node.querySelectorAll(".nodeLabel").forEach(function (label) {
+            label.style.setProperty("color", c[2], "important");
+          });
+        });
+      });
+    };
+    mermaid.run({ querySelector: "pre.mermaid" }).then(window.tintDiagrams).catch(() => {});
+  }
+</script>
+</body>
+</html>

@@ -36,6 +36,9 @@ new short is one JSON object, no HTML editing:**
 - `related` is 2–4 ids rendered as the tile's **See also** row.
 - `paths.json` holds the ordered learning routes shown in the **Start here** row
   (`index.html?path=builder`).
+- **◇ quiz me** turns whatever is currently on screen into a flashcard deck — `def` on
+  the front, title and note on the back. It's a view over the same JSON, so every tile
+  is already a card and there is nothing extra to maintain.
 - `videoUrl` is optional; leave it `""` until the short is published, then fill it in
   and the tile grows a **▶ watch** link automatically.
 - Every tile gets a stable anchor (`index.html#kv-cache`) for pinned comments or
@@ -62,16 +65,18 @@ site itself. It checks `concepts.json` against [`concepts.schema.json`](concepts
 `videoUrl` empty-or-YouTube) and confirms every `index.html#<id>` link in the pages resolves
 to a real tile. CI runs the same command on every push and pull request.
 
-## Architecture: CRUD to agents
+## The essays
 
-[`architecture.html`](architecture.html) is a second, static page — an essay-style
-one-pager on how a classic layered system (client → frontend → API → domain →
-database) changes shape once an agent is introduced. It covers what actually moves,
-what survives unchanged, where the "no more API/frontend" framing overstates itself,
-and the concrete problems that show up while both architectures run side by side
-during a migration. It links back into `index.html`'s concept tiles (MCP, tool use,
-RAG, guardrails, human-in-the-loop, A2A, evals) for anyone who wants the underlying
-definitions. Reachable from the **Architecture** link in the header nav of both pages.
+Four long-form pages cover the arguments a 60-second short can't, each linking back into the
+knowledge base for the underlying definitions:
+
+| Page | What it settles |
+|---|---|
+| [`architecture.html`](architecture.html) | How a classic layered system changes shape once an agent is introduced — what moves, what survives, and where "no more API/frontend" overstates itself |
+| [`mcp-vs-rest.html`](mcp-vs-rest.html) | Who decides which call happens, and when — plus the Skills-vs-MCP confusion |
+| [`rag-vs-finetuning.html`](rag-vs-finetuning.html) | RAG vs fine-tuning vs long context: three ways to give a model your data, and why fine-tuning is not how you teach it your wiki |
+| [`how-agents-fail.html`](how-agents-fail.html) | A field guide to the eight failure families, each mapped to the tile that answers it |
+| [`choosing-a-model.html`](choosing-a-model.html) | The axes — capability, cost, latency, context, openness — and why your own 20-example eval beats a leaderboard |
 
 ## Roadmap
 
@@ -136,8 +141,11 @@ agents-and-llms/
 ├─ LICENSE
 ├─ .nojekyll
 ├─ index.html               ← the knowledge base (search + filter)
-├─ architecture.html        ← CRUD-to-agents essay (second tab)
-├─ mcp-vs-rest.html         ← MCP vs REST essay (third tab)
+├─ architecture.html        ← CRUD-to-agents essay
+├─ mcp-vs-rest.html         ← MCP vs REST essay
+├─ rag-vs-finetuning.html   ← RAG vs fine-tuning vs long context
+├─ how-agents-fail.html     ← failure-mode field guide
+├─ choosing-a-model.html    ← how to pick a model
 ├─ concepts.json            ← every tile's data — edit this to add a short
 ├─ paths.json               ← curated learning routes (the "Start here" row)
 ├─ concepts.schema.json     ← the field reference for concepts.json
