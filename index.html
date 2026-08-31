@@ -23,6 +23,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script>
+  /* Resolve the theme before first paint — deferring this to DOMContentLoaded
+     flashes the light palette on every navigation for dark-mode readers. */
+  (function () {
+    var stored = null;
+    try { stored = localStorage.getItem("theme"); } catch (e) {}
+    var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-theme", stored || (prefersDark ? "dark" : "light"));
+  })();
+</script>
 <style>
   :root{
     --paper:#FBFBFD; --surface:#FFFFFF; --code:#F4F5F8;
@@ -166,9 +176,18 @@
   .copy:hover{opacity:1; color:var(--ink)}
   pre{margin:0; padding:14px 16px; background:var(--code); overflow-x:auto}
   code{font-family:var(--font-mono); font-size:13px; line-height:1.7; color:var(--ink); tab-size:4}
-  .mermaid-frame{margin:0; padding:16px 10px; background:#F4F5F8; overflow-x:auto}
+  .mermaid-frame{margin:0; padding:16px 10px; background:var(--code); overflow-x:auto}
   .mermaid-frame .mermaid{display:flex; justify-content:center}
   .mermaid-frame svg{max-width:100%; height:auto}
+  /* Mermaid's own chrome (edges, arrowheads, edge labels) is drawn for a light
+     ground. Node fills are handled in JS — see tintDiagrams(). */
+  /* !important is required: mermaid scopes its own rules by the svg's id, which
+     outranks anything selector-specificity can do from here. */
+  [data-theme="dark"] .mermaid-frame svg .flowchart-link{stroke:var(--faint) !important}
+  [data-theme="dark"] .mermaid-frame svg marker path{fill:var(--faint) !important; stroke:var(--faint) !important}
+  [data-theme="dark"] .mermaid-frame svg .edgeLabel{background:var(--code) !important; color:var(--muted) !important}
+  [data-theme="dark"] .mermaid-frame svg .edgeLabel rect{fill:var(--code) !important; opacity:1}
+  [data-theme="dark"] .mermaid-frame svg .edgeLabel foreignObject div{background:var(--code) !important}
   .tk-kw{color:var(--tk-kw)} .tk-type{color:var(--tk-type)} .tk-str{color:var(--tk-str)}
   .tk-num{color:var(--tk-num)} .tk-com{color:var(--tk-com); font-style:italic}
   .tk-fn{color:var(--tk-fn)} .tk-key{color:var(--tk-key)}
@@ -480,8 +499,35 @@ function render(){
   }
 
   if (window.mermaid) {
-    mermaid.run({ querySelector: "#grid .mermaid" }).catch(() => {});
+    mermaid.run({ querySelector: "#grid .mermaid" }).then(tintDiagrams).catch(() => {});
   }
+}
+
+/* ---------- diagram theming ----------
+   Every diagram's classDef colours are part of the tile's data, and mermaid
+   bakes them into inline styles marked !important — which no stylesheet can
+   override. So the rendered SVG is re-tinted here instead, by node class, and
+   again whenever the theme flips. Keep these in step with the CSS variables. */
+const DIAGRAM_TINT = {
+  n:    { light: ["#EFE9FE", "#7C3AED", "#5B21B6"], dark: ["#241B38", "#A78BFA", "#C9B8F5"] },
+  ok:   { light: ["#E3F4F1", "#0E9384", "#0A6A60"], dark: ["#0F302B", "#34D3B8", "#6FE3CE"] },
+  warn: { light: ["#FBE7E7", "#B23B3B", "#8C2323"], dark: ["#331717", "#E8736B", "#F0A09A"] }
+};
+function tintDiagrams(){
+  const mode = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+  document.querySelectorAll(".mermaid-frame svg .node").forEach(node => {
+    Object.keys(DIAGRAM_TINT).forEach(cls => {
+      if (!node.classList.contains(cls)) return;
+      const [fill, stroke, ink] = DIAGRAM_TINT[cls][mode];
+      node.querySelectorAll("rect, polygon, circle, path").forEach(shape => {
+        shape.style.setProperty("fill", fill, "important");
+        shape.style.setProperty("stroke", stroke, "important");
+      });
+      node.querySelectorAll(".nodeLabel").forEach(label => {
+        label.style.setProperty("color", ink, "important");
+      });
+    });
+  });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -555,16 +601,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  /* theme toggle */
+  /* theme toggle — the initial value is already set by the inline script in <head> */
   const root = document.documentElement;
-  let stored = null;
-  try { stored = localStorage.getItem("theme"); } catch(_){}
-  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-  root.setAttribute("data-theme", stored || (prefersDark ? "dark" : "light"));
   document.getElementById("theme").addEventListener("click", () => {
     const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
     root.setAttribute("data-theme", next);
     try { localStorage.setItem("theme", next); } catch(_){}
+    tintDiagrams();
   });
 });
 </script>
