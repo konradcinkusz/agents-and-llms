@@ -24,6 +24,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script>
+  /* Resolve the theme before first paint — deferring this to DOMContentLoaded
+     flashes the light palette on every navigation for dark-mode readers. */
+  (function () {
+    var stored = null;
+    try { stored = localStorage.getItem("theme"); } catch (e) {}
+    var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-theme", stored || (prefersDark ? "dark" : "light"));
+  })();
+</script>
 <style>
   :root{
     --paper:#FBFBFD; --surface:#FFFFFF; --code:#F4F5F8;
@@ -113,7 +123,19 @@
   .copy{font-family:var(--font-mono); font-size:11px; color:var(--muted); opacity:.85; cursor:pointer;
     background:transparent; border:1px solid var(--line-strong); border-radius:6px; padding:2px 8px; transition:opacity .15s}
   .copy:hover{opacity:1; color:var(--ink)}
-  .mermaid-frame{padding:22px 14px; background:#F4F5F8; overflow-x:auto}
+  .mermaid-frame{padding:22px 14px; background:var(--code); overflow-x:auto}
+  /* Mermaid's own chrome (edges, arrowheads, edge labels) is drawn for a light
+     ground; node fills are handled in JS — see tintDiagrams(). !important is
+     required because mermaid scopes its rules by the svg's id, which outranks
+     anything selector specificity can do from here. */
+  [data-theme="dark"] .mermaid-frame svg .flowchart-link{stroke:var(--faint) !important}
+  [data-theme="dark"] .mermaid-frame svg marker path{fill:var(--faint) !important; stroke:var(--faint) !important}
+  [data-theme="dark"] .mermaid-frame svg .edgeLabel{background:var(--code) !important; color:var(--muted) !important}
+  [data-theme="dark"] .mermaid-frame svg .edgeLabel rect{fill:var(--code) !important; opacity:1}
+  [data-theme="dark"] .mermaid-frame svg .edgeLabel foreignObject div{background:var(--code) !important}
+  [data-theme="dark"] .mermaid-frame svg .cluster rect{fill:var(--surface) !important; stroke:var(--line-strong) !important}
+  [data-theme="dark"] .mermaid-frame svg .cluster .nodeLabel,
+  [data-theme="dark"] .mermaid-frame svg .cluster text{fill:var(--muted) !important; color:var(--muted) !important}
   .mermaid-frame .mermaid{display:flex; justify-content:center; min-width:520px}
   .mermaid-frame svg{max-width:100%; height:auto}
   .fig-cap{padding:12px 16px 14px; font-size:13.5px; color:var(--muted); border-top:1px solid var(--line)}
@@ -606,15 +628,13 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /* theme toggle — identical behaviour to index.html */
+  /* the initial value is already set by the inline script in <head> */
   const root = document.documentElement;
-  let stored = null;
-  try { stored = localStorage.getItem("theme"); } catch(_){}
-  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-  root.setAttribute("data-theme", stored || (prefersDark ? "dark" : "light"));
   document.getElementById("theme").addEventListener("click", () => {
     const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
     root.setAttribute("data-theme", next);
     try { localStorage.setItem("theme", next); } catch(_){}
+    if (window.tintDiagrams) window.tintDiagrams();
   });
 });
 </script>
@@ -629,7 +649,34 @@ document.addEventListener("DOMContentLoaded", () => {
       securityLevel: "strict",
       flowchart: { useMaxWidth: true, htmlLabels: true }
     });
-    mermaid.run({ querySelector: "pre.mermaid" }).catch(() => {});
+    /* Each diagram's classDef colours are authored into the page, and mermaid
+       bakes them into inline styles marked !important — which no stylesheet can
+       override. So the rendered SVG is re-tinted here by node class, and again
+       whenever the theme flips. Keep these in step with the CSS variables. */
+    var DIAGRAM_TINT = {
+      n:    { light: ["#EFE9FE", "#7C3AED", "#5B21B6"], dark: ["#241B38", "#A78BFA", "#C9B8F5"] },
+      ok:   { light: ["#E3F4F1", "#0E9384", "#0A6A60"], dark: ["#0F302B", "#34D3B8", "#6FE3CE"] },
+      cool: { light: ["#E3F4F1", "#0E9384", "#0A6A60"], dark: ["#0F302B", "#34D3B8", "#6FE3CE"] },
+      hot:  { light: ["#FBEEDF", "#C4661F", "#9A4E17"], dark: ["#33220F", "#E8974A", "#F0B074"] },
+      warn: { light: ["#FBE7E7", "#B23B3B", "#8C2323"], dark: ["#331717", "#E8736B", "#F0A09A"] }
+    };
+    window.tintDiagrams = function () {
+      var mode = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+      document.querySelectorAll(".mermaid-frame svg .node").forEach(function (node) {
+        Object.keys(DIAGRAM_TINT).forEach(function (cls) {
+          if (!node.classList.contains(cls)) return;
+          var c = DIAGRAM_TINT[cls][mode];
+          node.querySelectorAll("rect, polygon, circle, path").forEach(function (shape) {
+            shape.style.setProperty("fill", c[0], "important");
+            shape.style.setProperty("stroke", c[1], "important");
+          });
+          node.querySelectorAll(".nodeLabel").forEach(function (label) {
+            label.style.setProperty("color", c[2], "important");
+          });
+        });
+      });
+    };
+    mermaid.run({ querySelector: "pre.mermaid" }).then(window.tintDiagrams).catch(() => {});
   }
 </script>
 </body>
